@@ -4,6 +4,7 @@ const _input = ref<string | File | null>(null)
 const _name = ref('')
 
 export function setFileInput(value: string | File | null) {
+  console.log('[fileInput] setFileInput:', typeof value, value instanceof File ? `File(${value.name})` : JSON.stringify(value))
   _input.value = value
   _name.value = typeof value === 'string'
     ? value.split(/[/\\]/).pop() || value
@@ -11,7 +12,9 @@ export function setFileInput(value: string | File | null) {
 }
 
 export function getFileInput() {
-  return _input.value
+  const v = _input.value
+  console.log('[fileInput] getFileInput:', typeof v, v instanceof File ? `File(${v.name})` : JSON.stringify(v))
+  return v
 }
 
 export function getFileName() {

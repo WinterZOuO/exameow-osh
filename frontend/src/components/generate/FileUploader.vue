@@ -46,7 +46,10 @@ async function pick() {
     })
     if (result && typeof result === 'string') {
       filePath.value = result
+      console.log('[FileUploader] setFileInput with:', typeof result, JSON.stringify(result))
       setFileInput(result)
+    } else {
+      console.log('[FileUploader] pick result ignored:', typeof result, JSON.stringify(result))
     }
   } else {
     fileInput.value?.click()
