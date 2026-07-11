@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { useExamStore } from '@/stores/exam'
+import { useI18nStore } from '@/stores/i18n'
 import { QuestionType, Difficulty } from '@exambot/shared'
 
 const store = useExamStore()
+const i18n = useI18nStore()
 
 const typeOptions = [
-  { title: 'Single Choice', value: QuestionType.SingleChoice, desc: 'One correct answer from 4 options' },
-  { title: 'Multi Choice', value: QuestionType.MultiChoice, desc: 'Multiple correct answers' },
-  { title: 'True / False', value: QuestionType.TrueFalse, desc: 'Binary choice questions' },
-  { title: 'Fill Blank', value: QuestionType.FillBlank, desc: 'Complete the sentence' },
-  { title: 'Short Answer', value: QuestionType.ShortAnswer, desc: 'Open-ended response' },
+  { title: 'typeSingle', value: QuestionType.SingleChoice },
+  { title: 'typeMulti', value: QuestionType.MultiChoice },
+  { title: 'typeTrueFalse', value: QuestionType.TrueFalse },
+  { title: 'typeFillBlank', value: QuestionType.FillBlank },
+  { title: 'typeShortAnswer', value: QuestionType.ShortAnswer },
+]
+
+const difficultyOptions = [
+  { title: 'diffEasy', value: Difficulty.Easy },
+  { title: 'diffMedium', value: Difficulty.Medium },
+  { title: 'diffHard', value: Difficulty.Hard },
 ]
 </script>
 
@@ -17,7 +25,7 @@ const typeOptions = [
   <v-card class="h-100">
     <v-card-text>
       <v-label class="text-caption font-weight-bold text-uppercase mb-3 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
-        Question Types
+        {{ i18n.t('genQuestionTypes') }}
       </v-label>
 
       <div class="d-flex flex-wrap ga-2 mb-4">
@@ -36,7 +44,7 @@ const typeOptions = [
             idx >= 0 ? store.questionTypes.splice(idx, 1) : store.questionTypes.push(opt.value)
           "
         >
-          {{ opt.title }}
+          {{ i18n.t(opt.title as any) }}
         </v-chip>
       </div>
 
@@ -46,7 +54,7 @@ const typeOptions = [
         <v-col cols="6">
           <v-text-field
             v-model.number="store.count"
-            label="Questions"
+            :label="i18n.t('genQuestions')"
             type="number"
             :min="1"
             :max="50"
@@ -57,14 +65,10 @@ const typeOptions = [
         <v-col cols="6">
           <v-select
             v-model="store.difficulty"
-            :items="[
-              { title: 'Easy', value: Difficulty.Easy },
-              { title: 'Medium', value: Difficulty.Medium },
-              { title: 'Hard', value: Difficulty.Hard },
-            ]"
-            item-title="title"
+            :items="difficultyOptions"
+            :item-title="(d: any) => i18n.t(d.title as any)"
             item-value="value"
-            label="Difficulty"
+            :label="i18n.t('genDifficulty')"
             prepend-inner-icon="mdi-signal-cellular-1"
           />
         </v-col>
@@ -78,7 +82,7 @@ const typeOptions = [
             ]"
             item-title="title"
             item-value="value"
-            label="Language"
+            :label="i18n.t('genLanguage')"
             prepend-inner-icon="mdi-translate"
           />
         </v-col>
@@ -86,8 +90,8 @@ const typeOptions = [
         <v-col cols="6">
           <v-text-field
             v-model="store.topicFilter"
-            label="Topic"
-            placeholder="e.g. ML Basics"
+            :label="i18n.t('genTopic')"
+            :placeholder="i18n.t('genTopicPlaceholder')"
             prepend-inner-icon="mdi-tag-outline"
           />
         </v-col>

@@ -2,11 +2,13 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
+import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
 
 const router = useRouter()
 const examStore = useExamStore()
+const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window
 const exportError = ref('')
 const exporting = ref(false)
@@ -48,67 +50,67 @@ function handleNewBatch() {
 <template>
   <div>
     <div v-if="!examStore.generated" class="mb-8">
-    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">Preview</h1>
-    <p class="text-body-1 text-medium-emphasis mb-6">Review generated questions before export</p>
+      <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">{{ i18n.t('previewTitle') }}</h1>
+      <p class="text-body-1 text-medium-emphasis mb-6">{{ i18n.t('previewSubtitleEmpty') }}</p>
 
-    <v-card class="text-center py-10">
-      <v-card-text>
-        <div
-          style="
-            width: 72px; height: 72px; margin: 0 auto;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #E8F0FE 0%, #F3E8FD 100%);
-            display: flex; align-items: center; justify-content: center;
-          "
-          class="mb-4"
-        >
-          <v-icon icon="mdi-file-document-outline" size="36" color="primary" />
-        </div>
-        <h3 class="text-h6 font-weight-bold mb-2">No Questions Yet</h3>
-        <p class="text-body-2 text-medium-emphasis mb-4">Generate questions first from the Generate page</p>
-        <v-btn color="primary" variant="flat" rounded="pill" @click="router.push('/generate')">
-          Go to Generate
-        </v-btn>
-      </v-card-text>
-    </v-card>
-  </div>
-
-  <div v-else class="mb-8">
-    <div class="d-flex align-center flex-wrap ga-3 mb-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">Preview</h1>
-        <p class="text-body-2 text-medium-emphasis">
-          {{ examStore.questions.length }} questions generated
-        </p>
-      </div>
-      <v-spacer />
-      <v-btn
-        variant="outlined"
-        color="on-surface-variant"
-        rounded="pill"
-        prepend-icon="mdi-arrow-left"
-        @click="handleNewBatch"
-      >
-        New Batch
-      </v-btn>
-      <v-btn
-        color="primary"
-        variant="flat"
-        rounded="pill"
-        size="large"
-        :loading="exporting"
-        prepend-icon="mdi-download"
-        @click="handleExport"
-      >
-        Export CSV
-      </v-btn>
+      <v-card class="text-center py-10">
+        <v-card-text>
+          <div
+            style="
+              width: 72px; height: 72px; margin: 0 auto;
+              border-radius: 20px;
+              background: linear-gradient(135deg, #E8F0FE 0%, #F3E8FD 100%);
+              display: flex; align-items: center; justify-content: center;
+            "
+            class="mb-4"
+          >
+            <v-icon icon="mdi-file-document-outline" size="36" color="primary" />
+          </div>
+          <h3 class="text-h6 font-weight-bold mb-2">{{ i18n.t('previewEmptyTitle') }}</h3>
+          <p class="text-body-2 text-medium-emphasis mb-4">{{ i18n.t('previewEmptyText') }}</p>
+          <v-btn color="primary" variant="flat" rounded="pill" @click="router.push('/generate')">
+            {{ i18n.t('previewGotoGenerate') }}
+          </v-btn>
+        </v-card-text>
+      </v-card>
     </div>
 
-    <v-alert v-if="exportError" type="error" closable class="mb-4">
-      {{ exportError }}
-    </v-alert>
+    <div v-else class="mb-8">
+      <div class="d-flex align-center flex-wrap ga-3 mb-4">
+        <div>
+          <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">{{ i18n.t('previewTitle') }}</h1>
+          <p class="text-body-2 text-medium-emphasis">
+            {{ i18n.t('previewQuestionCount', { n: examStore.questions.length }) }}
+          </p>
+        </div>
+        <v-spacer />
+        <v-btn
+          variant="outlined"
+          color="on-surface-variant"
+          rounded="pill"
+          prepend-icon="mdi-arrow-left"
+          @click="handleNewBatch"
+        >
+          {{ i18n.t('previewNewBatch') }}
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="flat"
+          rounded="pill"
+          size="large"
+          :loading="exporting"
+          prepend-icon="mdi-download"
+          @click="handleExport"
+        >
+          {{ i18n.t('previewExportCsv') }}
+        </v-btn>
+      </div>
 
-    <QuestionTable :questions="examStore.questions" />
+      <v-alert v-if="exportError" type="error" closable class="mb-4">
+        {{ exportError }}
+      </v-alert>
+
+      <QuestionTable :questions="examStore.questions" />
+    </div>
   </div>
-</div>
 </template>

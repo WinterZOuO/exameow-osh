@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18nStore } from '@/stores/i18n'
 
+const i18n = useI18nStore()
 const props = defineProps<{ isTauri: boolean }>()
 const emit = defineEmits<{ fileSelected: [file: File | null, path: string] }>()
 
@@ -84,7 +86,7 @@ function onWebFileChange(event: Event) {
         rounded="pill"
         @click="handleTauriPick"
       >
-        Select Document
+        {{ i18n.t('genSelectFile') }}
       </v-btn>
     </template>
     <template v-else>
@@ -102,11 +104,11 @@ function onWebFileChange(event: Event) {
         rounded="pill"
         @click="handleWebPick"
       >
-        Select Document
+        {{ i18n.t('genSelectFile') }}
       </v-btn>
     </template>
 
-    <p class="text-caption mt-3 text-medium-emphasis">TXT, DOCX, or text-based PDF</p>
+    <p class="text-caption mt-3 text-medium-emphasis">{{ i18n.t('genFileHint') }}</p>
 
     <v-fade-transition>
       <div v-if="fileName" class="mt-4">

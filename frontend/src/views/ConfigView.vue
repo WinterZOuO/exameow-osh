@@ -2,9 +2,11 @@
 import { useConfigStore } from '@/stores/config'
 import ApiSettings from '@/components/config/ApiSettings.vue'
 import { useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/i18n'
 
 const store = useConfigStore()
 const router = useRouter()
+const i18n = useI18nStore()
 </script>
 
 <template>
@@ -13,7 +15,7 @@ const router = useRouter()
 
     <v-fade-transition>
       <div v-if="store.configured" class="text-center mt-10">
-        <p class="text-body-1 text-medium-emphasis mb-4">Everything is set up. Ready to generate exam questions.</p>
+        <p class="text-body-1 text-medium-emphasis mb-4">{{ i18n.t('configReady') }}</p>
         <v-btn
           size="x-large"
           color="primary"
@@ -23,7 +25,7 @@ const router = useRouter()
           @click="router.push('/generate')"
         >
           <v-icon icon="mdi-arrow-right" start />
-          Start Generating
+          {{ i18n.t('configReadyCta') }}
         </v-btn>
       </div>
     </v-fade-transition>

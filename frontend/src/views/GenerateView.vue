@@ -3,12 +3,14 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
+import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
 
 const router = useRouter()
 const examStore = useExamStore()
 const configStore = useConfigStore()
+const i18n = useI18nStore()
 
 const isTauri = '__TAURI__' in window
 const error = ref('')
@@ -37,12 +39,12 @@ async function handleGenerate() {
 
 <template>
   <div class="mb-8">
-    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">Generate</h1>
-    <p class="text-body-1 text-medium-emphasis mb-6">Upload a document and configure exam parameters</p>
+    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">{{ i18n.t('genTitle') }}</h1>
+    <p class="text-body-1 text-medium-emphasis mb-6">{{ i18n.t('genSubtitle') }}</p>
 
     <v-row>
       <v-col cols="12" md="6">
-        <v-card class="mb-4 h-100" style="min-height: 240px;">
+        <v-card class="h-100" style="min-height: 240px;">
           <v-card-text class="d-flex flex-column justify-center align-center h-100">
             <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
           </v-card-text>
@@ -70,7 +72,7 @@ async function handleGenerate() {
         @click="handleGenerate"
       >
         <v-icon v-if="!examStore.generating" icon="mdi-magic-staff" start />
-        {{ examStore.generating ? 'Generating...' : 'Generate Questions' }}
+        {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
       </v-btn>
     </div>
 

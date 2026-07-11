@@ -1,30 +1,32 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Question } from '@exambot/shared'
+import { useI18nStore } from '@/stores/i18n'
 
+const i18n = useI18nStore()
 const props = defineProps<{ questions: Question[] }>()
 
 const typeLabel: Record<string, string> = {
-  single_choice: 'Single',
-  multi_choice: 'Multi',
-  true_false: 'T/F',
-  fill_blank: 'Fill',
-  short_answer: 'Short',
+  single_choice: 'typeSingle',
+  multi_choice: 'typeMulti',
+  true_false: 'typeTrueFalse',
+  fill_blank: 'typeFillBlank',
+  short_answer: 'typeShortAnswer',
 }
 
-const headers = [
-  { title: '#', key: 'id', width: 70, sortable: false },
-  { title: 'Type', key: 'qtypeTag', width: 100, sortable: false },
-  { title: 'Question', key: 'stem', sortable: false },
-  { title: 'Options', key: 'options', sortable: false },
-  { title: 'Answer', key: 'answer', width: 160, sortable: false },
-  { title: 'Analysis', key: 'analysis', sortable: false, width: 220 },
-]
+const headers = computed(() => [
+  { title: i18n.t('tableNum'), key: 'id', width: 70, sortable: false },
+  { title: i18n.t('tableType'), key: 'qtypeTag', width: 100, sortable: false },
+  { title: i18n.t('tableQuestion'), key: 'stem', sortable: false },
+  { title: i18n.t('tableOptions'), key: 'options', sortable: false },
+  { title: i18n.t('tableAnswer'), key: 'answer', width: 160, sortable: false },
+  { title: i18n.t('tableAnalysis'), key: 'analysis', sortable: false, width: 220 },
+])
 
 const items = computed(() =>
   props.questions.map((q, i) => ({
     id: q.id || `${i + 1}`,
-    qtypeTag: typeLabel[q.type] || q.type,
+    qtypeTag: i18n.t(typeLabel[q.type] as any) || q.type,
     qtype: q.type,
     stem: q.stem,
     options: q.options.join(' · '),
