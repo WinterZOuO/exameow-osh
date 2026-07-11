@@ -5,16 +5,20 @@ import { DocumentArrowUpIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue
 
 const i18n = useI18nStore()
 const props = defineProps<{ isTauri: boolean }>()
-const emit = defineEmits<{ fileSelected: [file: File | null, path: string] }>()
+const emit = defineEmits<{ fileSelected: [value: string | File | null] }>()
 
 const file = ref<File | null>(null)
 const filePath = ref('')
 const fileInput = ref<HTMLInputElement>()
-let openDialogFn: any = null
+const dialogReady = ref(false)
 
 onMounted(async () => {
   if (props.isTauri) {
-    try { const mod = await import('@tauri-apps/plugin-dialog'); openDialogFn = mod.open } catch {}
+    try {
+      const mod = await import('@tauri-apps/plugin-dialog');
+      (window as any).__tauriDialogOpen = mod.open
+      dialogReady.value = true
+    } catch { dialogReady.value = false }
   }
 })
 
@@ -29,13 +33,21 @@ const fileName = computed(() => {
 
 function clear() {
   file.value = null; filePath.value = ''
-  emit('fileSelected', null, '')
+  emit('fileSelected', null)
 }
 
 async function pick() {
-  if (props.isTauri && openDialogFn) {
-    const selected = await openDialogFn({ multiple: false, filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }] })
-    if (selected) { filePath.value = selected as string; emit('fileSelected', null, filePath.value) }
+  if (props.isTauri) {
+    const openFn = (window as any).__tauriDialogOpen
+    if (!openFn) return
+    const result: any = await openFn({
+      multiple: false,
+      filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }],
+    })
+    if (result && typeof result === 'string') {
+      filePath.value = result
+      emit('fileSelected', result)
+    }
   } else {
     fileInput.value?.click()
   }
@@ -43,17 +55,16 @@ async function pick() {
 
 function onWebFileChange(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files?.length) { file.value = input.files[0] ?? null; emit('fileSelected', file.value, '') }
+  if (input.files?.length) {
+    file.value = input.files[0] ?? null
+    emit('fileSelected', file.value)
+  }
 }
 </script>
 
 <template>
   <div class="text-center">
-    <button
-      v-if="!fileName"
-      class="flex flex-col items-center gap-3 group"
-      @click="pick"
-    >
+    <button v-if="!fileName" class="flex flex-col items-center gap-3 group" @click="pick">
       <div class="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 group-hover:scale-105 transition-transform">
         <DocumentArrowUpIcon class="w-8 h-8 text-primary-500" />
       </div>
@@ -62,14 +73,7 @@ function onWebFileChange(event: Event) {
         <div class="text-xs text-[rgb(var(--c-text-secondary))] mt-1">{{ i18n.t('genFileHint') }}</div>
       </div>
 
-      <input
-        v-if="!isTauri"
-        ref="fileInput"
-        type="file"
-        accept=".txt,.docx,.pdf"
-        class="hidden"
-        @change="onWebFileChange"
-      />
+      <input v-if="!isTauri" ref="fileInput" type="file" accept=".txt,.docx,.pdf" class="hidden" @change="onWebFileChange" />
     </button>
 
     <Transition name="fade">

@@ -15,25 +15,22 @@ const i18n = useI18nStore()
 
 const isTauri = '__TAURI__' in window
 const error = ref('')
-const fileSelected = ref(false)
-const currentFile = ref<File | null>(null)
-const currentPath = ref('')
+const selectedInput = ref<string | File | null>(null)
+const hasFile = computed(() => selectedInput.value !== null)
 
-const canGenerate = computed(() =>
-  fileSelected.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
-)
+function canGenerate() {
+  return hasFile.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured
+}
 
-function onFileSelected(file: File | null, path: string) {
-  fileSelected.value = !!(file || path)
-  currentFile.value = file
-  currentPath.value = path
+function onFileSelected(fileOrPath: string | File | null) {
+  selectedInput.value = fileOrPath
 }
 
 async function handleGenerate() {
   error.value = ''
+  const input = selectedInput.value
+  if (!input) { error.value = 'No file selected'; return }
   try {
-    const input = isTauri ? currentPath.value : currentFile.value!
-    if (!input) { error.value = 'No file selected'; return }
     await examStore.generate(input)
     router.push('/preview')
   } catch (e: any) {
@@ -59,17 +56,9 @@ async function handleGenerate() {
     </div>
 
     <div class="text-center">
-      <button
-        class="btn-primary !px-10 !py-4 text-base !font-bold"
-        :disabled="!canGenerate || examStore.generating"
-        @click="handleGenerate"
-      >
-        <SparklesIcon v-if="!examStore.generating" class="w-5 h-5" />
-        <svg v-else class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-        </svg>
-        {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
+      <button class="btn-primary !px-10 !py-4 text-base !font-bold" :disabled="!canGenerate()" @click="handleGenerate">
+        <SparklesIcon class="w-5 h-5" />
+        {{ i18n.t('genGenerateBtn') }}
       </button>
     </div>
   </div>
