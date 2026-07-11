@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
+import { SparklesIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const examStore = useExamStore()
@@ -38,48 +39,34 @@ async function handleGenerate() {
 </script>
 
 <template>
-  <div class="mb-8">
-    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">{{ i18n.t('genTitle') }}</h1>
-    <p class="text-body-1 text-medium-emphasis mb-6">{{ i18n.t('genSubtitle') }}</p>
+  <div>
+    <h1 class="page-title mb-1">{{ i18n.t('genTitle') }}</h1>
+    <p class="page-subtitle mb-8">{{ i18n.t('genSubtitle') }}</p>
 
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-card class="h-100" style="min-height: 240px;">
-          <v-card-text class="d-flex flex-column justify-center align-center h-100">
-            <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="6">
-        <ParamForm />
-      </v-col>
-    </v-row>
-
-    <v-alert v-if="error" type="error" closable class="mt-4">
-      {{ error }}
-    </v-alert>
-
-    <div class="text-center mt-8">
-      <v-btn
-        size="x-large"
-        color="primary"
-        variant="flat"
-        rounded="pill"
-        :loading="examStore.generating"
-        :disabled="!canGenerate"
-        style="font-weight: 700; min-width: 240px; min-height: 56px; font-size: 16px;"
-        @click="handleGenerate"
-      >
-        <v-icon v-if="!examStore.generating" icon="mdi-magic-staff" start />
-        {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
-      </v-btn>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="card min-h-[220px] flex items-center justify-center">
+        <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
+      </div>
+      <ParamForm />
     </div>
 
-    <div class="mt-6" style="max-width: 480px; margin-inline: auto;">
-      <v-fade-transition>
-        <v-progress-linear v-if="examStore.generating" indeterminate color="primary" />
-      </v-fade-transition>
+    <div v-if="error" class="mb-6 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300">
+      {{ error }}
+    </div>
+
+    <div class="text-center">
+      <button
+        class="btn-primary !px-10 !py-4 text-base !font-bold"
+        :disabled="!canGenerate || examStore.generating"
+        @click="handleGenerate"
+      >
+        <SparklesIcon v-if="!examStore.generating" class="w-5 h-5" />
+        <svg v-else class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
+      </button>
     </div>
   </div>
 </template>

@@ -1,142 +1,124 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useTheme } from 'vuetify'
 import { useI18nStore } from '@/stores/i18n'
+import {
+  Cog6ToothIcon,
+  SparklesIcon,
+  DocumentTextIcon,
+  SunIcon,
+  MoonIcon,
+} from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const route = useRoute()
-const theme = useTheme()
 const i18n = useI18nStore()
 
-function toggleTheme() {
-  const newTheme = theme.global.current.value.dark ? 'light' : 'dark'
-  theme.global.name.value = newTheme
+const isDark = ref(false)
+
+function applyDark() {
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem('exambot-dark', isDark.value ? '1' : '0')
 }
 
+watch(isDark, applyDark, { immediate: true })
+
+// init from localStorage
+const saved = localStorage.getItem('exambot-dark')
+if (saved === '1') isDark.value = true
+
 const navItems = [
-  { title: 'navConfig', icon: 'mdi-tune-variant', path: '/config' },
-  { title: 'navGenerate', icon: 'mdi-auto-fix', path: '/generate' },
-  { title: 'navPreview', icon: 'mdi-file-document-outline', path: '/preview' },
+  { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
+  { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
+  { key: 'navPreview', path: '/preview', icon: DocumentTextIcon },
 ]
+
+function isActive(path: string) {
+  return route.path === path ? 'btn-primary !px-4 !py-2 text-sm shadow-none' : 'btn-ghost !px-4 !py-2 text-sm'
+}
 </script>
 
 <template>
-  <v-app>
-    <v-app-bar
-      flat
-      density="comfortable"
-      class="px-2"
-      style="border-bottom: 1px solid rgba(128,128,128,0.12); height: 72px;"
-    >
-      <template #prepend>
-        <div class="d-flex align-center ga-3">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="14" fill="url(#logoGrad)"/>
+  <div class="min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 bg-[rgb(var(--c-surface))] border-b border-[rgb(var(--c-outline)/0.1)]">
+      <div class="mx-auto max-w-5xl flex items-center h-16 px-4 sm:px-6 gap-4">
+        <!-- Logo -->
+        <router-link to="/" class="flex items-center gap-3 shrink-0 no-underline">
+          <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+            <rect width="40" height="40" rx="12" fill="url(#logoGrad2)"/>
             <defs>
-              <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <linearGradient id="logoGrad2" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
                 <stop stop-color="#1A6CFF"/>
-                <stop offset="1" stop-color="#8B5CF6"/>
+                <stop offset="1" stop-color="#7C3AED"/>
               </linearGradient>
             </defs>
-            <path d="M12 14h7l3-4 3 4h7v12a2 2 0 01-2 2H14a2 2 0 01-2-2V14z" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16 21l3 3 5-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 15h6l2.5-3.5L23 15h5v11a2 2 0 01-2 2H14a2 2 0 01-2-2V15z" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 21.5l2.5 2.5 5-5" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <div>
-            <div style="font-weight: 700; font-size: 18px; line-height: 1.1; letter-spacing: -0.3px;">{{ i18n.t('appName') }}</div>
-            <div style="font-size: 12px; color: #5B6F8C; font-weight: 500;">{{ i18n.t('appSubtitle') }}</div>
+          <div class="hidden sm:block">
+            <div class="font-bold text-base leading-tight tracking-tight text-[rgb(var(--c-text))]">{{ i18n.t('appName') }}</div>
+            <div class="text-xs font-medium text-[rgb(var(--c-text-secondary))]">{{ i18n.t('appSubtitle') }}</div>
           </div>
-        </div>
-      </template>
+        </router-link>
 
-      <template v-if="$vuetify.display.mdAndUp" #append>
-        <div class="d-flex ga-1 align-center">
-          <v-btn
+        <!-- Desktop Nav -->
+        <div class="hidden sm:flex items-center gap-1 ml-6">
+          <button
             v-for="item in navItems"
             :key="item.path"
-            :variant="route.path === item.path ? 'flat' : 'text'"
-            :color="route.path === item.path ? 'primary' : 'on-surface-variant'"
-            size="small"
+            :class="isActive(item.path)"
             @click="router.push(item.path)"
           >
-            <v-icon :icon="item.icon" size="18" start />
-            {{ i18n.t(item.title as any) }}
-          </v-btn>
-
-          <v-divider vertical class="mx-2" length="24" />
-
-          <v-btn
-            icon="mdi-translate"
-            variant="text"
-            size="small"
-            color="on-surface-variant"
-            @click="i18n.toggle()"
-          >
-            <span style="font-size: 12px; font-weight: 700;">{{ i18n.locale === 'zh' ? '中' : 'En' }}</span>
-          </v-btn>
-
-          <v-btn
-            :icon="theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text"
-            size="small"
-            color="on-surface-variant"
-            @click="toggleTheme"
-          />
+            <component :is="item.icon" class="w-4 h-4" />
+            {{ i18n.t(item.key as any) }}
+          </button>
         </div>
-      </template>
 
-      <template v-else #append>
-        <div class="d-flex ga-1 align-center">
-          <v-btn
-            icon
-            variant="text"
-            size="small"
-            color="on-surface-variant"
-            @click="i18n.toggle()"
-          >
-            <span style="font-size: 12px; font-weight: 700;">{{ i18n.locale === 'zh' ? '中' : 'En' }}</span>
-          </v-btn>
-          <v-btn
-            :icon="theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text"
-            size="small"
-            color="on-surface-variant"
-            @click="toggleTheme"
-          />
+        <div class="flex-1" />
+
+        <!-- Actions -->
+        <div class="flex items-center gap-1">
+          <button class="btn-ghost !p-2 text-sm font-bold" @click="i18n.toggle()">
+            {{ i18n.locale === 'zh' ? '中' : 'En' }}
+          </button>
+          <button class="btn-ghost !p-2" @click="isDark = !isDark">
+            <SunIcon v-if="isDark" class="w-5 h-5" />
+            <MoonIcon v-else class="w-5 h-5" />
+          </button>
         </div>
-      </template>
-    </v-app-bar>
+      </div>
+    </header>
 
-    <v-main style="padding-top: 72px; padding-bottom: 72px;">
-      <v-container :fluid="$vuetify.display.smAndDown" :class="$vuetify.display.mdAndUp ? 'px-8' : 'px-4'" style="max-width: 960px;">
-        <router-view v-slot="{ Component }">
-          <v-fade-transition mode="out-in">
-            <component :is="Component" />
-          </v-fade-transition>
-        </router-view>
-      </v-container>
-    </v-main>
+    <!-- Main Content -->
+    <main class="flex-1 mx-auto w-full max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
+      <router-view v-slot="{ Component }">
+        <transition name="slide-up" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </main>
 
-    <v-bottom-navigation
-      v-if="$vuetify.display.smAndDown"
-      grow
-      bg-color="surface"
-      style="
-        border-top: 1px solid rgba(128,128,128,0.12);
-        height: 72px !important;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-      "
-    >
-      <v-btn
-        v-for="item in navItems"
-        :key="item.path"
-        :value="item.path"
-        :active="route.path === item.path"
-        @click="router.push(item.path)"
-        style="text-transform: none; font-weight: 500; font-size: 11px;"
-      >
-        <v-icon :icon="item.icon" size="22" />
-        <span>{{ i18n.t(item.title as any) }}</span>
-      </v-btn>
-    </v-bottom-navigation>
-  </v-app>
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="sm:hidden sticky bottom-0 z-30 bg-[rgb(var(--c-surface))] border-t border-[rgb(var(--c-outline)/0.1)] safe-bottom">
+      <div class="flex items-center justify-around h-16 px-2">
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-colors duration-150 min-w-0"
+          :class="route.path === item.path
+            ? 'text-primary-500'
+            : 'text-[rgb(var(--c-text-secondary))]'"
+          @click="router.push(item.path)"
+        >
+          <component :is="item.icon" class="w-6 h-6" />
+          <span class="text-[10px] font-medium leading-none">{{ i18n.t(item.key as any) }}</span>
+        </button>
+      </div>
+    </nav>
+  </div>
 </template>
+
+<style scoped>
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>

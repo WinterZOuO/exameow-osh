@@ -3,6 +3,7 @@ import { useConfigStore } from '@/stores/config'
 import ApiSettings from '@/components/config/ApiSettings.vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 
 const store = useConfigStore()
 const router = useRouter()
@@ -13,21 +14,14 @@ const i18n = useI18nStore()
   <div>
     <ApiSettings />
 
-    <v-fade-transition>
-      <div v-if="store.configured" class="text-center mt-10">
-        <p class="text-body-1 text-medium-emphasis mb-4">{{ i18n.t('configReady') }}</p>
-        <v-btn
-          size="x-large"
-          color="primary"
-          variant="flat"
-          rounded="pill"
-          style="font-weight: 700; min-width: 280px; min-height: 56px; font-size: 16px;"
-          @click="router.push('/generate')"
-        >
-          <v-icon icon="mdi-arrow-right" start />
+    <Transition name="fade">
+      <div v-if="store.configured" class="text-center mt-12">
+        <p class="text-base text-[rgb(var(--c-text-secondary))] mb-5">{{ i18n.t('configReady') }}</p>
+        <button class="btn-primary !px-8 !py-4 text-base !font-bold" @click="router.push('/generate')">
+          <ArrowRightIcon class="w-5 h-5" />
           {{ i18n.t('configReadyCta') }}
-        </v-btn>
+        </button>
       </div>
-    </v-fade-transition>
+    </Transition>
   </div>
 </template>

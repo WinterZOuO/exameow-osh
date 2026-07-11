@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
+import { DocumentArrowUpIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const i18n = useI18nStore()
 const props = defineProps<{ isTauri: boolean }>()
@@ -13,10 +14,7 @@ let openDialogFn: any = null
 
 onMounted(async () => {
   if (props.isTauri) {
-    try {
-      const mod = await import('@tauri-apps/plugin-dialog')
-      openDialogFn = mod.open
-    } catch {}
+    try { const mod = await import('@tauri-apps/plugin-dialog'); openDialogFn = mod.open } catch {}
   }
 })
 
@@ -29,101 +27,59 @@ const fileName = computed(() => {
   return ''
 })
 
-const fileSize = computed(() => {
-  if (file.value && file.value.size > 0) {
-    const kb = file.value.size / 1024
-    return kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb / 1024).toFixed(1)} MB`
-  }
-  return ''
-})
-
-async function handleTauriPick() {
-  if (!openDialogFn) return
-  const selected = await openDialogFn({
-    multiple: false,
-    filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }],
-  })
-  if (selected) {
-    filePath.value = selected as string
-    emit('fileSelected', null, filePath.value)
-  }
+function clear() {
+  file.value = null; filePath.value = ''
+  emit('fileSelected', null, '')
 }
 
-function handleWebPick() {
-  fileInput.value?.click()
+async function pick() {
+  if (props.isTauri && openDialogFn) {
+    const selected = await openDialogFn({ multiple: false, filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }] })
+    if (selected) { filePath.value = selected as string; emit('fileSelected', null, filePath.value) }
+  } else {
+    fileInput.value?.click()
+  }
 }
 
 function onWebFileChange(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files?.length) {
-    file.value = input.files[0] ?? null
-    emit('fileSelected', file.value, '')
-  }
+  if (input.files?.length) { file.value = input.files[0] ?? null; emit('fileSelected', file.value, '') }
 }
 </script>
 
 <template>
-  <div class="text-center py-6">
-    <div v-if="!fileName" class="mb-4">
-      <div
-        style="
-          width: 72px; height: 72px; margin: 0 auto;
-          border-radius: 20px;
-          background: linear-gradient(135deg, #E8F0FE 0%, #F3E8FD 100%);
-          display: flex; align-items: center; justify-content: center;
-          color: #1A6CFF; font-size: 32px;
-        "
-      >
-        <v-icon icon="mdi-file-upload-outline" size="36" color="primary" />
+  <div class="text-center">
+    <button
+      v-if="!fileName"
+      class="flex flex-col items-center gap-3 group"
+      @click="pick"
+    >
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 group-hover:scale-105 transition-transform">
+        <DocumentArrowUpIcon class="w-8 h-8 text-primary-500" />
       </div>
-    </div>
+      <div>
+        <div class="font-semibold text-sm text-primary-500">{{ i18n.t('genSelectFile') }}</div>
+        <div class="text-xs text-[rgb(var(--c-text-secondary))] mt-1">{{ i18n.t('genFileHint') }}</div>
+      </div>
 
-    <template v-if="isTauri">
-      <v-btn
-        variant="outlined"
-        color="primary"
-        size="large"
-        rounded="pill"
-        @click="handleTauriPick"
-      >
-        {{ i18n.t('genSelectFile') }}
-      </v-btn>
-    </template>
-    <template v-else>
       <input
+        v-if="!isTauri"
         ref="fileInput"
         type="file"
         accept=".txt,.docx,.pdf"
-        style="display: none"
+        class="hidden"
         @change="onWebFileChange"
       />
-      <v-btn
-        variant="outlined"
-        color="primary"
-        size="large"
-        rounded="pill"
-        @click="handleWebPick"
-      >
-        {{ i18n.t('genSelectFile') }}
-      </v-btn>
-    </template>
+    </button>
 
-    <p class="text-caption mt-3 text-medium-emphasis">{{ i18n.t('genFileHint') }}</p>
-
-    <v-fade-transition>
-      <div v-if="fileName" class="mt-4">
-        <v-chip
-          color="primary"
-          variant="tonal"
-          size="large"
-          prepend-icon="mdi-file-document-outline"
-          closable
-          @click:close="file = null; filePath = ''; emit('fileSelected', null, '')"
-        >
-          <span class="font-weight-medium">{{ fileName }}</span>
-          <span v-if="fileSize" class="ml-1 text-caption">· {{ fileSize }}</span>
-        </v-chip>
+    <Transition name="fade">
+      <div v-if="fileName" class="inline-flex items-center gap-2 px-4 py-2 rounded-pill bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300">
+        <DocumentTextIcon class="w-4 h-4" />
+        <span class="text-sm font-medium truncate max-w-[200px]">{{ fileName }}</span>
+        <button class="hover:bg-primary-200 dark:hover:bg-primary-800 rounded-full p-0.5" @click.stop="clear">
+          <XMarkIcon class="w-4 h-4" />
+        </button>
       </div>
-    </v-fade-transition>
+    </Transition>
   </div>
 </template>

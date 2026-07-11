@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/vue/24/outline'
 
 const store = useConfigStore()
 const i18n = useI18nStore()
@@ -14,13 +15,7 @@ const saveError = ref('')
 async function handleFetchModels() {
   fetchError.value = ''
   fetchingModels.value = true
-  try {
-    await store.fetchModels()
-  } catch (e: any) {
-    fetchError.value = e.message || String(e)
-  } finally {
-    fetchingModels.value = false
-  }
+  try { await store.fetchModels() } catch (e: any) { fetchError.value = e.message || String(e) } finally { fetchingModels.value = false }
 }
 
 async function handleSave() {
@@ -28,120 +23,102 @@ async function handleSave() {
   try {
     await store.save()
     saveSuccess.value = true
-    setTimeout(() => (saveSuccess.value = false), 2500)
-  } catch (e: any) {
-    saveError.value = e.message || String(e)
-  }
+    setTimeout(() => saveSuccess.value = false, 2500)
+  } catch (e: any) { saveError.value = e.message || String(e) }
 }
 </script>
 
 <template>
-  <div class="mb-8">
-    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">{{ i18n.t('configTitle') }}</h1>
-    <p class="text-body-1 text-medium-emphasis mb-6">{{ i18n.t('configSubtitle') }}</p>
+  <div>
+    <h1 class="page-title mb-1">{{ i18n.t('configTitle') }}</h1>
+    <p class="page-subtitle mb-8">{{ i18n.t('configSubtitle') }}</p>
 
-    <v-card class="mb-4 pb-2 px-2 pt-2">
-      <v-card-text>
-        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
-          {{ i18n.t('configSectionEndpoint') }}
-        </v-label>
-        <v-text-field
+    <!-- Endpoint Card -->
+    <div class="card mb-4">
+      <label class="section-label">{{ i18n.t('configSectionEndpoint') }}</label>
+      <div class="relative">
+        <ServerIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+        <input
           v-model="store.endpoint"
-          :label="i18n.t('configApiUrl')"
-          placeholder="https://api.openai.com/v1"
-          prepend-inner-icon="mdi-server"
-          class="mb-2"
+          :placeholder="i18n.t('configApiUrl')"
+          class="input-field !pl-11"
         />
-
-        <v-divider class="my-4" opacity="0.08" />
-
-        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
-          {{ i18n.t('configSectionAuth') }}
-        </v-label>
-        <v-text-field
-          v-model="store.apiKey"
-          :type="showKey ? 'text' : 'password'"
-          :label="i18n.t('configApiKey')"
-          placeholder="sk-..."
-          prepend-inner-icon="mdi-key"
-          :append-inner-icon="showKey ? 'mdi-eye-off' : 'mdi-eye'"
-          @click:append-inner="showKey = !showKey"
-        />
-      </v-card-text>
-    </v-card>
-
-    <v-card class="mb-4 pb-2 px-2 pt-2">
-      <v-card-text>
-        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
-          {{ i18n.t('configSectionModel') }}
-        </v-label>
-
-        <div class="d-flex gap-3">
-          <v-btn
-            variant="outlined"
-            color="primary"
-            :loading="fetchingModels"
-            :disabled="!store.endpoint || !store.apiKey"
-            prepend-icon="mdi-cloud-download"
-            class="flex-shrink-0"
-            style="min-height: 56px;"
-            @click="handleFetchModels"
-          >
-            {{ i18n.t('configFetchModels') }}
-          </v-btn>
-
-          <div class="flex-grow-1">
-            <v-select
-              v-if="store.models.length > 0"
-              v-model="store.model"
-              :items="store.models"
-              item-title="id"
-              item-value="id"
-              :label="i18n.t('configSelectModel')"
-              prepend-inner-icon="mdi-brain"
-            />
-            <v-text-field
-              v-else
-              v-model="store.model"
-              :label="i18n.t('configEnterModel')"
-              placeholder="gpt-4o"
-              prepend-inner-icon="mdi-brain"
-            />
-          </div>
-        </div>
-      </v-card-text>
-    </v-card>
-
-    <v-alert v-if="fetchError" type="error" closable class="mb-4">
-      {{ fetchError }}
-    </v-alert>
-
-    <div class="d-flex ga-3 align-center">
-      <v-btn
-        color="primary"
-        variant="flat"
-        size="large"
-        :disabled="!store.configured"
-        @click="handleSave"
-      >
-        <v-icon icon="mdi-check" start />
-        {{ i18n.t('configSave') }}
-      </v-btn>
-
-      <v-fade-transition>
-        <div v-if="saveSuccess" class="d-flex align-center ga-2">
-          <v-icon icon="mdi-check-circle" color="success" size="20" />
-          <span class="text-body-2 font-weight-medium" style="color: #1B7B34;">{{ i18n.t('configSaved') }}</span>
-        </div>
-      </v-fade-transition>
+      </div>
     </div>
 
-    <v-alert v-if="saveError" type="error" closable class="mt-4">
+    <!-- Auth Card -->
+    <div class="card mb-4">
+      <label class="section-label">{{ i18n.t('configSectionAuth') }}</label>
+      <div class="relative">
+        <KeyIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+        <input
+          v-model="store.apiKey"
+          :type="showKey ? 'text' : 'password'"
+          :placeholder="i18n.t('configApiKey')"
+          class="input-field !pl-11 !pr-11"
+        />
+        <button class="absolute right-4 top-1/2 -translate-y-1/2 text-[rgb(var(--c-text-secondary))]" @click="showKey = !showKey">
+          <EyeSlashIcon v-if="showKey" class="w-5 h-5" />
+          <EyeIcon v-else class="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Model Card -->
+    <div class="card mb-4">
+      <label class="section-label">{{ i18n.t('configSectionModel') }}</label>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          class="btn-outline shrink-0 !py-3 text-sm"
+          :disabled="!store.endpoint || !store.apiKey"
+          @click="handleFetchModels"
+        >
+          <CloudArrowDownIcon class="w-4 h-4" />
+          {{ fetchingModels ? '...' : i18n.t('configFetchModels') }}
+        </button>
+
+        <div class="flex-1 relative">
+          <CpuChipIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+          <select
+            v-if="store.models.length > 0"
+            v-model="store.model"
+            class="input-field !pl-11 appearance-none cursor-pointer"
+          >
+            <option value="" disabled>{{ i18n.t('configSelectModel') }}</option>
+            <option v-for="m in store.models" :key="m.id" :value="m.id">{{ m.id }}</option>
+          </select>
+          <input
+            v-else
+            v-model="store.model"
+            :placeholder="i18n.t('configEnterModel')"
+            class="input-field !pl-11"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div v-if="fetchError" class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+      <span>{{ fetchError }}</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3">
+      <button class="btn-primary" :disabled="!store.configured" @click="handleSave">
+        <CheckIcon class="w-5 h-5" />
+        {{ i18n.t('configSave') }}
+      </button>
+
+      <Transition name="fade">
+        <div v-if="saveSuccess" class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
+          <CheckCircleIcon class="w-5 h-5" /> {{ i18n.t('configSaved') }}
+        </div>
+      </Transition>
+    </div>
+
+    <div v-if="saveError" class="mt-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300">
       {{ saveError }}
-    </v-alert>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.gap-3 { gap: 12px; }
-</style>
