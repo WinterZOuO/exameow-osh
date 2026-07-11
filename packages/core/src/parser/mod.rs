@@ -2,6 +2,61 @@ mod txt;
 mod docx;
 mod pdf;
 
+use std::path::Path;
+
 pub use txt::extract_txt;
 pub use docx::extract_docx;
 pub use pdf::extract_pdf;
+
+#[derive(Debug)]
+pub enum FileFormat {
+    Txt,
+    Docx,
+    Pdf,
+}
+
+impl FileFormat {
+    pub fn from_extension(path: &str) -> Result<Self, ParserError> {
+        let ext = Path::new(path)
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_lowercase();
+        match ext.as_str() {
+            "txt" => Ok(FileFormat::Txt),
+            "docx" => Ok(FileFormat::Docx),
+            "pdf" => Ok(FileFormat::Pdf),
+            other => Err(ParserError::Unsupported(format!("unsupported extension: .{other}"))),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParserError {
+    Io(std::io::Error),
+    Parse(String),
+    Unsupported(String),
+}
+
+impl std::fmt::Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParserError::Io(e) => write!(f, "IO error: {e}"),
+            ParserError::Parse(e) => write!(f, "Parse error: {e}"),
+            ParserError::Unsupported(e) => write!(f, "Unsupported: {e}"),
+        }
+    }
+}
+
+impl From<std::io::Error> for ParserError {
+    fn from(e: std::io::Error) -> Self { ParserError::Io(e) }
+}
+
+pub fn parse_file(path: &str) -> Result<String, ParserError> {
+    let format = FileFormat::from_extension(path)?;
+    match format {
+        FileFormat::Txt => extract_txt(path),
+        FileFormat::Docx => extract_docx(path),
+        FileFormat::Pdf => extract_pdf(path),
+    }
+}
