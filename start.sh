@@ -44,11 +44,12 @@ case $MODE in
     1)
         echo ""
         echo -e "${GREEN}Starting Tauri desktop app...${NC}"
-        echo "  Frontend dev:  http://localhost:5173"
+        echo "  Vite:  http://localhost:5173"
         echo "  Press Ctrl+C to stop"
         echo ""
-        source ~/.zshrc 2>/dev/null || true
-        frontend/node_modules/.bin/tauri dev
+        set +e
+        export PATH="$SCRIPT_DIR/frontend/node_modules/.bin:$PATH"
+        tauri dev
         ;;
     2)
         echo ""
@@ -58,6 +59,7 @@ case $MODE in
         echo "  Press Ctrl+C to stop both"
         echo ""
 
+        set +e
         # start Axum server in background
         source ~/.zshrc 2>/dev/null || true
         cargo run -p exambot-server &
@@ -85,7 +87,7 @@ case $MODE in
         echo "  App:  http://localhost:3000"
         echo "  Press Ctrl+C to stop"
         echo ""
-        source ~/.zshrc 2>/dev/null || true
+        set +e
         cargo run -p exambot-server
         ;;
     *)
