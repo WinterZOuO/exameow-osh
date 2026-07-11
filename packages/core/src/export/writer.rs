@@ -1,5 +1,30 @@
+use crate::error::CoreError;
 use crate::exam::Question;
+use csv::WriterBuilder;
 
-pub fn export_csv(_questions: &[Question], _path: &str) -> Result<(), String> {
+pub fn export_csv(questions: &[Question], path: &str) -> Result<(), CoreError> {
+    let mut wtr = WriterBuilder::new()
+        .from_path(path)
+        .map_err(|e| CoreError::Export(format!("cannot create CSV file: {e}")))?;
+
+    wtr.write_record(["id", "type", "stem", "options", "answer", "analysis"])
+        .map_err(|e| CoreError::Export(format!("write error: {e}")))?;
+
+    for q in questions {
+        let options_str = q.options.join("|");
+        wtr.write_record([
+            &q.id,
+            &q.qtype.to_string(),
+            &q.stem,
+            &options_str,
+            &q.answer,
+            &q.analysis,
+        ])
+        .map_err(|e| CoreError::Export(format!("write error: {e}")))?;
+    }
+
+    wtr.flush()
+        .map_err(|e| CoreError::Export(format!("flush error: {e}")))?;
+
     Ok(())
 }
