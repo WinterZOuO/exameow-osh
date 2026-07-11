@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
+import { getFileInput, getFileName } from '@/stores/fileInput'
 import { SparklesIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -15,20 +16,14 @@ const i18n = useI18nStore()
 
 const isTauri = '__TAURI__' in window
 const error = ref('')
-const selectedInput = ref<string | File | null>(null)
-const hasFile = computed(() => selectedInput.value !== null)
 
 function canGenerate() {
-  return hasFile.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured
-}
-
-function onFileSelected(fileOrPath: string | File | null) {
-  selectedInput.value = fileOrPath
+  return !!getFileInput() && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured
 }
 
 async function handleGenerate() {
   error.value = ''
-  const input = selectedInput.value
+  const input = getFileInput()
   if (!input) { error.value = 'No file selected'; return }
   try {
     await examStore.generate(input)
@@ -46,7 +41,7 @@ async function handleGenerate() {
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div class="card min-h-[220px] flex items-center justify-center">
-        <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
+        <FileUploader :is-tauri="isTauri" />
       </div>
       <ParamForm />
     </div>

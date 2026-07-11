@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
+import { setFileInput, clearFileInput } from '@/stores/fileInput'
 import { DocumentArrowUpIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const i18n = useI18nStore()
 const props = defineProps<{ isTauri: boolean }>()
-const emit = defineEmits<{ fileSelected: [value: string | File | null] }>()
 
 const file = ref<File | null>(null)
 const filePath = ref('')
@@ -33,7 +33,7 @@ const fileName = computed(() => {
 
 function clear() {
   file.value = null; filePath.value = ''
-  emit('fileSelected', null)
+  clearFileInput()
 }
 
 async function pick() {
@@ -46,7 +46,7 @@ async function pick() {
     })
     if (result && typeof result === 'string') {
       filePath.value = result
-      emit('fileSelected', result)
+      setFileInput(result)
     }
   } else {
     fileInput.value?.click()
@@ -57,7 +57,7 @@ function onWebFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   if (input.files?.length) {
     file.value = input.files[0] ?? null
-    emit('fileSelected', file.value)
+    setFileInput(file.value)
   }
 }
 </script>
