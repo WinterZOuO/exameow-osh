@@ -52,7 +52,15 @@ export const useExamStore = defineStore('exam', () => {
     try {
       const fileOrPath = isTauri ? filePath.value : selectedFile.value
       if (!fileOrPath) throw new Error('No file selected')
-      const result = await api.generateExam(fileOrPath!, getParams(), configStore.getConfig())
+
+      const params = getParams()
+      const config = configStore.getConfig()
+
+      console.log('[exam] generating with filePath:', typeof fileOrPath, fileOrPath)
+      console.log('[exam] params:', JSON.stringify(params))
+      console.log('[exam] config endpoint:', config.endpoint)
+
+      const result = await api.generateExam(fileOrPath!, params, config)
       questions.value = result.questions
     } finally {
       generating.value = false

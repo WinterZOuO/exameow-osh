@@ -7,10 +7,7 @@ export interface GenerateResult {
 
 export const tauriApi = {
   async getModels(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
-    return invoke<ModelInfo[]>('get_models', {
-      endpoint: String(endpoint),
-      api_key: String(apiKey ?? ''),
-    })
+    return invoke<ModelInfo[]>('get_models', { endpoint, apiKey })
   },
 
   async generateExam(
@@ -20,28 +17,24 @@ export const tauriApi = {
     apiKey: string,
     model: string,
   ): Promise<GenerateResult> {
+    if (typeof filePath !== 'string' || !filePath) {
+      throw new Error(`generateExam: filePath must be a non-empty string, got ${typeof filePath}: ${JSON.stringify(filePath)}`)
+    }
     return invoke<GenerateResult>('generate_exam', {
-      file_path: String(filePath),
-      params_json: String(JSON.stringify(params)),
-      endpoint: String(endpoint),
-      api_key: String(apiKey ?? ''),
-      model: String(model),
+      filePath,
+      paramsJson: JSON.stringify(params),
+      endpoint,
+      apiKey,
+      model,
     })
   },
 
   async exportCsv(questions: Question[], savePath: string): Promise<void> {
-    return invoke<void>('export_csv', {
-      questions_json: JSON.stringify(questions),
-      save_path: String(savePath),
-    })
+    return invoke<void>('export_csv', { questionsJson: JSON.stringify(questions), savePath })
   },
 
   async saveConfig(config: AIConfig): Promise<void> {
-    return invoke<void>('save_config', {
-      endpoint: String(config.endpoint),
-      api_key: String(config.api_key),
-      model: String(config.model),
-    })
+    return invoke<void>('save_config', { endpoint: config.endpoint, apiKey: config.api_key, model: config.model })
   },
 
   async loadConfig(): Promise<AIConfig | null> {
