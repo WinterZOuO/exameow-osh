@@ -40,65 +40,63 @@ function toggleType(type: QuestionType) {
       </v-label>
 
       <div>
-        <div
+        <v-row
           v-for="opt in typeOptions"
           :key="opt.value"
-          :class="[
-            'px-3 py-2 rounded-lg mb-1',
-            store.questionTypes.includes(opt.value) ? 'bg-primary' : '',
-          ]"
-          :style="
-            store.questionTypes.includes(opt.value)
-              ? 'background-color: rgba(var(--v-theme-primary), 0.06) !important;'
-              : ''
-          "
+          dense
+          align="center"
+          class="mb-2 px-2 py-1 rounded-lg"
         >
-          <div class="d-flex align-center" style="gap: 12px;">
+          <v-col cols="4" class="d-flex">
             <v-chip
               :variant="store.questionTypes.includes(opt.value) ? 'flat' : 'outlined'"
               :color="store.questionTypes.includes(opt.value) ? 'primary' : 'on-surface-variant'"
               size="small"
               filter
               class="cursor-pointer flex-shrink-0"
-              style="font-weight: 600; font-size: 13px; min-width: 90px; justify-content: center;"
+              style="font-weight: 600; font-size: 13px;"
               @click="toggleType(opt.value)"
             >
               {{ i18n.t(opt.title as any) }}
             </v-chip>
+          </v-col>
 
+          <v-col cols="8">
             <template v-if="store.questionTypes.includes(opt.value)">
-              <v-btn
-                icon="mdi-minus"
-                variant="text"
-                size="x-small"
-                density="compact"
-                color="on-surface-variant"
-                @click="store.typeCounts[opt.value] = Math.max(0, (store.typeCounts[opt.value] || 0) - 1)"
-              />
-              <span
-                style="
-                  min-width: 24px; text-align: center;
-                  font-weight: 700; font-size: 16px;
-                  font-variant-numeric: tabular-nums;
-                "
-              >
-                {{ store.typeCounts[opt.value] }}
-              </span>
-              <v-btn
-                icon="mdi-plus"
-                variant="text"
-                size="x-small"
-                density="compact"
-                color="on-surface-variant"
-                @click="store.typeCounts[opt.value] = Math.min(20, (store.typeCounts[opt.value] || 0) + 1)"
-              />
+              <div class="d-flex align-center" style="gap: 8px;">
+                <v-btn
+                  icon="mdi-minus"
+                  variant="outlined"
+                  size="x-small"
+                  density="compact"
+                  color="on-surface-variant"
+                  @click="store.typeCounts[opt.value] = Math.max(0, (store.typeCounts[opt.value] || 0) - 1)"
+                />
+                <v-chip
+                  color="primary"
+                  variant="flat"
+                  size="small"
+                  style="font-weight: 700; font-size: 15px; min-width: 40px; justify-content: center;"
+                >
+                  {{ store.typeCounts[opt.value] || 0 }}
+                </v-chip>
+                <v-btn
+                  icon="mdi-plus"
+                  variant="outlined"
+                  size="x-small"
+                  density="compact"
+                  color="on-surface-variant"
+                  @click="store.typeCounts[opt.value] = Math.min(20, (store.typeCounts[opt.value] || 0) + 1)"
+                />
+                <span class="text-caption text-medium-emphasis ml-1">道</span>
+              </div>
             </template>
-            <v-spacer v-else />
-          </div>
-        </div>
+            <span v-else class="text-caption text-medium-emphasis">点击选择</span>
+          </v-col>
+        </v-row>
       </div>
 
-      <v-divider class="my-4" opacity="0.08" />
+      <v-divider class="mt-2 mb-4" opacity="0.08" />
 
       <v-row dense>
         <v-col cols="6">
