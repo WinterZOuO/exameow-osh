@@ -12,11 +12,7 @@ const ALL_TYPES: QuestionType[] = [
   'short_answer' as QuestionType,
 ]
 
-const isTauri = '__TAURI__' in window
-
 export const useExamStore = defineStore('exam', () => {
-  const selectedFile = ref<File | null>(null)
-  const filePath = ref(isTauri ? '' : '')
   const questionTypes = ref<QuestionType[]>([])
   const typeCounts = reactive<Record<string, number>>(
     Object.fromEntries(ALL_TYPES.map((t) => [t, 0])),
@@ -46,21 +42,13 @@ export const useExamStore = defineStore('exam', () => {
     }
   }
 
-  async function generate() {
+  async function generate(fileOrPath: string | File) {
     const configStore = useConfigStore()
     generating.value = true
     try {
-      const fileOrPath = isTauri ? filePath.value : selectedFile.value
-      if (!fileOrPath) throw new Error('No file selected')
-
       const params = getParams()
       const config = configStore.getConfig()
-
-      console.log('[exam] generating with filePath:', typeof fileOrPath, fileOrPath)
-      console.log('[exam] params:', JSON.stringify(params))
-      console.log('[exam] config endpoint:', config.endpoint)
-
-      const result = await api.generateExam(fileOrPath!, params, config)
+      const result = await api.generateExam(fileOrPath, params, config)
       questions.value = result.questions
     } finally {
       generating.value = false
@@ -68,13 +56,11 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function reset() {
-    selectedFile.value = null
-    filePath.value = ''
     questions.value = []
   }
 
   return {
-    selectedFile, filePath, questionTypes, typeCounts, totalCount,
+    questionTypes, typeCounts, totalCount,
     difficulty, language, topicFilter, questions, generating, generated,
     getParams, generate, reset,
   }

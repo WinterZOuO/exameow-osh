@@ -16,6 +16,8 @@ const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window
 const error = ref('')
 const fileSelected = ref(false)
+const currentFile = ref<File | null>(null)
+const currentPath = ref('')
 
 const canGenerate = computed(() =>
   fileSelected.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
@@ -23,14 +25,16 @@ const canGenerate = computed(() =>
 
 function onFileSelected(file: File | null, path: string) {
   fileSelected.value = !!(file || path)
-  examStore.selectedFile = file
-  examStore.filePath = path
+  currentFile.value = file
+  currentPath.value = path
 }
 
 async function handleGenerate() {
   error.value = ''
   try {
-    await examStore.generate()
+    const input = isTauri ? currentPath.value : currentFile.value!
+    if (!input) { error.value = 'No file selected'; return }
+    await examStore.generate(input)
     router.push('/preview')
   } catch (e: any) {
     error.value = e.message || String(e)
