@@ -108,7 +108,7 @@ impl ConfigStore {
             .map_err(|e| CoreError::Config(format!("decode error: {e}")))?;
 
         if combined.len() < 12 + 16 {
-            return Ok(None);
+            return Err(CoreError::Config("config file corrupted".to_string()));
         }
 
         let nonce_bytes: [u8; 12] = combined[..12].try_into().unwrap();

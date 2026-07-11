@@ -7,6 +7,7 @@ const showKey = ref(false)
 const fetchError = ref('')
 const fetchingModels = ref(false)
 const saveSuccess = ref(false)
+const saveError = ref('')
 
 async function handleFetchModels() {
   fetchError.value = ''
@@ -21,11 +22,14 @@ async function handleFetchModels() {
 }
 
 async function handleSave() {
+  saveError.value = ''
   try {
     await store.save()
     saveSuccess.value = true
     setTimeout(() => (saveSuccess.value = false), 2500)
-  } catch {}
+  } catch (e: any) {
+    saveError.value = e.message || String(e)
+  }
 }
 </script>
 
@@ -110,6 +114,17 @@ async function handleSave() {
         Save Configuration
       </v-btn>
     </v-card-actions>
+
+    <v-alert
+      v-if="saveError"
+      type="error"
+      variant="tonal"
+      density="compact"
+      closable
+      class="mx-4 mb-2"
+    >
+      {{ saveError }}
+    </v-alert>
 
     <v-alert
       v-if="saveSuccess"

@@ -11,7 +11,6 @@ use exambot_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::sync::Arc;
-use tempfile::NamedTempFile;
 
 pub struct AppState {
     pub config_store: ConfigStore,
@@ -103,7 +102,9 @@ pub async fn generate_exam_handler(
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid params: {e}")))?;
 
     let ext = file_name.rsplit('.').next().unwrap_or("txt");
-    let mut temp_file = NamedTempFile::new()
+    let mut temp_file = tempfile::Builder::new()
+        .suffix(&format!(".{ext}"))
+        .tempfile()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     temp_file
         .write_all(&file_data)
@@ -138,26 +139,8 @@ pub async fn export_handler(
     let questions: Vec<Question> = serde_json::from_str(&params.questions)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid questions JSON: {e}")))?;
 
-    let mut wtr = csv::Writer::from_writer(vec![]);
-    wtr.write_record(["id", "type", "stem", "options", "answer", "analysis"])
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    for q in &questions {
-        let options_str = q.options.join("|");
-        let qtype_str = q.qtype.to_string();
-        wtr.write_record([
-            q.id.as_str(),
-            &qtype_str,
-            q.stem.as_str(),
-            &options_str,
-            q.answer.as_str(),
-            q.analysis.as_str(),
-        ])
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    }
-
-    let data = wtr
-        .into_inner()
+    let mut buf = vec![];
+    exambot_core::export::export_csv_to_writer(&questions, &mut buf)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Response::builder()
@@ -166,7 +149,7 @@ pub async fn export_handler(
             header::CONTENT_DISPOSITION,
             "attachment; filename=\"questions.csv\"",
         )
-        .body(axum::body::Body::from(data))
+        .body(axum::body::Body::from(buf))
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 

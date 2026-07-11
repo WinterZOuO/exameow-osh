@@ -53,7 +53,7 @@ impl AIClient {
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.7,
-            "max_tokens": 4096,
+            "max_tokens": 16384,
         });
 
         let response = self
