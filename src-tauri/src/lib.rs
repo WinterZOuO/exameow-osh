@@ -42,15 +42,12 @@ async fn generate_exam(
     model: String,
 ) -> Result<GenerateResult, CommandError> {
     let text = parse_file(&file_path).map_err(|e| CommandError(format!("File parse error: {e}")))?;
-
     let params: ExamParams = serde_json::from_str(&params_json)
         .map_err(|e| CommandError(format!("Invalid params JSON: {e}")))?;
-
     let client = AIClient::new(&endpoint, &api_key);
     let questions = core_generate_exam(&client, &text, &params, &model)
         .await
         .map_err(|e| CommandError(format!("Exam generation error: {e}")))?;
-
     Ok(GenerateResult { questions })
 }
 
