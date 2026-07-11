@@ -39,13 +39,6 @@ pub fn build_system_prompt() -> String {
 }
 
 pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
-    let types_list = params
-        .question_types
-        .iter()
-        .map(|t| t.to_string())
-        .collect::<Vec<_>>()
-        .join(", ");
-
     let difficulty_str = match params.difficulty {
         Difficulty::Easy => "easy questions suitable for beginners",
         Difficulty::Medium => "moderate difficulty questions requiring understanding",
@@ -64,18 +57,43 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
         text.to_string()
     };
 
-    format!(
-        r#"Generate {count} questions based on the following document.
+    let count_instruction = if let Some(ref tc) = params.type_counts {
+        let mut parts: Vec<String> = vec![];
+        let mut total: u32 = 0;
+        for (key, &cnt) in tc {
+            if cnt > 0 {
+                parts.push(format!("{cnt} {key} questions"));
+                total += cnt;
+            }
+        }
+        format!(
+            "Generate exactly the following breakdown of {total} questions:\n{per_type}",
+            total = total,
+            per_type = parts.join("\n")
+        )
+    } else {
+        let types_list = params
+            .question_types
+            .iter()
+            .map(|t| t.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "Generate {count} questions.\nQuestion types: {types}",
+            count = params.count,
+            types = types_list,
+        )
+    };
 
-Question types: {types}
+    format!(
+        r#"{count_instruction}
 Difficulty: {difficulty_str}
 Language: {language}{topic_note}
 
 DOCUMENT CONTENT:
 {text_content}
 "#,
-        count = params.count,
-        types = types_list,
+        count_instruction = count_instruction,
         difficulty_str = difficulty_str,
         language = params.language,
         topic_note = topic_note,

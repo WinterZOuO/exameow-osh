@@ -19,6 +19,17 @@ const difficultyOptions = [
   { title: 'diffMedium', value: Difficulty.Medium },
   { title: 'diffHard', value: Difficulty.Hard },
 ]
+
+function toggleType(type: QuestionType) {
+  const idx = store.questionTypes.indexOf(type)
+  if (idx >= 0) {
+    store.questionTypes.splice(idx, 1)
+    store.typeCounts[type] = 0
+  } else {
+    store.questionTypes.push(type)
+    store.typeCounts[type] = 5
+  }
+}
 </script>
 
 <template>
@@ -28,40 +39,55 @@ const difficultyOptions = [
         {{ i18n.t('genQuestionTypes') }}
       </v-label>
 
-      <div class="d-flex flex-wrap ga-2 mb-4">
-        <v-chip
+      <div class="mb-2">
+        <div
           v-for="opt in typeOptions"
           :key="opt.value"
-          :value="opt.value"
-          :variant="store.questionTypes.includes(opt.value) ? 'flat' : 'outlined'"
-          :color="store.questionTypes.includes(opt.value) ? 'primary' : 'on-surface-variant'"
-          size="large"
-          filter
-          class="cursor-pointer"
-          style="font-weight: 500;"
-          @click="
-            const idx = store.questionTypes.indexOf(opt.value);
-            idx >= 0 ? store.questionTypes.splice(idx, 1) : store.questionTypes.push(opt.value)
-          "
+          class="mb-3"
         >
-          {{ i18n.t(opt.title as any) }}
-        </v-chip>
+          <div class="d-flex align-center ga-3">
+            <v-chip
+              :variant="store.questionTypes.includes(opt.value) ? 'flat' : 'outlined'"
+              :color="store.questionTypes.includes(opt.value) ? 'primary' : 'on-surface-variant'"
+              filter
+              class="cursor-pointer flex-shrink-0"
+              style="font-weight: 500; min-width: 110px; justify-content: center;"
+              @click="toggleType(opt.value)"
+            >
+              {{ i18n.t(opt.title as any) }}
+            </v-chip>
+
+            <template v-if="store.questionTypes.includes(opt.value)">
+              <v-slider
+                :model-value="store.typeCounts[opt.value]"
+                @update:model-value="(v: number) => store.typeCounts[opt.value] = v"
+                :min="0"
+                :max="20"
+                :step="1"
+                hide-details
+                thumb-label="always"
+                thumb-size="28"
+                density="compact"
+                style="flex: 1; min-width: 0;"
+              />
+              <span
+                style="
+                  min-width: 28px; text-align: center;
+                  font-weight: 700; font-size: 15px;
+                  color: var(--v-primary-base);
+                "
+              >
+                {{ store.typeCounts[opt.value] }}
+              </span>
+            </template>
+            <span v-else style="flex: 1;" />
+          </div>
+        </div>
       </div>
 
       <v-divider class="mb-4" opacity="0.08" />
 
       <v-row dense>
-        <v-col cols="6">
-          <v-text-field
-            v-model.number="store.count"
-            :label="i18n.t('genQuestions')"
-            type="number"
-            :min="1"
-            :max="50"
-            prepend-inner-icon="mdi-numeric"
-          />
-        </v-col>
-
         <v-col cols="6">
           <v-select
             v-model="store.difficulty"
@@ -87,7 +113,7 @@ const difficultyOptions = [
           />
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="12">
           <v-text-field
             v-model="store.topicFilter"
             :label="i18n.t('genTopic')"

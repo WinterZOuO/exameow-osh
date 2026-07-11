@@ -15,6 +15,7 @@ fn test_build_user_prompt() {
         difficulty: Difficulty::Medium,
         language: "zh-CN".to_string(),
         topic_filter: Some("Machine Learning".to_string()),
+        type_counts: None,
     };
     let text = "Sample document content about ML.";
     let prompt = build_user_prompt(text, &params);
@@ -24,6 +25,27 @@ fn test_build_user_prompt() {
     assert!(prompt.contains("zh-CN"));
     assert!(prompt.contains("Machine Learning"));
     assert!(prompt.contains("Sample document content"));
+}
+
+#[test]
+fn test_build_user_prompt_with_counts() {
+    let mut type_counts = std::collections::HashMap::new();
+    type_counts.insert("single_choice".to_string(), 3);
+    type_counts.insert("true_false".to_string(), 2);
+    let params = ExamParams {
+        question_types: vec![QuestionType::SingleChoice, QuestionType::TrueFalse],
+        count: 5,
+        difficulty: Difficulty::Easy,
+        language: "en-US".to_string(),
+        topic_filter: None,
+        type_counts: Some(type_counts),
+    };
+    let text = "Test content.";
+    let prompt = build_user_prompt(text, &params);
+    assert!(prompt.contains("5 questions"));
+    assert!(prompt.contains("3 single_choice"));
+    assert!(prompt.contains("2 true_false"));
+    assert!(prompt.contains("Test content"));
 }
 
 #[test]

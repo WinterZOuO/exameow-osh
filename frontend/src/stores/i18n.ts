@@ -13,10 +13,6 @@ export const useI18nStore = defineStore('i18n', () => {
     locale.value = locale.value === 'zh' ? 'en' : 'zh'
   }
 
-  function setLocale(l: Locale) {
-    locale.value = l
-  }
-
   function t(key: keyof LocaleMessages, params?: Record<string, string | number>): string {
     let text = messages.value[key] || key
     if (params) {
@@ -27,5 +23,5 @@ export const useI18nStore = defineStore('i18n', () => {
     return text
   }
 
-  return { locale, messages, toggle, setLocale, t }
+  return { locale, messages, toggle, t }
 })

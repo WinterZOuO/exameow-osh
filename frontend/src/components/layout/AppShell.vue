@@ -30,17 +30,17 @@ const navItems = [
     >
       <template #prepend>
         <div class="d-flex align-center ga-3">
-          <div
-            style="
-              width: 40px; height: 40px;
-              border-radius: 14px;
-              background: linear-gradient(135deg, #1A6CFF 0%, #8B5CF6 100%);
-              display: flex; align-items: center; justify-content: center;
-              color: white; font-weight: 700; font-size: 18px;
-            "
-          >
-            E
-          </div>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="14" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#1A6CFF"/>
+                <stop offset="1" stop-color="#8B5CF6"/>
+              </linearGradient>
+            </defs>
+            <path d="M12 14h7l3-4 3 4h7v12a2 2 0 01-2 2H14a2 2 0 01-2-2V14z" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 21l3 3 5-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <div>
             <div style="font-weight: 700; font-size: 18px; line-height: 1.1; letter-spacing: -0.3px;">{{ i18n.t('appName') }}</div>
             <div style="font-size: 12px; color: #5B6F8C; font-weight: 500;">{{ i18n.t('appSubtitle') }}</div>

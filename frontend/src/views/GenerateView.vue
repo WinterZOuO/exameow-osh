@@ -17,7 +17,7 @@ const error = ref('')
 const fileSelected = ref(false)
 
 const canGenerate = computed(() =>
-  fileSelected.value && examStore.questionTypes.length > 0 && examStore.count > 0 && configStore.configured,
+  fileSelected.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
 )
 
 function onFileSelected(file: File | null, path: string) {

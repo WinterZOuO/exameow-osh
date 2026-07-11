@@ -24,6 +24,7 @@ export interface Question {
 export interface ExamParams {
   question_types: QuestionType[]
   count: number
+  type_counts?: Record<string, number>
   difficulty: Difficulty
   language: string
   topic_filter?: string
