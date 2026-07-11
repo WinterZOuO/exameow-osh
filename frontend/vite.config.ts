@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   build: {
-    rolldownOptions: {
+    rollupOptions: {
       external: ['@tauri-apps/plugin-dialog'],
     },
   },

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import ApiSettings from '@/components/config/ApiSettings.vue'
 import { useRouter } from 'vue-router'
