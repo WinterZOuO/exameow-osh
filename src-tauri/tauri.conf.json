@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nickzyl/tauri/refs/heads/master/crates/tauri-config-schema/schema.json",
+  "productName": "ExamBot",
+  "version": "0.1.0",
+  "identifier": "com.exambot.app",
+  "build": {
+    "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm build",
+    "beforeDevCommand": "pnpm dev"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "ExamBot",
+        "width": 1024,
+        "height": 768
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' http://localhost:* https://*"
+    }
+  },
+  "plugins": {
+    "dialog": {},
+    "fs": {
+      "scope": ["**"]
+    }
+  }
+}
