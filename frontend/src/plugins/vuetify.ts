@@ -11,7 +11,7 @@ export default createVuetify({
     VCard: {
       elevation: 0,
       rounded: 'xl',
-      style: 'border: 1px solid rgba(0,0,0,0.06)',
+      border: true,
     },
     VBtn: {
       rounded: 'pill',
