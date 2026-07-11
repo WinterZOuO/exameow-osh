@@ -2,4 +2,4 @@ mod types;
 mod prompt;
 
 pub use types::*;
-pub use prompt::build_prompt;
+pub use prompt::*;

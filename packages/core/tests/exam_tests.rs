@@ -1,0 +1,60 @@
+use exambot_core::exam::*;
+
+#[test]
+fn test_build_system_prompt() {
+    let prompt = build_system_prompt();
+    assert!(prompt.contains("expert exam question generator"));
+    assert!(prompt.contains("single_choice"));
+}
+
+#[test]
+fn test_build_user_prompt() {
+    let params = ExamParams {
+        question_types: vec![QuestionType::SingleChoice, QuestionType::TrueFalse],
+        count: 5,
+        difficulty: Difficulty::Medium,
+        language: "zh-CN".to_string(),
+        topic_filter: Some("Machine Learning".to_string()),
+    };
+    let text = "Sample document content about ML.";
+    let prompt = build_user_prompt(text, &params);
+    assert!(prompt.contains("5 questions"));
+    assert!(prompt.contains("single_choice"));
+    assert!(prompt.contains("true_false"));
+    assert!(prompt.contains("zh-CN"));
+    assert!(prompt.contains("Machine Learning"));
+    assert!(prompt.contains("Sample document content"));
+}
+
+#[test]
+fn test_parse_questions_valid_json() {
+    let json = r#"[
+        {"id": "q1", "type": "single_choice", "stem": "What is AI?", "options": ["A", "B", "C", "D"], "answer": "A", "analysis": "AI is..."},
+        {"id": "q2", "type": "true_false", "stem": "Is Earth round?", "options": ["True", "False"], "answer": "True", "analysis": ""}
+    ]"#;
+    let questions = parse_questions(json).unwrap();
+    assert_eq!(questions.len(), 2);
+    assert_eq!(questions[0].id, "q1");
+    assert_eq!(questions[0].qtype, QuestionType::SingleChoice);
+}
+
+#[test]
+fn test_parse_questions_empty_array() {
+    let json = "[]";
+    let result = parse_questions(json);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_parse_questions_with_markdown_fences() {
+    let json = "```json\n[{\"id\":\"q1\",\"type\":\"true_false\",\"stem\":\"Test?\",\"options\":[\"True\",\"False\"],\"answer\":\"True\",\"analysis\":\"\"}]\n```";
+    let questions = parse_questions(json).unwrap();
+    assert_eq!(questions.len(), 1);
+}
+
+#[test]
+fn test_question_type_labels() {
+    assert_eq!(QuestionType::SingleChoice.to_label_cn(), "单选题");
+    assert_eq!(QuestionType::TrueFalse.to_label_cn(), "判断题");
+    assert_eq!(QuestionType::FillBlank.to_label_cn(), "填空题");
+}
