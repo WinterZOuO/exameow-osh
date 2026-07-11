@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
-import { getFileInput, getFileName } from '@/stores/fileInput'
+import { getFileInput, fileInputRef } from '@/stores/fileInput'
 import { SparklesIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -17,9 +17,9 @@ const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window
 const error = ref('')
 
-function canGenerate() {
-  return !!getFileInput() && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured
-}
+const canGenerate = computed(() =>
+  !!fileInputRef.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
+)
 
 async function handleGenerate() {
   error.value = ''
@@ -51,9 +51,13 @@ async function handleGenerate() {
     </div>
 
     <div class="text-center">
-      <button class="btn-primary !px-10 !py-4 text-base !font-bold" :disabled="!canGenerate()" @click="handleGenerate">
-        <SparklesIcon class="w-5 h-5" />
-        {{ i18n.t('genGenerateBtn') }}
+      <button class="btn-primary !px-10 !py-4 text-base !font-bold" :disabled="!canGenerate || examStore.generating" @click="handleGenerate">
+        <SparklesIcon v-if="!examStore.generating" class="w-5 h-5" />
+        <svg v-else class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
       </button>
     </div>
   </div>
