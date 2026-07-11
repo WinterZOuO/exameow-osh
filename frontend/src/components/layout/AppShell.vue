@@ -5,45 +5,86 @@ const router = useRouter()
 const route = useRoute()
 
 const navItems = [
-  { title: 'Config', icon: 'mdi-cog', path: '/config' },
-  { title: 'Generate', icon: 'mdi-creation', path: '/generate' },
-  { title: 'Preview', icon: 'mdi-table-eye', path: '/preview' },
+  { title: 'Config', icon: 'mdi-tune-variant', path: '/config' },
+  { title: 'Generate', icon: 'mdi-auto-fix', path: '/generate' },
+  { title: 'Preview', icon: 'mdi-file-document-outline', path: '/preview' },
 ]
 </script>
 
 <template>
   <v-app>
-    <v-navigation-drawer
-      v-if="$vuetify.display.mdAndUp"
-      permanent
-      rail
+    <v-app-bar
+      flat
+      density="comfortable"
+      class="px-2"
+      style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.06); height: 72px;"
     >
-      <v-list density="compact" nav>
-        <v-list-item
-          v-for="item in navItems"
-          :key="item.path"
-          :title="item.title"
-          :prepend-icon="item.icon"
-          :active="route.path === item.path"
-          @click="router.push(item.path)"
-        />
-      </v-list>
-    </v-navigation-drawer>
+      <template #prepend>
+        <div class="d-flex align-center ga-3">
+          <div
+            style="
+              width: 40px; height: 40px;
+              border-radius: 14px;
+              background: linear-gradient(135deg, #1A6CFF 0%, #8B5CF6 100%);
+              display: flex; align-items: center; justify-content: center;
+              color: white; font-weight: 700; font-size: 18px;
+            "
+          >
+            E
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 18px; line-height: 1.1; letter-spacing: -0.3px;">ExamBot</div>
+            <div style="font-size: 12px; color: #5B6F8C; font-weight: 500;">AI Question Generator</div>
+          </div>
+        </div>
+      </template>
 
-    <v-main>
-      <v-container fluid class="pa-4">
-        <router-view />
+      <template v-if="$vuetify.display.mdAndUp" #append>
+        <div class="d-flex ga-1">
+          <v-btn
+            v-for="item in navItems"
+            :key="item.path"
+            :variant="route.path === item.path ? 'flat' : 'text'"
+            :color="route.path === item.path ? 'primary' : 'on-surface-variant'"
+            size="small"
+            @click="router.push(item.path)"
+          >
+            <v-icon :icon="item.icon" size="18" start />
+            {{ item.title }}
+          </v-btn>
+        </div>
+      </template>
+    </v-app-bar>
+
+    <v-main style="padding-top: 72px; padding-bottom: 72px;">
+      <v-container :fluid="$vuetify.display.smAndDown" :class="$vuetify.display.mdAndUp ? 'px-8' : 'px-4'" style="max-width: 960px;">
+        <router-view v-slot="{ Component }">
+          <v-fade-transition mode="out-in">
+            <component :is="Component" />
+          </v-fade-transition>
+        </router-view>
       </v-container>
     </v-main>
 
-    <v-bottom-navigation v-if="$vuetify.display.smAndDown" grow>
+    <v-bottom-navigation
+      v-if="$vuetify.display.smAndDown"
+      grow
+      bg-color="surface"
+      style="
+        border-top: 1px solid rgba(0,0,0,0.06);
+        height: 72px !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      "
+    >
       <v-btn
         v-for="item in navItems"
         :key="item.path"
         :value="item.path"
+        :active="route.path === item.path"
         @click="router.push(item.path)"
+        style="text-transform: none; font-weight: 500; font-size: 11px;"
       >
-        <v-icon>{{ item.icon }}</v-icon>
+        <v-icon :icon="item.icon" size="22" />
         <span>{{ item.title }}</span>
       </v-btn>
     </v-bottom-navigation>

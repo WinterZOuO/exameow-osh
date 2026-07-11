@@ -14,9 +14,9 @@ const isTauri = '__TAURI__' in window
 const error = ref('')
 const fileSelected = ref(false)
 
-const canGenerate = computed(() => {
-  return fileSelected.value && examStore.questionTypes.length > 0 && examStore.count > 0 && configStore.configured
-})
+const canGenerate = computed(() =>
+  fileSelected.value && examStore.questionTypes.length > 0 && examStore.count > 0 && configStore.configured,
+)
 
 function onFileSelected(file: File | null, path: string) {
   fileSelected.value = !!(file || path)
@@ -36,12 +36,17 @@ async function handleGenerate() {
 </script>
 
 <template>
-  <div>
-    <h2 class="text-h5 mb-4">Generate Exam Questions</h2>
+  <div class="mb-8">
+    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">Generate</h1>
+    <p class="text-body-1 text-medium-emphasis mb-6">Upload a document and configure exam parameters</p>
 
     <v-row>
       <v-col cols="12" md="6">
-        <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
+        <v-card class="mb-4 h-100" style="min-height: 240px;">
+          <v-card-text class="d-flex flex-column justify-center align-center h-100">
+            <FileUploader :is-tauri="isTauri" @file-selected="onFileSelected" />
+          </v-card-text>
+        </v-card>
       </v-col>
 
       <v-col cols="12" md="6">
@@ -49,35 +54,30 @@ async function handleGenerate() {
       </v-col>
     </v-row>
 
-    <v-alert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      closable
-      class="mt-4"
-    >
+    <v-alert v-if="error" type="error" closable class="mt-4">
       {{ error }}
     </v-alert>
 
-    <div class="text-center mt-6">
+    <div class="text-center mt-8">
       <v-btn
-        size="large"
+        size="x-large"
         color="primary"
         variant="flat"
+        rounded="pill"
         :loading="examStore.generating"
         :disabled="!canGenerate"
-        prepend-icon="mdi-magic-staff"
+        style="font-weight: 700; min-width: 240px; min-height: 56px; font-size: 16px;"
         @click="handleGenerate"
       >
+        <v-icon v-if="!examStore.generating" icon="mdi-magic-staff" start />
         {{ examStore.generating ? 'Generating...' : 'Generate Questions' }}
       </v-btn>
     </div>
 
-    <v-progress-linear
-      v-if="examStore.generating"
-      indeterminate
-      color="primary"
-      class="mt-4"
-    />
+    <div class="mt-6" style="max-width: 480px; margin-inline: auto;">
+      <v-fade-transition>
+        <v-progress-linear v-if="examStore.generating" indeterminate color="primary" />
+      </v-fade-transition>
+    </div>
   </div>
 </template>

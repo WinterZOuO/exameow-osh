@@ -27,6 +27,14 @@ const fileName = computed(() => {
   return ''
 })
 
+const fileSize = computed(() => {
+  if (file.value && file.value.size > 0) {
+    const kb = file.value.size / 1024
+    return kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb / 1024).toFixed(1)} MB`
+  }
+  return ''
+})
+
 async function handleTauriPick() {
   if (!openDialogFn) return
   const selected = await openDialogFn({
@@ -53,15 +61,30 @@ function onWebFileChange(event: Event) {
 </script>
 
 <template>
-  <v-card variant="outlined" class="pa-4">
+  <div class="text-center py-6">
+    <div v-if="!fileName" class="mb-4">
+      <div
+        style="
+          width: 72px; height: 72px; margin: 0 auto;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #E8F0FE 0%, #F3E8FD 100%);
+          display: flex; align-items: center; justify-content: center;
+          color: #1A6CFF; font-size: 32px;
+        "
+      >
+        <v-icon icon="mdi-file-upload-outline" size="36" color="primary" />
+      </div>
+    </div>
+
     <template v-if="isTauri">
       <v-btn
-        block
         variant="outlined"
-        prepend-icon="mdi-file-upload"
+        color="primary"
+        size="large"
+        rounded="pill"
         @click="handleTauriPick"
       >
-        Select Document (TXT, DOCX, PDF)
+        Select Document
       </v-btn>
     </template>
     <template v-else>
@@ -73,17 +96,32 @@ function onWebFileChange(event: Event) {
         @change="onWebFileChange"
       />
       <v-btn
-        block
         variant="outlined"
-        prepend-icon="mdi-file-upload"
+        color="primary"
+        size="large"
+        rounded="pill"
         @click="handleWebPick"
       >
-        Select Document (TXT, DOCX, PDF)
+        Select Document
       </v-btn>
     </template>
 
-    <div v-if="fileName" class="mt-2 text-body-2 font-weight-medium">
-      Selected: {{ fileName }}
-    </div>
-  </v-card>
+    <p class="text-caption mt-3 text-medium-emphasis">TXT, DOCX, or text-based PDF</p>
+
+    <v-fade-transition>
+      <div v-if="fileName" class="mt-4">
+        <v-chip
+          color="primary"
+          variant="tonal"
+          size="large"
+          prepend-icon="mdi-file-document-outline"
+          closable
+          @click:close="file = null; filePath = ''; emit('fileSelected', null, '')"
+        >
+          <span class="font-weight-medium">{{ fileName }}</span>
+          <span v-if="fileSize" class="ml-1 text-caption">· {{ fileSize }}</span>
+        </v-chip>
+      </div>
+    </v-fade-transition>
+  </div>
 </template>

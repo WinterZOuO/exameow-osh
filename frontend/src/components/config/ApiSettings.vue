@@ -34,106 +34,117 @@ async function handleSave() {
 </script>
 
 <template>
-  <v-card class="mx-auto" max-width="640">
-    <v-card-title class="text-h5">AI Configuration</v-card-title>
-    <v-card-text>
-      <v-text-field
-        v-model="store.endpoint"
-        label="API Endpoint URL"
-        placeholder="https://api.openai.com/v1"
-        variant="outlined"
-        density="comfortable"
-        prepend-inner-icon="mdi-server"
-      />
+  <div class="mb-8">
+    <h1 class="text-h4 font-weight-bold mb-1" style="letter-spacing: -0.5px;">Settings</h1>
+    <p class="text-body-1 text-medium-emphasis mb-6">Connect your AI backend to get started</p>
 
-      <v-text-field
-        v-model="store.apiKey"
-        :type="showKey ? 'text' : 'password'"
-        label="API Key"
-        placeholder="sk-..."
-        variant="outlined"
-        density="comfortable"
-        prepend-inner-icon="mdi-key"
-        :append-inner-icon="showKey ? 'mdi-eye-off' : 'mdi-eye'"
-        @click:append-inner="showKey = !showKey"
-      />
+    <v-card class="mb-4 pb-2 px-2 pt-2">
+      <v-card-text>
+        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
+          Endpoint
+        </v-label>
+        <v-text-field
+          v-model="store.endpoint"
+          label="API URL"
+          placeholder="https://api.openai.com/v1"
+          prepend-inner-icon="mdi-server"
+          class="mb-4"
+        />
 
-      <v-btn
-        block
-        variant="tonal"
-        :loading="fetchingModels"
-        :disabled="!store.endpoint || !store.apiKey"
-        @click="handleFetchModels"
-      >
-        Fetch Models
-      </v-btn>
+        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
+          Authentication
+        </v-label>
+        <v-text-field
+          v-model="store.apiKey"
+          :type="showKey ? 'text' : 'password'"
+          label="API Key"
+          placeholder="sk-..."
+          prepend-inner-icon="mdi-key"
+          :append-inner-icon="showKey ? 'mdi-eye-off' : 'mdi-eye'"
+          @click:append-inner="showKey = !showKey"
+        />
+      </v-card-text>
+    </v-card>
 
-      <v-alert
-        v-if="fetchError"
-        type="error"
-        variant="tonal"
-        density="compact"
-        closable
-        class="mt-2"
-      >
-        {{ fetchError }}
-      </v-alert>
+    <v-card class="mb-4 pb-2 px-2 pt-2">
+      <v-card-text>
+        <v-label class="text-caption font-weight-bold text-uppercase mb-2 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
+          Model
+        </v-label>
 
-      <v-select
-        v-if="store.models.length > 0"
-        v-model="store.model"
-        :items="store.models"
-        item-title="id"
-        item-value="id"
-        label="Model"
-        variant="outlined"
-        density="comfortable"
-        prepend-inner-icon="mdi-brain"
-        class="mt-4"
-      />
-      <v-text-field
-        v-else
-        v-model="store.model"
-        label="Model Name"
-        placeholder="e.g. gpt-4o"
-        variant="outlined"
-        density="comfortable"
-        prepend-inner-icon="mdi-brain"
-        class="mt-4"
-      />
-    </v-card-text>
+        <div class="d-flex ga-3 align-start">
+          <v-btn
+            variant="outlined"
+            color="primary"
+            :loading="fetchingModels"
+            :disabled="!store.endpoint || !store.apiKey"
+            prepend-icon="mdi-cloud-download"
+            class="flex-shrink-0"
+            @click="handleFetchModels"
+          >
+            Fetch Models
+          </v-btn>
 
-    <v-card-actions>
-      <v-spacer />
+          <v-fade-transition>
+            <div v-if="store.models.length > 0" class="flex-grow-1">
+              <v-select
+                v-model="store.model"
+                :items="store.models"
+                item-title="id"
+                item-value="id"
+                label="Select Model"
+                prepend-inner-icon="mdi-brain"
+              />
+            </div>
+            <div v-else class="flex-grow-1">
+              <v-text-field
+                v-model="store.model"
+                label="Or enter model name"
+                placeholder="gpt-4o"
+                prepend-inner-icon="mdi-brain"
+              />
+            </div>
+          </v-fade-transition>
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <v-alert
+      v-if="fetchError"
+      type="error"
+      closable
+      class="mb-4"
+    >
+      {{ fetchError }}
+    </v-alert>
+
+    <div class="d-flex ga-3 align-center">
       <v-btn
         color="primary"
-        variant="elevated"
+        variant="flat"
+        size="large"
         :disabled="!store.configured"
         @click="handleSave"
       >
+        <v-icon icon="mdi-check" start />
         Save Configuration
       </v-btn>
-    </v-card-actions>
+
+      <v-fade-transition>
+        <div v-if="saveSuccess" class="d-flex align-center ga-2">
+          <v-icon icon="mdi-check-circle" color="success" size="20" />
+          <span class="text-body-2 font-weight-medium" style="color: #1B7B34;">Saved</span>
+        </div>
+      </v-fade-transition>
+    </div>
 
     <v-alert
       v-if="saveError"
       type="error"
-      variant="tonal"
-      density="compact"
       closable
-      class="mx-4 mb-2"
+      class="mt-4"
     >
       {{ saveError }}
     </v-alert>
-
-    <v-alert
-      v-if="saveSuccess"
-      type="success"
-      variant="tonal"
-      density="compact"
-      class="mx-4 mb-4"
-    >
-      Configuration saved successfully
-    </v-alert>
-  </v-card>
+  </div>
 </template>

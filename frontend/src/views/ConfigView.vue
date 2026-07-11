@@ -11,17 +11,21 @@ const router = useRouter()
   <div>
     <ApiSettings />
 
-    <div class="text-center mt-6">
-      <v-btn
-        v-if="store.configured"
-        size="large"
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-arrow-right"
-        @click="router.push('/generate')"
-      >
-        Start Generating
-      </v-btn>
-    </div>
+    <v-fade-transition>
+      <div v-if="store.configured" class="text-center mt-10">
+        <p class="text-body-1 text-medium-emphasis mb-4">Everything is set up. Ready to generate exam questions.</p>
+        <v-btn
+          size="x-large"
+          color="primary"
+          variant="flat"
+          rounded="pill"
+          style="font-weight: 700; min-width: 280px; min-height: 56px; font-size: 16px;"
+          @click="router.push('/generate')"
+        >
+          <v-icon icon="mdi-arrow-right" start />
+          Start Generating
+        </v-btn>
+      </div>
+    </v-fade-transition>
   </div>
 </template>
