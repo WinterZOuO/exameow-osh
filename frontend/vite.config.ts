@@ -9,6 +9,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      external: ['@tauri-apps/plugin-dialog'],
+    },
+  },
   clearScreen: false,
   server: {
     strictPort: true,
