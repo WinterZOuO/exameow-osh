@@ -12,5 +12,7 @@ lopdf = "0.34"
 quick-xml = "0.37"
 zip = "2"
 uuid = { version = "1", features = ["v4"] }
+base64 = "0.22"
+ring = "0.17"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }

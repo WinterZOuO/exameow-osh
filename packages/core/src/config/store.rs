@@ -1,5 +1,160 @@
-pub struct ConfigStore;
+use crate::error::CoreError;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, AES_256_GCM};
+use ring::rand::{SecureRandom, SystemRandom};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AIConfigData {
+    pub endpoint: String,
+    pub api_key: String,
+    pub model: String,
+}
+
+pub struct ConfigStore {
+    config_path: PathBuf,
+    key: [u8; 32],
+}
+
 impl ConfigStore {
-    pub fn save(&self, _endpoint: &str, _api_key: &str, _model: &str) -> Result<(), String> { Ok(()) }
-    pub fn load(&self) -> Result<Option<(String, String, String)>, String> { Ok(None) }
+    pub fn new(app_name: &str) -> Result<Self, CoreError> {
+        let config_dir = dirs_next().ok_or_else(|| {
+            CoreError::Config("cannot determine config directory".to_string())
+        })?;
+        let app_dir = config_dir.join(app_name);
+        std::fs::create_dir_all(&app_dir)
+            .map_err(|e| CoreError::Config(format!("cannot create config dir: {e}")))?;
+
+        let config_path = app_dir.join("config.enc");
+        let key_path = app_dir.join("key.bin");
+
+        let key = if key_path.exists() {
+            let key_bytes = std::fs::read(&key_path)
+                .map_err(|e| CoreError::Config(format!("cannot read key: {e}")))?;
+            let mut key = [0u8; 32];
+            key.copy_from_slice(&key_bytes[..32]);
+            key
+        } else {
+            let rng = SystemRandom::new();
+            let mut key = [0u8; 32];
+            rng.fill(&mut key)
+                .map_err(|_| CoreError::Config("key generation failed".to_string()))?;
+            std::fs::write(&key_path, &key)
+                .map_err(|e| CoreError::Config(format!("cannot write key: {e}")))?;
+
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let mut perms = std::fs::metadata(&key_path)
+                    .map_err(|e| CoreError::Config(format!("cannot read key metadata: {e}")))?
+                    .permissions();
+                perms.set_mode(0o600);
+                std::fs::set_permissions(&key_path, perms)
+                    .map_err(|e| CoreError::Config(format!("cannot set key permissions: {e}")))?;
+            }
+
+            key
+        };
+
+        Ok(Self { config_path, key })
+    }
+
+    pub fn save(&self, endpoint: &str, api_key: &str, model: &str) -> Result<(), CoreError> {
+        let config = AIConfigData {
+            endpoint: endpoint.to_string(),
+            api_key: api_key.to_string(),
+            model: model.to_string(),
+        };
+
+        let plaintext = serde_json::to_vec(&config)
+            .map_err(|e| CoreError::Config(format!("serialize error: {e}")))?;
+
+        let rng = SystemRandom::new();
+        let mut nonce_bytes = [0u8; 12];
+        rng.fill(&mut nonce_bytes)
+            .map_err(|_| CoreError::Config("nonce generation failed".to_string()))?;
+
+        let unbound_key = UnboundKey::new(&AES_256_GCM, &self.key)
+            .map_err(|_| CoreError::Config("invalid key".to_string()))?;
+        let key = LessSafeKey::new(unbound_key);
+
+        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+        let aad = Aad::empty();
+
+        let mut in_out = plaintext.clone();
+        key.seal_in_place_append_tag(nonce, aad, &mut in_out)
+            .map_err(|_| CoreError::Config("encryption failed".to_string()))?;
+
+        let mut combined = nonce_bytes.to_vec();
+        combined.extend_from_slice(&in_out);
+
+        let encoded = BASE64.encode(&combined);
+        std::fs::write(&self.config_path, encoded)
+            .map_err(|e| CoreError::Config(format!("write error: {e}")))?;
+
+        Ok(())
+    }
+
+    pub fn load(&self) -> Result<Option<AIConfigData>, CoreError> {
+        if !self.config_path.exists() {
+            return Ok(None);
+        }
+
+        let encoded = std::fs::read_to_string(&self.config_path)
+            .map_err(|e| CoreError::Config(format!("read error: {e}")))?;
+
+        let combined = BASE64.decode(&encoded)
+            .map_err(|e| CoreError::Config(format!("decode error: {e}")))?;
+
+        if combined.len() < 12 + 16 {
+            return Ok(None);
+        }
+
+        let nonce_bytes: [u8; 12] = combined[..12].try_into().unwrap();
+        let ciphertag = &combined[12..];
+
+        let unbound_key = UnboundKey::new(&AES_256_GCM, &self.key)
+            .map_err(|_| CoreError::Config("invalid key".to_string()))?;
+        let key = LessSafeKey::new(unbound_key);
+
+        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+        let aad = Aad::empty();
+
+        let mut in_out = ciphertag.to_vec();
+        let plaintext = key.open_in_place(nonce, aad, &mut in_out)
+            .map_err(|_| CoreError::Config("decryption failed — config may be corrupted".to_string()))?;
+
+        let config: AIConfigData = serde_json::from_slice(plaintext)
+            .map_err(|e| CoreError::Config(format!("deserialize error: {e}")))?;
+
+        Ok(Some(config))
+    }
+}
+
+fn dirs_next() -> Option<PathBuf> {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            return Some(PathBuf::from(home).join("Library").join("Application Support"));
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(data) = std::env::var("XDG_CONFIG_HOME") {
+            if !data.is_empty() {
+                return Some(PathBuf::from(data));
+            }
+        }
+        if let Ok(home) = std::env::var("HOME") {
+            return Some(PathBuf::from(home).join(".config"));
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(appdata) = std::env::var("APPDATA") {
+            return Some(PathBuf::from(appdata));
+        }
+    }
+    None
 }
