@@ -35,57 +35,70 @@ function toggleType(type: QuestionType) {
 <template>
   <v-card class="h-100">
     <v-card-text>
-      <v-label class="text-caption font-weight-bold text-uppercase mb-3 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
+      <v-label class="text-caption font-weight-bold text-uppercase mb-4 d-block" style="color: #1A6CFF; letter-spacing: 1px;">
         {{ i18n.t('genQuestionTypes') }}
       </v-label>
 
-      <div class="mb-2">
+      <div>
         <div
           v-for="opt in typeOptions"
           :key="opt.value"
-          class="mb-3"
+          :class="[
+            'px-3 py-2 rounded-lg mb-1',
+            store.questionTypes.includes(opt.value) ? 'bg-primary' : '',
+          ]"
+          :style="
+            store.questionTypes.includes(opt.value)
+              ? 'background-color: rgba(var(--v-theme-primary), 0.06) !important;'
+              : ''
+          "
         >
-          <div class="d-flex align-center ga-3">
+          <div class="d-flex align-center" style="gap: 12px;">
             <v-chip
               :variant="store.questionTypes.includes(opt.value) ? 'flat' : 'outlined'"
               :color="store.questionTypes.includes(opt.value) ? 'primary' : 'on-surface-variant'"
+              size="small"
               filter
               class="cursor-pointer flex-shrink-0"
-              style="font-weight: 500; min-width: 110px; justify-content: center;"
+              style="font-weight: 600; font-size: 13px; min-width: 90px; justify-content: center;"
               @click="toggleType(opt.value)"
             >
               {{ i18n.t(opt.title as any) }}
             </v-chip>
 
             <template v-if="store.questionTypes.includes(opt.value)">
-              <v-slider
-                :model-value="store.typeCounts[opt.value]"
-                @update:model-value="(v: number) => store.typeCounts[opt.value] = v"
-                :min="0"
-                :max="20"
-                :step="1"
-                hide-details
-                thumb-label="always"
-                thumb-size="28"
+              <v-btn
+                icon="mdi-minus"
+                variant="text"
+                size="x-small"
                 density="compact"
-                style="flex: 1; min-width: 0;"
+                color="on-surface-variant"
+                @click="store.typeCounts[opt.value] = Math.max(0, (store.typeCounts[opt.value] || 0) - 1)"
               />
               <span
                 style="
-                  min-width: 28px; text-align: center;
-                  font-weight: 700; font-size: 15px;
-                  color: var(--v-primary-base);
+                  min-width: 24px; text-align: center;
+                  font-weight: 700; font-size: 16px;
+                  font-variant-numeric: tabular-nums;
                 "
               >
                 {{ store.typeCounts[opt.value] }}
               </span>
+              <v-btn
+                icon="mdi-plus"
+                variant="text"
+                size="x-small"
+                density="compact"
+                color="on-surface-variant"
+                @click="store.typeCounts[opt.value] = Math.min(20, (store.typeCounts[opt.value] || 0) + 1)"
+              />
             </template>
-            <span v-else style="flex: 1;" />
+            <v-spacer v-else />
           </div>
         </div>
       </div>
 
-      <v-divider class="mb-4" opacity="0.08" />
+      <v-divider class="my-4" opacity="0.08" />
 
       <v-row dense>
         <v-col cols="6">
