@@ -14,7 +14,7 @@ const examStore = useExamStore()
 const configStore = useConfigStore()
 const i18n = useI18nStore()
 
-const isTauri = '__TAURI__' in window
+const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 const error = ref('')
 
 const canGenerate = computed(() =>
