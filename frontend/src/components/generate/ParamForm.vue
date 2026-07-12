@@ -2,7 +2,6 @@
 import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
 import { QuestionType, Difficulty } from '@exambot/shared'
-import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const store = useExamStore()
 const i18n = useI18nStore()
@@ -32,14 +31,12 @@ function toggleType(type: QuestionType) {
   <div class="card">
     <label class="section-label">{{ i18n.t('genQuestionTypes') }}</label>
 
-    <div class="space-y-1.5 mb-5">
+    <div class="space-y-2 mb-5">
       <div
         v-for="opt in typeOptions"
         :key="opt.value"
-        class="flex items-center gap-3 px-3 py-2 rounded-2xl transition-colors"
-        :class="store.questionTypes.includes(opt.value)
-          ? 'bg-[rgb(var(--c-container))]'
-          : ''"
+        class="flex items-center gap-3 px-3 py-1.5 rounded-2xl transition-colors"
+        :class="store.questionTypes.includes(opt.value) ? 'bg-[rgb(var(--c-container))]' : ''"
       >
         <button
           class="chip shrink-0"
@@ -49,25 +46,15 @@ function toggleType(type: QuestionType) {
           {{ i18n.t(opt.title as any) }}
         </button>
 
-        <template v-if="store.questionTypes.includes(opt.value)">
-          <div class="flex items-center gap-1.5 ml-auto">
-            <button
-              class="w-7 h-7 flex items-center justify-center rounded-full border border-[rgb(var(--c-outline)/0.2)] text-[rgb(var(--c-text-secondary))] hover:border-[rgb(var(--c-outline)/0.5)] transition-colors"
-              @click="store.typeCounts[opt.value] = Math.max(0, (store.typeCounts[opt.value] || 0) - 1)"
-            >
-              <MinusIcon class="w-3.5 h-3.5" />
-            </button>
-            <span class="w-8 text-center font-bold text-[15px] tabular-nums">
-              {{ store.typeCounts[opt.value] || 0 }}
-            </span>
-            <button
-              class="w-7 h-7 flex items-center justify-center rounded-full border border-[rgb(var(--c-outline)/0.2)] text-[rgb(var(--c-text-secondary))] hover:border-[rgb(var(--c-outline)/0.5)] transition-colors"
-              @click="store.typeCounts[opt.value] = Math.min(20, (store.typeCounts[opt.value] || 0) + 1)"
-            >
-              <PlusIcon class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </template>
+        <input
+          v-if="store.questionTypes.includes(opt.value)"
+          :value="store.typeCounts[opt.value] || 0"
+          type="number"
+          min="0"
+          max="999"
+          class="w-16 text-center font-bold text-sm px-2 py-1 rounded-lg border border-[rgb(var(--c-outline)/0.15)] bg-[rgb(var(--c-surface))] text-[rgb(var(--c-text))] outline-none focus:border-primary-500"
+          @input="(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value) || 0; store.typeCounts[opt.value] = Math.max(0, v) }"
+        />
         <span v-else class="ml-auto text-xs text-[rgb(var(--c-text-secondary))]">点击选择</span>
       </div>
     </div>
