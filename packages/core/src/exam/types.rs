@@ -76,4 +76,6 @@ pub struct ExamParams {
     pub topic_filter: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub type_counts: Option<std::collections::HashMap<String, u32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
 }

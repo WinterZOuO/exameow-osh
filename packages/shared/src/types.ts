@@ -28,6 +28,7 @@ export interface ExamParams {
   difficulty: Difficulty
   language: string
   topic_filter?: string
+  text?: string
 }
 
 export interface AIConfig {

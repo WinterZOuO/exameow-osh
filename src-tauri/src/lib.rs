@@ -41,14 +41,26 @@ async fn generate_exam(
     api_key: String,
     model: String,
 ) -> Result<GenerateResult, CommandError> {
-    let text = parse_file(&file_path).map_err(|e| CommandError(format!("File parse error: {e}")))?;
     let params: ExamParams = serde_json::from_str(&params_json)
         .map_err(|e| CommandError(format!("Invalid params JSON: {e}")))?;
+
+    let text = if params.text.is_some() {
+        params.text.clone().unwrap()
+    } else {
+        parse_file(&file_path).map_err(|e| CommandError(format!("File parse error: {e}")))?
+    };
+
     let client = AIClient::new(&endpoint, &api_key);
     let questions = core_generate_exam(&client, &text, &params, &model)
         .await
         .map_err(|e| CommandError(format!("Exam generation error: {e}")))?;
+
     Ok(GenerateResult { questions })
+}
+
+#[tauri::command]
+fn parse_file_text(file_path: String) -> Result<String, CommandError> {
+    parse_file(&file_path).map_err(|e| CommandError(format!("File parse error: {e}")))
 }
 
 #[tauri::command]
@@ -92,6 +104,7 @@ pub fn run() {
             greet,
             get_models,
             generate_exam,
+            parse_file_text,
             export_csv,
             save_config,
             load_config,

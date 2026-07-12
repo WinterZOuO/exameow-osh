@@ -6,6 +6,10 @@ export interface GenerateResult {
 }
 
 export const tauriApi = {
+  async parseFileText(filePath: string): Promise<string> {
+    return invoke<string>('parse_file_text', { filePath })
+  },
+
   async getModels(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
     return invoke<ModelInfo[]>('get_models', { endpoint, apiKey })
   },
@@ -17,9 +21,6 @@ export const tauriApi = {
     apiKey: string,
     model: string,
   ): Promise<GenerateResult> {
-    if (typeof filePath !== 'string' || !filePath) {
-      throw new Error(`generateExam: filePath must be a non-empty string, got ${typeof filePath}: ${JSON.stringify(filePath)}`)
-    }
     return invoke<GenerateResult>('generate_exam', {
       filePath,
       paramsJson: JSON.stringify(params),

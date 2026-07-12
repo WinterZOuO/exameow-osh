@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
@@ -15,21 +15,27 @@ const configStore = useConfigStore()
 const i18n = useI18nStore()
 
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
-const error = ref('')
 
 const canGenerate = computed(() =>
   !!fileInputRef.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
 )
 
+const progressPercent = computed(() => {
+  const p = examStore.progress
+  if (!p.total) return 0
+  return Math.round((p.current / p.total) * 100)
+})
+
+const isBatched = computed(() => examStore.progress.total > 1)
+
 async function handleGenerate() {
-  error.value = ''
   const input = getFileInput()
-  if (!input) { error.value = 'No file selected'; return }
+  if (!input) return
   try {
     await examStore.generate(input)
     router.push('/preview')
-  } catch (e: any) {
-    error.value = e.message || String(e)
+  } catch (_) {
+    // error is handled in store
   }
 }
 </script>
@@ -46,12 +52,31 @@ async function handleGenerate() {
       <ParamForm />
     </div>
 
-    <div v-if="error" class="mb-6 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300">
-      {{ error }}
+    <!-- Progress -->
+    <div v-if="examStore.generating" class="card mb-6">
+      <div class="mb-3 flex items-center justify-between text-sm">
+        <span class="font-medium">{{ examStore.progress.message || i18n.t('genGenerating') }}</span>
+        <span v-if="isBatched" class="font-bold text-primary-500 tabular-nums">
+          {{ examStore.progress.current }}/{{ examStore.progress.total }}
+        </span>
+      </div>
+      <div class="w-full h-2 bg-[rgb(var(--c-container))] rounded-full overflow-hidden">
+        <div
+          class="h-full bg-primary-500 rounded-full transition-all duration-500 ease-out"
+          :style="{ width: (!isBatched && examStore.generating) ? '99%' : progressPercent + '%' }"
+        />
+      </div>
+      <div v-if="isBatched" class="mt-2 text-xs text-[rgb(var(--c-text-secondary))]">
+        {{ examStore.questions.length }} questions generated so far
+      </div>
     </div>
 
     <div class="text-center">
-      <button class="btn-primary !px-10 !py-4 text-base !font-bold" :disabled="!canGenerate || examStore.generating" @click="handleGenerate">
+      <button
+        class="btn-primary !px-10 !py-4 text-base !font-bold"
+        :disabled="!canGenerate || examStore.generating"
+        @click="handleGenerate"
+      >
         <SparklesIcon v-if="!examStore.generating" class="w-5 h-5" />
         <svg v-else class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>

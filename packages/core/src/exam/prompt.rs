@@ -125,8 +125,9 @@ pub async fn generate_exam(
     params: &ExamParams,
     model: &str,
 ) -> Result<Vec<Question>, CoreError> {
+    let doc_text = params.text.as_deref().unwrap_or(text);
     let system_prompt = build_system_prompt();
-    let user_prompt = build_user_prompt(text, params);
+    let user_prompt = build_user_prompt(doc_text, params);
     let response = client.chat(&system_prompt, &user_prompt, model).await?;
     parse_questions(&response)
 }
