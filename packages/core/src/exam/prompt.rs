@@ -67,7 +67,17 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
 
     let max_chars = 32000;
     let text_section = if text.len() > max_chars {
-        format!("{}...(truncated)", &text[..max_chars])
+        let head_size = max_chars * 6 / 10;
+        let tail_size = max_chars - head_size;
+        let head_len = text.floor_char_boundary(head_size);
+        let head = &text[..head_len];
+        let tail_start = text.floor_char_boundary(text.len().saturating_sub(tail_size));
+        let tail = if tail_start > head_len + 100 {
+            format!("\n\n...(middle omitted)...\n\n{}", &text[tail_start..])
+        } else {
+            text[head_len..].to_string()
+        };
+        format!("{}{}", head, tail)
     } else {
         text.to_string()
     };
