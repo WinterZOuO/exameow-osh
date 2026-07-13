@@ -30,47 +30,47 @@ async function handleSave() {
 
 <template>
   <div>
-    <h1 class="page-title mb-1">{{ i18n.t('configTitle') }}</h1>
-    <p class="page-subtitle mb-8">{{ i18n.t('configSubtitle') }}</p>
+    <h1 class="text-display-sm mb-1">{{ i18n.t('configTitle') }}</h1>
+    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSubtitle') }}</p>
 
-    <!-- Endpoint Card -->
-    <div class="card mb-4">
-      <label class="section-label">{{ i18n.t('configSectionEndpoint') }}</label>
+    <!-- Endpoint -->
+    <div class="card-filled p-5 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionEndpoint') }}</label>
       <div class="relative">
-        <ServerIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+        <ServerIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
         <input
           v-model="store.endpoint"
           :placeholder="i18n.t('configApiUrl')"
-          class="input-field !pl-11"
+          class="input-outlined !pl-10"
         />
       </div>
     </div>
 
-    <!-- Auth Card -->
-    <div class="card mb-4">
-      <label class="section-label">{{ i18n.t('configSectionAuth') }}</label>
+    <!-- Auth -->
+    <div class="card-filled p-5 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionAuth') }}</label>
       <div class="relative">
-        <KeyIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+        <KeyIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
         <input
           v-model="store.apiKey"
           :type="showKey ? 'text' : 'password'"
           :placeholder="i18n.t('configApiKey')"
-          class="input-field !pl-11 !pr-11"
+          class="input-outlined !pl-10 !pr-10"
         />
-        <button class="absolute right-4 top-1/2 -translate-y-1/2 text-[rgb(var(--c-text-secondary))]" @click="showKey = !showKey">
-          <EyeSlashIcon v-if="showKey" class="w-5 h-5" />
-          <EyeIcon v-else class="w-5 h-5" />
+        <button class="absolute right-3 top-1/2 -translate-y-1/2 btn-icon !w-8 !h-8" @click="showKey = !showKey">
+          <EyeSlashIcon v-if="showKey" class="w-4 h-4" />
+          <EyeIcon v-else class="w-4 h-4" />
         </button>
       </div>
     </div>
 
-    <!-- Model Card -->
-    <div class="card mb-4">
-      <label class="section-label">{{ i18n.t('configSectionModel') }}</label>
+    <!-- Model -->
+    <div class="card-filled p-5 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionModel') }}</label>
 
       <div class="flex flex-col sm:flex-row gap-3">
         <button
-          class="btn-outline shrink-0 !py-3 text-sm"
+          class="btn-outlined shrink-0 text-sm"
           :disabled="!store.endpoint || !store.apiKey"
           @click="handleFetchModels"
         >
@@ -79,11 +79,11 @@ async function handleSave() {
         </button>
 
         <div class="flex-1 relative">
-          <CpuChipIcon class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--c-text-secondary))]" />
+          <CpuChipIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
           <select
             v-if="store.models.length > 0"
             v-model="store.model"
-            class="input-field !pl-11 appearance-none cursor-pointer"
+            class="input-outlined !pl-10 appearance-none cursor-pointer"
           >
             <option value="" disabled>{{ i18n.t('configSelectModel') }}</option>
             <option v-for="m in store.models" :key="m.id" :value="m.id">{{ m.id }}</option>
@@ -92,33 +92,45 @@ async function handleSave() {
             v-else
             v-model="store.model"
             :placeholder="i18n.t('configEnterModel')"
-            class="input-field !pl-11"
+            class="input-outlined !pl-10"
           />
         </div>
       </div>
     </div>
 
-    <!-- Alerts -->
-    <div v-if="fetchError" class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
-      <span>{{ fetchError }}</span>
-    </div>
+    <!-- Fetch Error -->
+    <Transition name="scale">
+      <div
+        v-if="fetchError"
+        class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
+        style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+      >
+        <span>{{ fetchError }}</span>
+      </div>
+    </Transition>
 
     <!-- Actions -->
     <div class="flex items-center gap-3">
-      <button class="btn-primary" :disabled="!store.configured" @click="handleSave">
+      <button class="btn-filled" :disabled="!store.configured" @click="handleSave">
         <CheckIcon class="w-5 h-5" />
         {{ i18n.t('configSave') }}
       </button>
 
       <Transition name="fade">
-        <div v-if="saveSuccess" class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
+        <div v-if="saveSuccess" class="flex items-center gap-2 text-sm font-medium" style="color: rgb(var(--md-primary))">
           <CheckCircleIcon class="w-5 h-5" /> {{ i18n.t('configSaved') }}
         </div>
       </Transition>
     </div>
 
-    <div v-if="saveError" class="mt-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300">
-      {{ saveError }}
-    </div>
+    <Transition name="scale">
+      <div
+        v-if="saveError"
+        class="mt-4 px-4 py-3 rounded-2xl text-sm"
+        style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+      >
+        {{ saveError }}
+      </div>
+    </Transition>
   </div>
 </template>

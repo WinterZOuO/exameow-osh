@@ -2,6 +2,7 @@ use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
 use exambot_core::exam::{generate_exam as core_generate_exam, ExamParams, Question};
 use exambot_core::export::export_csv as core_export_csv;
+use exambot_core::export::export_kaoshibao as core_export_kaoshibao;
 use exambot_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
@@ -72,6 +73,14 @@ fn export_csv(questions_json: String, save_path: String) -> Result<(), CommandEr
 }
 
 #[tauri::command]
+fn export_kaoshibao(questions_json: String, save_path: String) -> Result<(), CommandError> {
+    let questions: Vec<Question> = serde_json::from_str(&questions_json)
+        .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
+    core_export_kaoshibao(&questions, &save_path)
+        .map_err(|e| CommandError(format!("Kaoshibao export error: {e}")))
+}
+
+#[tauri::command]
 fn save_config(endpoint: String, api_key: String, model: String) -> Result<(), CommandError> {
     let store = ConfigStore::new(APP_NAME)
         .map_err(|e| CommandError(format!("Config init error: {e}")))?;
@@ -106,6 +115,7 @@ pub fn run() {
             generate_exam,
             parse_file_text,
             export_csv,
+            export_kaoshibao,
             save_config,
             load_config,
         ])

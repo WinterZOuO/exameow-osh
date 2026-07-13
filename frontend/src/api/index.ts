@@ -39,11 +39,23 @@ export const api = {
   async exportCsv(
     questions: import('@exambot/shared').Question[],
     savePath?: string,
+    filename?: string,
   ): Promise<void> {
     if (isTauri()) {
       return tauriApi.exportCsv(questions, savePath!)
     }
-    return httpApi.exportCsv(questions)
+    return httpApi.exportCsv(questions, filename)
+  },
+
+  async exportKaoshibao(
+    questions: import('@exambot/shared').Question[],
+    savePath?: string,
+    filename?: string,
+  ): Promise<void> {
+    if (isTauri()) {
+      return tauriApi.exportKaoshibao(questions, savePath!)
+    }
+    return httpApi.exportKaoshibao(questions, filename)
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

@@ -34,15 +34,31 @@ export const httpApi = {
     return res.json()
   },
 
-  async exportCsv(questions: Question[]): Promise<void> {
+  async exportCsv(questions: Question[], filename: string = 'exambot_questions.csv'): Promise<void> {
     const csvContent = generateCsvContent(questions)
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'exambot_questions.csv'
+    a.download = filename
     a.click()
     URL.revokeObjectURL(url)
+  },
+
+  async exportKaoshibao(questions: Question[], filename: string = 'exambot_kaoshibao.xlsx'): Promise<void> {
+    const res = await fetch(`${BASE_URL}/api/export/kaoshibao`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(questions),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(objectUrl)
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

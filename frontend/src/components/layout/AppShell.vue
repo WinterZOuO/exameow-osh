@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import {
@@ -23,7 +23,6 @@ function applyDark() {
 
 watch(isDark, applyDark, { immediate: true })
 
-// init from localStorage
 const saved = localStorage.getItem('exambot-dark')
 if (saved === '1') isDark.value = true
 
@@ -33,56 +32,66 @@ const navItems = [
   { key: 'navPreview', path: '/preview', icon: DocumentTextIcon },
 ]
 
-function isActive(path: string) {
-  return route.path === path ? 'btn-primary !px-4 !py-2 text-sm shadow-none' : 'btn-ghost !px-4 !py-2 text-sm'
-}
+const currentNavIndex = computed(() => navItems.findIndex(item => item.path === route.path))
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
-    <!-- Top Bar -->
-    <header class="sticky top-0 z-30 bg-[rgb(var(--c-surface))] border-b border-[rgb(var(--c-outline)/0.1)]">
-      <div class="mx-auto max-w-5xl flex items-center h-16 px-4 sm:px-6 gap-4">
+  <div class="min-h-screen flex flex-col" :style="{ backgroundColor: 'rgb(var(--md-surface))' }">
+    <!-- ====== Top App Bar ====== -->
+    <header
+      class="sticky top-0 z-30 safe-top"
+      :style="{ backgroundColor: 'rgb(var(--md-surface))', borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.4)' }"
+    >
+      <div class="mx-auto w-full max-w-[90rem] flex items-center h-14 sm:h-16 px-3 sm:px-6 gap-2 sm:gap-3">
         <!-- Logo -->
         <router-link to="/" class="flex items-center gap-3 shrink-0 no-underline">
-          <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-            <rect width="40" height="40" rx="12" fill="url(#logoGrad2)"/>
-            <defs>
-              <linearGradient id="logoGrad2" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#1A6CFF"/>
-                <stop offset="1" stop-color="#7C3AED"/>
-              </linearGradient>
-            </defs>
-            <path d="M12 15h6l2.5-3.5L23 15h5v11a2 2 0 01-2 2H14a2 2 0 01-2-2V15z" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16 21.5l2.5 2.5 5-5" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <!-- Pixel-style rounded square logo -->
+          <div class="w-[38px] h-[38px] rounded-2xl flex items-center justify-center shrink-0 elevation-1"
+               style="background: linear-gradient(135deg, rgb(var(--md-primary)), rgb(var(--md-tertiary)))">
+            <svg width="22" height="22" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 15h6l2.5-3.5L23 15h5v11a2 2 0 01-2 2H14a2 2 0 01-2-2V15z" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 21.5l2.5 2.5 5-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
           <div class="hidden sm:block">
-            <div class="font-bold text-base leading-tight tracking-tight text-[rgb(var(--c-text))]">{{ i18n.t('appName') }}</div>
-            <div class="text-xs font-medium text-[rgb(var(--c-text-secondary))]">{{ i18n.t('appSubtitle') }}</div>
+            <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
+            <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('appSubtitle') }}</div>
           </div>
         </router-link>
 
-        <!-- Desktop Nav -->
-        <div class="hidden sm:flex items-center gap-1 ml-6">
-          <button
-            v-for="item in navItems"
-            :key="item.path"
-            :class="isActive(item.path)"
-            @click="router.push(item.path)"
+        <!-- Desktop Nav — Segmented-like pills -->
+        <div class="hidden sm:flex items-center ml-6">
+          <nav
+            class="flex items-center p-1 rounded-full gap-0.5"
+            style="background-color: rgb(var(--md-surface-container-high))"
           >
-            <component :is="item.icon" class="w-4 h-4" />
-            {{ i18n.t(item.key as any) }}
-          </button>
+            <button
+              v-for="item in navItems"
+              :key="item.path"
+              class="relative flex items-center gap-1.5 px-4 h-9 rounded-full text-sm font-medium transition-all duration-300 ease-out"
+              :style="route.path === item.path
+                ? { backgroundColor: 'rgb(var(--md-secondary-container))', color: 'rgb(var(--md-on-secondary-container))' }
+                : { color: 'rgb(var(--md-on-surface-variant))' }"
+              @click="router.push(item.path)"
+            >
+              <component :is="item.icon" class="w-4 h-4" />
+              {{ i18n.t(item.key as any) }}
+            </button>
+          </nav>
         </div>
 
         <div class="flex-1" />
 
         <!-- Actions -->
         <div class="flex items-center gap-1">
-          <button class="btn-ghost !p-2 text-sm font-bold" @click="i18n.toggle()">
+          <button
+            class="btn-icon text-xs !font-bold"
+            @click="i18n.toggle()"
+            :style="{ color: 'rgb(var(--md-on-surface-variant))' }"
+          >
             {{ i18n.locale === 'zh' ? '中' : 'En' }}
           </button>
-          <button class="btn-ghost !p-2" @click="isDark = !isDark">
+          <button class="btn-icon" @click="isDark = !isDark">
             <SunIcon v-if="isDark" class="w-5 h-5" />
             <MoonIcon v-else class="w-5 h-5" />
           </button>
@@ -90,8 +99,8 @@ function isActive(path: string) {
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 mx-auto w-full max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
+    <!-- ====== Main Content ====== -->
+    <main class="flex-1 mx-auto w-full max-w-5xl xl:max-w-6xl px-3 sm:px-6 py-3 sm:py-6">
       <router-view v-slot="{ Component }">
         <transition name="slide-up" mode="out-in">
           <component :is="Component" />
@@ -99,26 +108,42 @@ function isActive(path: string) {
       </router-view>
     </main>
 
-    <!-- Bottom Nav (Mobile) -->
-    <nav class="sm:hidden sticky bottom-0 z-30 bg-[rgb(var(--c-surface))] border-t border-[rgb(var(--c-outline)/0.1)] safe-bottom">
-      <div class="flex items-center justify-around h-16 px-2">
-        <button
-          v-for="item in navItems"
-          :key="item.path"
-          class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-colors duration-150 min-w-0"
-          :class="route.path === item.path
-            ? 'text-primary-500'
-            : 'text-[rgb(var(--c-text-secondary))]'"
-          @click="router.push(item.path)"
-        >
-          <component :is="item.icon" class="w-6 h-6" />
-          <span class="text-[10px] font-medium leading-none">{{ i18n.t(item.key as any) }}</span>
-        </button>
+    <!-- ====== Bottom Navigation Bar (Mobile) ====== -->
+    <nav
+      class="sm:hidden sticky bottom-0 z-30 safe-bottom"
+      :style="{
+        backgroundColor: 'rgba(var(--md-surface-container-low) / 0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgb(var(--md-outline-variant) / 0.3)',
+      }"
+    >
+      <div class="flex items-center justify-around h-[72px] px-2">
+        <!-- Active indicator bar -->
+        <div class="relative flex items-center justify-around w-full">
+          <!-- Active indicator -->
+          <div
+            class="absolute top-0 h-8 rounded-2xl transition-all duration-400 ease-out"
+            style="width: 33.33%; background-color: rgb(var(--md-secondary-container))"
+            :style="{ left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0) * 33.33}%)` }"
+          />
+
+          <button
+            v-for="item in navItems"
+            :key="item.path"
+            class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-2"
+            :style="{
+              width: '33.33%',
+              color: route.path === item.path ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
+            }"
+            @click="router.push(item.path)"
+          >
+            <component :is="item.icon" class="w-6 h-6 transition-transform duration-300"
+                       :style="{ transform: route.path === item.path ? 'scale(1.1)' : 'scale(1)' }" />
+            <span class="text-[11px] font-medium leading-none">{{ i18n.t(item.key as any) }}</span>
+          </button>
+        </div>
       </div>
     </nav>
   </div>
 </template>
-
-<style scoped>
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-</style>

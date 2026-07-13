@@ -28,43 +28,63 @@ function toggleType(type: QuestionType) {
 </script>
 
 <template>
-  <div class="card">
-    <label class="section-label">{{ i18n.t('genQuestionTypes') }}</label>
+  <div class="card-filled p-5">
+    <label class="text-label-md block mb-4" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genQuestionTypes') }}</label>
 
-    <div class="space-y-2 mb-5">
-      <div
+    <!-- Filter Chips -->
+    <div class="flex flex-wrap gap-2 mb-5">
+      <button
         v-for="opt in typeOptions"
         :key="opt.value"
-        class="flex items-center gap-3 px-3 py-1.5 rounded-2xl transition-colors"
-        :class="store.questionTypes.includes(opt.value) ? 'bg-[rgb(var(--c-container))]' : ''"
+        class="chip-filter"
+        :class="{ 'chip-filter-active': store.questionTypes.includes(opt.value) }"
+        @click="toggleType(opt.value)"
       >
-        <button
-          class="chip shrink-0"
-          :class="store.questionTypes.includes(opt.value) ? 'chip-active' : ''"
-          @click="toggleType(opt.value)"
-        >
-          {{ i18n.t(opt.title as any) }}
-        </button>
-
-        <input
-          v-if="store.questionTypes.includes(opt.value)"
-          :value="store.typeCounts[opt.value] || 0"
-          type="number"
-          min="0"
-          max="999"
-          class="w-16 text-center font-bold text-sm px-2 py-1 rounded-lg border border-[rgb(var(--c-outline)/0.15)] bg-[rgb(var(--c-surface))] text-[rgb(var(--c-text))] outline-none focus:border-primary-500"
-          @input="(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value) || 0; store.typeCounts[opt.value] = Math.max(0, v) }"
-        />
-        <span v-else class="ml-auto text-xs text-[rgb(var(--c-text-secondary))]">点击选择</span>
-      </div>
+        {{ i18n.t(opt.title as any) }}
+      </button>
     </div>
 
-    <div class="divider" />
+    <!-- Per-type counts -->
+    <TransitionGroup name="list" tag="div" class="space-y-2 mb-5">
+      <div
+        v-for="type in store.questionTypes"
+        :key="type"
+        class="flex items-center gap-3 p-3 rounded-2xl transition-colors duration-200"
+        :style="{ backgroundColor: 'rgb(var(--md-surface-container-low))' }"
+      >
+        <span
+          class="inline-flex items-center px-3 h-8 rounded-lg text-xs font-medium !cursor-default"
+          :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
+        >
+          {{ i18n.t(typeOptions.find(o => o.value === type)?.title as any) }}
+        </span>
+        <span class="text-body-md flex-1" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genQuestions') }}</span>
+        <input
+          :value="store.typeCounts[type] || 0"
+          type="number"
+          min="1"
+          max="999"
+          class="w-20 text-center font-semibold text-base px-3 py-2 rounded-xl border outline-none transition-all duration-200"
+          :style="{
+            backgroundColor: 'rgb(var(--md-surface))',
+            borderColor: 'rgb(var(--md-outline-variant))',
+            color: 'rgb(var(--md-on-surface))',
+          }"
+          @input="(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value) || 0; store.typeCounts[type] = Math.max(0, v) }"
+        />
+      </div>
+    </TransitionGroup>
 
+    <div class="divider my-4" />
+
+    <!-- Options -->
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="text-xs font-medium text-[rgb(var(--c-text-secondary))] mb-1.5 block">{{ i18n.t('genDifficulty') }}</label>
-        <select v-model="store.difficulty" class="input-field text-sm !py-2.5">
+        <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genDifficulty') }}</label>
+        <select
+          v-model="store.difficulty"
+          class="input-outlined text-sm !py-2.5"
+        >
           <option v-for="d in difficultyOptions" :key="d.value" :value="d.value">
             {{ i18n.t(d.title as any) }}
           </option>
@@ -72,19 +92,19 @@ function toggleType(type: QuestionType) {
       </div>
 
       <div>
-        <label class="text-xs font-medium text-[rgb(var(--c-text-secondary))] mb-1.5 block">{{ i18n.t('genLanguage') }}</label>
-        <select v-model="store.language" class="input-field text-sm !py-2.5">
+        <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genLanguage') }}</label>
+        <select v-model="store.language" class="input-outlined text-sm !py-2.5">
           <option value="zh-CN">中文</option>
           <option value="en-US">English</option>
         </select>
       </div>
 
       <div class="col-span-2">
-        <label class="text-xs font-medium text-[rgb(var(--c-text-secondary))] mb-1.5 block">{{ i18n.t('genTopic') }}</label>
+        <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genTopic') }}</label>
         <input
           v-model="store.topicFilter"
           :placeholder="i18n.t('genTopicPlaceholder')"
-          class="input-field text-sm !py-2.5"
+          class="input-outlined text-sm !py-2.5"
         />
       </div>
     </div>

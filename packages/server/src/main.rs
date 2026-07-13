@@ -20,9 +20,10 @@ async fn main() {
         .route("/api/models", get(routes::get_models))
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/export", get(routes::export_handler))
+        .route("/api/export/kaoshibao", post(routes::export_kaoshibao_handler))
         .route("/api/config/save", post(routes::save_config_handler))
         .route("/api/config/load", get(routes::load_config_handler))
-        .nest_service("/", ServeDir::new("../frontend/dist"))
+        .fallback_service(ServeDir::new("../frontend/dist"))
         .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
         .with_state(state);
 

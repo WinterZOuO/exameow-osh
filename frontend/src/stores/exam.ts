@@ -20,7 +20,8 @@ export const useExamStore = defineStore('exam', () => {
   const difficulty = ref<Difficulty>('medium' as Difficulty)
   const language = ref('zh-CN')
   const topicFilter = ref('')
-  const questions = ref<Question[]>([])
+  const questions = ref<Question[]>(loadCachedQuestions())
+  const sourceFileName = ref(loadCachedSourceFile())
   const generating = ref(false)
   const progress = ref({ current: 0, total: 0, message: '' })
   const generated = computed(() => questions.value.length > 0)
@@ -44,16 +45,28 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function chunkText(text: string, chunkCount: number): string[] {
-    const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 20)
+    const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 10)
     if (paragraphs.length === 0) return [text]
-    if (paragraphs.length <= chunkCount) return paragraphs.map((p) => p.trim())
+    if (chunkCount <= 1) return [text]
 
-    const chunks: string[] = []
-    const perChunk = Math.ceil(paragraphs.length / chunkCount)
-    for (let i = 0; i < paragraphs.length; i += perChunk) {
-      chunks.push(paragraphs.slice(i, i + perChunk).join('\n\n'))
+    // Distribute paragraphs round-robin to ensure each chunk gets unique, diverse content
+    const chunks: string[] = Array.from({ length: chunkCount }, () => '')
+    for (let i = 0; i < paragraphs.length; i++) {
+      const chunkIdx = i % chunkCount
+      chunks[chunkIdx] += (chunks[chunkIdx] ? '\n\n' : '') + paragraphs[i]!.trim()
     }
-    return chunks.slice(0, chunkCount)
+
+    // If some chunks are too small, merge them back into the first few
+    const result = chunks.filter(c => c.length > 0)
+    if (result.length < chunks.length / 2) {
+      // Fewer chunks than expected - use full text for all batches (AI will vary)
+      return Array.from({ length: chunkCount }, () => text)
+    }
+
+    while (result.length < chunkCount) {
+      result.push(text) // fallback to full text for remaining
+    }
+    return result.slice(0, chunkCount)
   }
 
   function buildBatches(baseParams: ExamParams, chunkCount: number): ExamParams[] {
@@ -61,7 +74,6 @@ export const useExamStore = defineStore('exam', () => {
     if (typeEntries.length === 0) return [baseParams]
 
     const MAX_PER_BATCH = 10
-    // distribute each type across batches, max 10 per batch
     const batches: { counts: Record<string, number> }[] = []
     for (const [qtype, total] of typeEntries) {
       let remaining = total
@@ -76,7 +88,8 @@ export const useExamStore = defineStore('exam', () => {
       }
     }
 
-    const textChunks = chunkText(baseParams.text || '', batches.length || 1)
+    const totalBatches = batches.length
+    const textChunks = chunkText(baseParams.text || '', totalBatches)
 
     return batches.map((b, i) => {
       const batchCounts = b.counts
@@ -87,28 +100,72 @@ export const useExamStore = defineStore('exam', () => {
         count: batchTotal,
         type_counts: batchCounts,
         text: textChunks[i % textChunks.length],
+        batch_index: i + 1,
+        batch_total: totalBatches,
       } as ExamParams
     })
   }
 
-  async function generate(fileOrPath: string | File) {
+  function loadCachedQuestions(): Question[] {
+    try {
+      const cached = localStorage.getItem('exambot-questions')
+      if (cached) return JSON.parse(cached)
+    } catch {}
+    return []
+  }
+
+  function loadCachedSourceFile(): string {
+    return localStorage.getItem('exambot-sourcefile') || ''
+  }
+
+  function saveCachedQuestions() {
+    try {
+      localStorage.setItem('exambot-questions', JSON.stringify(questions.value))
+      localStorage.setItem('exambot-sourcefile', sourceFileName.value)
+    } catch {}
+  }
+
+  function extractFileName(inputs: (string | File)[]): string {
+    if (inputs.length === 0) return ''
+    const first = inputs[0]!
+    const rawName = first instanceof File
+      ? first.name
+      : first.replace(/\\/g, '/').split('/').pop() || first
+    const dot = rawName.lastIndexOf('.')
+    const base = dot > 0 ? rawName.substring(0, dot) : rawName
+    return inputs.length > 1 ? `${base}等文件` : base
+  }
+
+  async function generate(inputs: (string | File)[]) {
     const configStore = useConfigStore()
     generating.value = true
     progress.value = { current: 0, total: 0, message: 'Preparing...' }
     questions.value = []
+    sourceFileName.value = extractFileName(inputs)
 
     try {
       const config = configStore.getConfig()
       const baseParams = getParams()
 
-      // Get document text
-      let fullText: string
-      if (typeof fileOrPath === 'string') {
+      // Parse all files and concatenate text
+      let fullText = ''
+      const hasTauriPaths = inputs.some(i => typeof i === 'string')
+
+      if (hasTauriPaths) {
         progress.value.message = 'Extracting document text...'
         const { tauriApi } = await import('@/api/bridge')
-        fullText = await tauriApi.parseFileText(fileOrPath)
+        for (const input of inputs) {
+          if (typeof input === 'string') {
+            const text = await tauriApi.parseFileText(input)
+            if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+          }
+        }
       } else {
-        fullText = await fileOrPath.text()
+        for (const input of inputs) {
+          const file = input as File
+          const text = await (file as File).text()
+          if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+        }
       }
 
       baseParams.text = fullText
@@ -127,6 +184,7 @@ export const useExamStore = defineStore('exam', () => {
       }
 
       progress.value = { current: batches.length, total: batches.length, message: 'Complete!' }
+      saveCachedQuestions()
     } finally {
       generating.value = false
     }
@@ -134,11 +192,13 @@ export const useExamStore = defineStore('exam', () => {
 
   function reset() {
     questions.value = []
+    sourceFileName.value = ''
+    try { localStorage.removeItem('exambot-questions'); localStorage.removeItem('exambot-sourcefile') } catch {}
   }
 
   return {
     questionTypes, typeCounts, totalCount,
     difficulty, language, topicFilter, questions, generating, generated,
-    progress, getParams, generate, reset,
+    sourceFileName, progress, getParams, generate, reset,
   }
 })

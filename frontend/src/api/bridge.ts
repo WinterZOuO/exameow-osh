@@ -34,6 +34,10 @@ export const tauriApi = {
     return invoke<void>('export_csv', { questionsJson: JSON.stringify(questions), savePath })
   },
 
+  async exportKaoshibao(questions: Question[], savePath: string): Promise<void> {
+    return invoke<void>('export_kaoshibao', { questionsJson: JSON.stringify(questions), savePath })
+  },
+
   async saveConfig(config: AIConfig): Promise<void> {
     return invoke<void>('save_config', { endpoint: config.endpoint, apiKey: config.api_key, model: config.model })
   },

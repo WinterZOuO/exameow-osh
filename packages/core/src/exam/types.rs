@@ -78,4 +78,8 @@ pub struct ExamParams {
     pub type_counts: Option<std::collections::HashMap<String, u32>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_index: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub batch_total: Option<u32>,
 }

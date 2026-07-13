@@ -29,6 +29,8 @@ export interface ExamParams {
   language: string
   topic_filter?: string
   text?: string
+  batch_index?: number
+  batch_total?: number
 }
 
 export interface AIConfig {

@@ -7,6 +7,11 @@ pub fn build_system_prompt() -> String {
     format!(
         r#"You are an expert exam question generator. Generate questions based on the provided document content.
 
+## Critical Rules (MUST follow)
+- EVERY question MUST be unique — do NOT generate two questions that test the same concept, fact, or sentence.
+- Cover DIFFERENT parts of the document for each question. Avoid clustering questions on the same paragraph.
+- Vary question wording, angles, and tested knowledge points.
+
 ## Output Rules
 1. Respond ONLY with a valid JSON array — no explanation, no markdown fences.
 2. Each question object MUST have exactly these fields:
@@ -50,6 +55,16 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
         None => String::new(),
     };
 
+    let batch_note = match params.batch_index {
+        Some(idx) if params.batch_total.unwrap_or(1) > 1 => {
+            format!(
+                "\nThis is batch {}/{} of the document. Focus on different content than other batches would.",
+                idx, params.batch_total.unwrap_or(1)
+            )
+        }
+        _ => String::new(),
+    };
+
     let max_chars = 32000;
     let text_section = if text.len() > max_chars {
         format!("{}...(truncated)", &text[..max_chars])
@@ -88,7 +103,7 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
     format!(
         r#"{count_instruction}
 Difficulty: {difficulty_str}
-Language: {language}{topic_note}
+Language: {language}{topic_note}{batch_note}
 
 DOCUMENT CONTENT:
 {text_content}
@@ -97,6 +112,7 @@ DOCUMENT CONTENT:
         difficulty_str = difficulty_str,
         language = params.language,
         topic_note = topic_note,
+        batch_note = batch_note,
         text_content = text_section,
     )
 }

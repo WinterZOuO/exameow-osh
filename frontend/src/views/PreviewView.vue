@@ -1,33 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
-import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const examStore = useExamStore()
 const i18n = useI18nStore()
-const isTauri = '__TAURI__' in window
+const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 const exportError = ref('')
 const exporting = ref(false)
+const exportingKaoshibao = ref(false)
+
+const baseFileName = computed(() => {
+  const name = examStore.sourceFileName
+  if (name) return name
+  return 'exambot_questions'
+})
 
 async function handleExport() {
   exportError.value = ''
   exporting.value = true
   try {
+    const defaultName = `${baseFileName.value}.csv`
     if (isTauri) {
       let saveDialog: any
       try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
-      const savePath = saveDialog ? await saveDialog({ defaultPath: 'exambot_questions.csv', filters: [{ name: 'CSV', extensions: ['csv'] }] }) : null
+      const savePath = saveDialog ? await saveDialog({ defaultPath: defaultName, filters: [{ name: 'CSV', extensions: ['csv'] }] }) : null
       if (!savePath) return
       await api.exportCsv(examStore.questions, savePath as string)
     } else {
-      await api.exportCsv(examStore.questions)
+      await api.exportCsv(examStore.questions, undefined, defaultName)
     }
   } catch (e: any) { exportError.value = e.message || String(e) } finally { exporting.value = false }
+}
+
+async function handleExportKaoshibao() {
+  exportError.value = ''
+  exportingKaoshibao.value = true
+  try {
+    const defaultName = `${baseFileName.value}.xlsx`
+    if (isTauri) {
+      let saveDialog: any
+      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
+      const savePath = saveDialog ? await saveDialog({ defaultPath: defaultName, filters: [{ name: 'Excel', extensions: ['xlsx'] }] }) : null
+      if (!savePath) return
+      await api.exportKaoshibao(examStore.questions, savePath as string)
+    } else {
+      await api.exportKaoshibao(examStore.questions, undefined, defaultName)
+    }
+  } catch (e: any) { exportError.value = e.message || String(e) } finally { exportingKaoshibao.value = false }
 }
 
 function handleNewBatch() { examStore.reset(); router.push('/generate') }
@@ -37,15 +62,16 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
   <div>
     <!-- Empty State -->
     <div v-if="!examStore.generated">
-      <h1 class="page-title mb-1">{{ i18n.t('previewTitle') }}</h1>
-      <p class="page-subtitle mb-8">{{ i18n.t('previewSubtitleEmpty') }}</p>
-      <div class="card text-center py-12">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
-          <DocumentTextIcon class="w-8 h-8 text-primary-500" />
+      <h1 class="text-display-sm mb-1">{{ i18n.t('previewTitle') }}</h1>
+      <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('previewSubtitleEmpty') }}</p>
+      <div class="card-outlined text-center py-14 px-6">
+        <div class="w-[72px] h-[72px] rounded-[28px] flex items-center justify-center mx-auto mb-5 elevation-1"
+             style="background: linear-gradient(135deg, rgb(var(--md-primary)), rgb(var(--md-tertiary)))">
+          <DocumentTextIcon class="w-9 h-9 text-white" />
         </div>
-        <h3 class="text-lg font-bold mb-2">{{ i18n.t('previewEmptyTitle') }}</h3>
-        <p class="text-sm text-[rgb(var(--c-text-secondary))] mb-5">{{ i18n.t('previewEmptyText') }}</p>
-        <button class="btn-primary text-sm" @click="router.push('/generate')">
+        <h3 class="text-title-lg mb-2">{{ i18n.t('previewEmptyTitle') }}</h3>
+        <p class="text-body-md mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('previewEmptyText') }}</p>
+        <button class="btn-filled" @click="router.push('/generate')">
           {{ i18n.t('previewGotoGenerate') }}
         </button>
       </div>
@@ -53,22 +79,33 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
 
     <!-- Results -->
     <div v-else>
-      <div class="flex flex-wrap items-center gap-3 mb-6">
+      <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 mb-6">
         <div class="flex-1">
-          <h1 class="page-title mb-1">{{ i18n.t('previewTitle') }}</h1>
-          <p class="page-subtitle">{{ i18n.t('previewQuestionCount', { n: examStore.questions.length }) }}</p>
+          <h1 class="text-display-sm mb-1">{{ i18n.t('previewTitle') }}</h1>
+          <p class="text-body-lg" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('previewQuestionCount', { n: examStore.questions.length }) }}</p>
         </div>
-        <button class="btn-outline text-sm" @click="handleNewBatch">
-          <ArrowLeftIcon class="w-4 h-4" /> {{ i18n.t('previewNewBatch') }}
-        </button>
-        <button class="btn-primary text-sm" :disabled="exporting" @click="handleExport">
-          <ArrowDownTrayIcon class="w-4 h-4" /> {{ i18n.t('previewExportCsv') }}
-        </button>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn-tonal text-sm" @click="handleNewBatch">
+            <ArrowLeftIcon class="w-4 h-4" /> {{ i18n.t('previewNewBatch') }}
+          </button>
+          <button class="btn-tonal text-sm" :disabled="exportingKaoshibao" @click="handleExportKaoshibao">
+            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : '考试宝' }}
+          </button>
+          <button class="btn-filled text-sm" :disabled="exporting" @click="handleExport">
+            <ArrowDownTrayIcon class="w-4 h-4" /> CSV
+          </button>
+        </div>
       </div>
 
-      <div v-if="exportError" class="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-sm text-red-700 dark:text-red-300">
-        {{ exportError }}
-      </div>
+      <Transition name="scale">
+        <div
+          v-if="exportError"
+          class="mb-4 px-4 py-3 rounded-2xl text-sm"
+          style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+        >
+          {{ exportError }}
+        </div>
+      </Transition>
 
       <QuestionTable :questions="examStore.questions" />
     </div>

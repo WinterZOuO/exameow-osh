@@ -153,6 +153,25 @@ pub async fn export_handler(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
+pub async fn export_kaoshibao_handler(
+    Json(questions): Json<Vec<Question>>,
+) -> Result<Response, (StatusCode, String)> {
+    let data = exambot_core::export::export_kaoshibao_to_writer(&questions)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Response::builder()
+        .header(
+            header::CONTENT_TYPE,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        .header(
+            header::CONTENT_DISPOSITION,
+            "attachment; filename=\"exambot_kaoshibao.xlsx\"",
+        )
+        .body(axum::body::Body::from(data))
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+}
+
 pub async fn save_config_handler(
     State(_state): State<Arc<AppState>>,
     Json(config): Json<AIConfigData>,

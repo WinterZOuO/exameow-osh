@@ -6,7 +6,7 @@ import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
-import { getFileInput, fileInputRef } from '@/stores/fileInput'
+import { getFileInputs, fileInputsRef } from '@/stores/fileInput'
 import { SparklesIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -17,7 +17,7 @@ const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 
 const canGenerate = computed(() =>
-  !!fileInputRef.value && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
+  fileInputsRef.value.length > 0 && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
 )
 
 const progressPercent = computed(() => {
@@ -29,10 +29,10 @@ const progressPercent = computed(() => {
 const isBatched = computed(() => examStore.progress.total > 1)
 
 async function handleGenerate() {
-  const input = getFileInput()
-  if (!input) return
+  const inputs = getFileInputs()
+  if (inputs.length === 0) return
   try {
-    await examStore.generate(input)
+    await examStore.generate(inputs)
     router.push('/preview')
   } catch (_) {
     // error is handled in store
@@ -42,38 +42,43 @@ async function handleGenerate() {
 
 <template>
   <div>
-    <h1 class="page-title mb-1">{{ i18n.t('genTitle') }}</h1>
-    <p class="page-subtitle mb-8">{{ i18n.t('genSubtitle') }}</p>
+    <h1 class="text-display-sm mb-1">{{ i18n.t('genTitle') }}</h1>
+    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genSubtitle') }}</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="card min-h-[220px] flex items-center justify-center">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-6">
+      <!-- File Upload Card -->
+      <div class="card-outlined min-h-[180px] sm:min-h-[240px] flex items-center justify-center p-3 sm:p-4">
         <FileUploader :is-tauri="isTauri" />
       </div>
       <ParamForm />
     </div>
 
     <!-- Progress -->
-    <div v-if="examStore.generating" class="card mb-6">
-      <div class="mb-3 flex items-center justify-between text-sm">
-        <span class="font-medium">{{ examStore.progress.message || i18n.t('genGenerating') }}</span>
-        <span v-if="isBatched" class="font-bold text-primary-500 tabular-nums">
-          {{ examStore.progress.current }}/{{ examStore.progress.total }}
-        </span>
+    <Transition name="scale">
+      <div v-if="examStore.generating" class="card-filled p-5 mb-6">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-title-sm">{{ examStore.progress.message || i18n.t('genGenerating') }}</span>
+          <span v-if="isBatched" class="text-sm font-bold tabular-nums" style="color: rgb(var(--md-primary))">
+            {{ examStore.progress.current }}/{{ examStore.progress.total }}
+          </span>
+        </div>
+        <div v-if="!isBatched && examStore.generating" class="progress-indeterminate" />
+        <div v-else class="w-full h-1 rounded-full overflow-hidden" :style="{ backgroundColor: 'rgba(var(--md-primary) / 0.12)' }">
+          <div
+            class="h-full rounded-full transition-all duration-500 ease-out"
+            :style="{ backgroundColor: 'rgb(var(--md-primary))', width: progressPercent + '%' }"
+          />
+        </div>
+        <div v-if="isBatched" class="mt-2 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
+          {{ examStore.questions.length }} questions generated so far
+        </div>
       </div>
-      <div class="w-full h-2 bg-[rgb(var(--c-container))] rounded-full overflow-hidden">
-        <div
-          class="h-full bg-primary-500 rounded-full transition-all duration-500 ease-out"
-          :style="{ width: (!isBatched && examStore.generating) ? '99%' : progressPercent + '%' }"
-        />
-      </div>
-      <div v-if="isBatched" class="mt-2 text-xs text-[rgb(var(--c-text-secondary))]">
-        {{ examStore.questions.length }} questions generated so far
-      </div>
-    </div>
+    </Transition>
 
+    <!-- Generate Button -->
     <div class="text-center">
       <button
-        class="btn-primary !px-10 !py-4 text-base !font-bold"
+        class="btn-filled text-base !px-10 !h-12"
         :disabled="!canGenerate || examStore.generating"
         @click="handleGenerate"
       >
