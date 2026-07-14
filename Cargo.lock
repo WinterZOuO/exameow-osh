@@ -1155,7 +1155,7 @@ dependencies = [
 
 [[package]]
 name = "exambot"
-version = "0.1.0"
+version = "2.1.1"
 dependencies = [
  "base64 0.22.1",
  "exambot-core",

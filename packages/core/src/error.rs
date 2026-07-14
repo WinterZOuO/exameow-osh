@@ -1,4 +1,5 @@
 use crate::parser::ParserError;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum CoreError {
@@ -26,7 +27,15 @@ impl From<ParserError> for CoreError {
 }
 
 impl From<reqwest::Error> for CoreError {
-    fn from(e: reqwest::Error) -> Self { CoreError::AI(e.to_string()) }
+    fn from(e: reqwest::Error) -> Self {
+        let mut msg = e.to_string();
+        let mut source = e.source();
+        while let Some(s) = source {
+            msg.push_str(&format!("\n  caused by: {s}"));
+            source = s.source();
+        }
+        CoreError::AI(msg)
+    }
 }
 
 impl From<serde_json::Error> for CoreError {

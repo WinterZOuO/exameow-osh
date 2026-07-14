@@ -34,8 +34,8 @@ async function handleGenerate() {
   try {
     await examStore.generate(inputs)
     router.push('/preview')
-  } catch (_) {
-    // error is handled in store
+  } catch (_e) {
+    // error displayed via examStore.error
   }
 }
 </script>
@@ -55,7 +55,7 @@ async function handleGenerate() {
 
     <!-- Progress -->
     <Transition name="scale">
-      <div v-if="examStore.generating" class="card-filled p-5 mb-6">
+      <div v-if="!examStore.error && examStore.generating" class="card-filled p-5 mb-6">
         <div class="mb-3 flex items-center justify-between">
           <span class="text-title-sm">{{ examStore.progress.message || i18n.t('genGenerating') }}</span>
           <span v-if="isBatched" class="text-sm font-bold tabular-nums" style="color: rgb(var(--md-primary))">
@@ -72,6 +72,13 @@ async function handleGenerate() {
         <div v-if="isBatched" class="mt-2 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
           {{ examStore.questions.length }} questions generated so far
         </div>
+      </div>
+    </Transition>
+
+    <!-- Error -->
+    <Transition name="scale">
+      <div v-if="examStore.error && !examStore.generating" class="card-filled p-4 mb-6 border" :style="{ backgroundColor: 'rgba(var(--md-error) / 0.08)', borderColor: 'rgb(var(--md-error))' }">
+        <p class="text-body-md" style="color: rgb(var(--md-error))">{{ examStore.error }}</p>
       </div>
     </Transition>
 

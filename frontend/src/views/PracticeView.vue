@@ -87,11 +87,16 @@ function triggerNav(dir: 'next' | 'prev', fromGesture: boolean) {
 }
 
 function goPrev() {
+  if (practiceStore.isFirstQuestion) return
   triggerNav('prev', true)
   triggerSlide('prev', 0)
 }
 
 function goNext() {
+  if (practiceStore.isLastQuestion) {
+    showSubmitConfirm.value = true
+    return
+  }
   triggerNav('next', true)
   triggerSlide('next', 0)
 }
@@ -115,7 +120,7 @@ function onTransitionEnd() {
     finishAnimation()
     doNavigate(dir)
   } else {
-    slideOffset.value = 0
+    finishAnimation()
   }
 }
 
@@ -167,10 +172,11 @@ onMounted(() => {
 
 watch([viewState, () => practiceStore.session], ([state]) => {
   nextTick(() => {
+    if (swipeContainer.value) {
+      detach(swipeContainer.value)
+    }
     if (state === 'practice' && swipeContainer.value) {
       attach(swipeContainer.value)
-    } else if (swipeContainer.value) {
-      detach(swipeContainer.value)
     }
   })
 })

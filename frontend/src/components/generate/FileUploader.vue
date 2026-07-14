@@ -18,8 +18,13 @@ onMounted(async () => {
       const mod = await import('@tauri-apps/plugin-dialog')
       ;(window as any).__tauriDialogOpen = mod.open
       dialogReady.value = true
-    } catch { dialogReady.value = false }
+      console.log('[FileUploader] dialog plugin loaded OK')
+    } catch (e) {
+      dialogReady.value = false
+      console.warn('[FileUploader] dialog plugin FAILED to load:', e)
+    }
   }
+  console.log('[FileUploader] isTauri:', props.isTauri, 'dialogReady:', dialogReady.value)
 })
 
 const fileNames = computed(() => fileNamesRef.value)
@@ -47,11 +52,15 @@ async function pick() {
       multiple: true,
       filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }],
     })
+    console.log('[FileUploader] open result:', typeof result, result)
     if (result) {
-      const paths = Array.isArray(result) ? result : [result]
+      const results = Array.isArray(result) ? result : [result]
+      const paths = results.map((r: any) => typeof r === 'string' ? r : r.path)
+      console.log('[FileUploader] normalized paths:', paths)
       addFileInputs(paths)
     }
   } else {
+    console.log('[FileUploader] fallback to web file input (dialogReady:', dialogReady.value, ')')
     webFileInput.value?.click()
   }
 }

@@ -11,8 +11,12 @@ pub struct AIClient {
 impl AIClient {
     pub fn new(endpoint: &str, api_key: &str) -> Self {
         let endpoint = endpoint.trim_end_matches('/').to_string();
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
         Self {
-            client: reqwest::Client::new(),
+            client,
             endpoint,
             api_key: api_key.to_string(),
         }

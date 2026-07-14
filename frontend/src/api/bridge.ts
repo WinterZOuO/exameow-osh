@@ -25,13 +25,24 @@ export const tauriApi = {
     apiKey: string,
     model: string,
   ): Promise<GenerateResult> {
-    return invoke<GenerateResult>('generate_exam', {
-      filePath,
-      paramsJson: JSON.stringify(params),
-      endpoint,
-      apiKey,
-      model,
-    })
+    const fpType = typeof filePath
+    const fpVal = fpType === 'string' ? filePath : JSON.stringify(filePath)
+    console.log('[bridge] generateExam filePath type:', fpType, 'val:', fpVal)
+    const safePath = typeof filePath === 'string' ? filePath : String(filePath || 'file')
+    console.log('[bridge] safePath:', safePath)
+    try {
+      return await invoke<GenerateResult>('generate_exam', {
+        filePath: safePath,
+        paramsJson: JSON.stringify(params),
+        endpoint,
+        apiKey,
+        model,
+      })
+    } catch (e: any) {
+      const detail = `[DIAG] filePath type=${fpType} val=${fpVal} safePath=${safePath} | ${e?.message || e}`
+      console.error(detail)
+      throw new Error(detail)
+    }
   },
 
   async exportCsv(questions: Question[], savePath: string): Promise<void> {

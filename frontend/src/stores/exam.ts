@@ -24,6 +24,7 @@ export const useExamStore = defineStore('exam', () => {
   const questions = ref<Question[]>(loadCachedQuestions())
   const sourceFileName = ref(loadCachedSourceFile())
   const generating = ref(false)
+  const error = ref<string | null>(null)
   const progress = ref({ current: 0, total: 0, message: '' })
   const generated = computed(() => questions.value.length > 0)
   const totalCount = computed(() =>
@@ -158,6 +159,15 @@ export const useExamStore = defineStore('exam', () => {
     return inputs.length > 1 ? `${base}等文件` : base
   }
 
+  function uint8ToBase64(bytes: Uint8Array): string {
+    const CHUNK = 4096
+    const parts: string[] = []
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]))
+    }
+    return btoa(parts.join(''))
+  }
+
   async function generate(inputs: (string | File)[]) {
     const configStore = useConfigStore()
     generating.value = true
@@ -166,6 +176,7 @@ export const useExamStore = defineStore('exam', () => {
     sourceFileName.value = extractFileName(inputs)
 
     try {
+      error.value = null
       const config = configStore.getConfig()
       const baseParams = getParams()
 
@@ -176,10 +187,14 @@ export const useExamStore = defineStore('exam', () => {
 
       if (hasTauriPaths) {
         progress.value.message = 'Extracting document text...'
+        const { readFile } = await import('@tauri-apps/plugin-fs')
         const { tauriApi } = await import('@/api/bridge')
         for (const input of inputs) {
           if (typeof input === 'string') {
-            const text = await tauriApi.parseFileText(input)
+            const ext = input.split('.').pop()?.toLowerCase() || 'txt'
+            const buf = await readFile(input)
+            const base64 = uint8ToBase64(new Uint8Array(buf))
+            const text = await tauriApi.parseFileBytes(base64, ext)
             if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
           }
         }
@@ -190,7 +205,7 @@ export const useExamStore = defineStore('exam', () => {
           const file = input as File
           const ext = file.name.split('.').pop() || 'txt'
           const buf = await file.arrayBuffer()
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
+          const base64 = uint8ToBase64(new Uint8Array(buf))
           const text = await tauriApi.parseFileBytes(base64, ext)
           if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
         }
@@ -206,7 +221,12 @@ export const useExamStore = defineStore('exam', () => {
       baseParams.source_name = sourceFileName.value
       const batches = buildBatches(baseParams)
       const firstInput = inputs[0]!
-      const fileRef = hasTauriPaths ? (firstInput as string) : (firstInput as File)
+      console.log('[ExamBot] fileRef debug:', { hasTauriPaths, isTauriEnv, firstInputType: typeof firstInput, firstInputVal: firstInput })
+      const fileRef = hasTauriPaths
+        ? (firstInput as string)
+        : (isTauriEnv
+          ? (typeof firstInput === 'string' ? firstInput : (firstInput as File).name || 'file')
+          : (firstInput as File))
 
       progress.value = { current: 0, total: batches.length, message: 'Generating...' }
 
@@ -238,6 +258,9 @@ export const useExamStore = defineStore('exam', () => {
 
       const practiceStore = usePracticeStore()
       practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
+    } catch (e: any) {
+      error.value = e?.message || e?.toString() || 'Unknown error'
+      throw e
     } finally {
       generating.value = false
     }
@@ -252,6 +275,6 @@ export const useExamStore = defineStore('exam', () => {
   return {
     questionTypes, typeCounts, totalCount,
     difficulty, language, topicFilter, questions, generating, generated,
-    sourceFileName, progress, getParams, generate, reset,
+    sourceFileName, error, progress, getParams, generate, reset,
   }
 })
