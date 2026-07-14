@@ -78,7 +78,7 @@ const typeCounts = (bank: QuestionBank) => {
     <button
       v-for="bank in banks"
       :key="bank.id"
-      class="w-full text-left card-elevated p-3 sm:p-5 transition-all duration-200 group"
+      class="w-full text-left card-elevated p-3 sm:p-5 transition-all duration-200 group relative"
       :style="
         selectedId === bank.id
           ? { outline: '2px solid rgb(var(--md-primary))', outlineOffset: '1px' }
