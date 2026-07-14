@@ -45,7 +45,7 @@ export const httpApi = {
     URL.revokeObjectURL(url)
   },
 
-  async exportKaoshibao(questions: Question[], filename: string = 'exambot_kaoshibao.xlsx'): Promise<void> {
+  async exportKaoshibao(questions: Question[], filename: string = 'exambot_questions.xlsx'): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/export/kaoshibao`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -86,17 +86,30 @@ export const httpApi = {
 }
 
 function generateCsvContent(questions: Question[]): string {
-  const headers = ['id', 'type', 'stem', 'options', 'answer', 'analysis']
+  const typeLabels: Record<string, string> = {
+    single_choice: '单选题', multi_choice: '多选题',
+    true_false: '判断题', fill_blank: '填空题',
+    short_answer: '简答题',
+  }
+  const headers = ['题干', '题型', '选项A', '选项B', '选项C', '选项D', '选项E', '选项F', '选项G', '选项H', '正确答案', '解析', '章节', '难度']
   const rows = questions.map((q) => [
-    q.id,
-    q.type,
-    q.stem.replace(/"/g, '""'),
-    q.options.join('|'),
-    q.answer.replace(/"/g, '""'),
-    q.analysis.replace(/"/g, '""'),
+    q.stem,
+    typeLabels[q.type] || q.type,
+    q.options[0] || '',
+    q.options[1] || '',
+    q.options[2] || '',
+    q.options[3] || '',
+    q.options[4] || '',
+    q.options[5] || '',
+    q.options[6] || '',
+    q.options[7] || '',
+    q.answer,
+    q.analysis,
+    '',
+    '',
   ])
   const csvRows = [headers, ...rows].map((r) =>
-    r.map((c) => `"${c}"`).join(','),
+    r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','),
   )
   return '\uFEFF' + csvRows.join('\n')
 }

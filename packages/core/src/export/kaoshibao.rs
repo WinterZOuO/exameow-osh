@@ -12,7 +12,7 @@ const KAOSHIBAO_TYPE_MAP: &[(&str, &str)] = &[
     ("short_answer", "简答题"),
 ];
 
-fn to_kaoshibao_type(qtype: &str) -> &str {
+pub(super) fn to_chinese_type(qtype: &str) -> &str {
     for (key, label) in KAOSHIBAO_TYPE_MAP {
         if qtype == *key {
             return label;
@@ -206,7 +206,7 @@ fn generate_kaoshibao_xlsx(questions: &[Question]) -> Result<Vec<u8>, CoreError>
 
         let stem = q.stem.trim();
         let qtype_str = q.qtype.to_string();
-        let qtype = to_kaoshibao_type(&qtype_str);
+        let qtype = to_chinese_type(&qtype_str);
         let analysis = q.analysis.trim();
         let answer = q.answer.trim();
         let options: Vec<String> = q.options.iter().map(|o| o.trim().to_string()).collect();

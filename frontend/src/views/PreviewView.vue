@@ -89,7 +89,7 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
             <ArrowLeftIcon class="w-4 h-4" /> {{ i18n.t('previewNewBatch') }}
           </button>
           <button class="btn-tonal text-sm" :disabled="exportingKaoshibao" @click="handleExportKaoshibao">
-            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : '考试宝' }}
+            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
           </button>
           <button class="btn-filled text-sm" :disabled="exporting" @click="handleExport">
             <ArrowDownTrayIcon class="w-4 h-4" /> CSV

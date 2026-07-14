@@ -47,12 +47,12 @@ const rows = computed(() =>
       <table class="w-full text-sm min-w-[700px] sm:min-w-0">
         <thead>
           <tr :style="{ borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.3)' }">
-            <th class="text-left px-5 py-3.5 text-label-sm w-12" style="color: rgb(var(--md-on-surface-variant))">#</th>
-            <th class="text-left px-5 py-3.5 text-label-sm w-24" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableType') }}</th>
-            <th class="text-left px-5 py-3.5 text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableQuestion') }}</th>
-            <th class="text-left px-5 py-3.5 text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableOptions') }}</th>
-            <th class="text-left px-5 py-3.5 text-label-sm w-36" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableAnswer') }}</th>
-            <th class="text-left px-5 py-3.5 text-label-sm w-48" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableAnalysis') }}</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm w-8 sm:w-12" style="color: rgb(var(--md-on-surface-variant))">#</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm w-20 sm:w-24 whitespace-nowrap" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableType') }}</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableQuestion') }}</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableOptions') }}</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm w-28 sm:w-36 whitespace-nowrap" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableAnswer') }}</th>
+            <th class="text-left px-3 sm:px-5 py-2.5 sm:py-3.5 text-label-sm w-40 sm:w-48 hidden sm:table-cell" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('tableAnalysis') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -64,19 +64,19 @@ const rows = computed(() =>
             @mouseenter="(e: MouseEvent) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgb(var(--md-surface-container-highest))' }"
             @mouseleave="(e: MouseEvent) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }"
           >
-            <td class="px-5 py-3 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ idx + 1 }}</td>
-            <td class="px-5 py-3">
+            <td class="px-3 sm:px-5 py-2 sm:py-3 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ idx + 1 }}</td>
+            <td class="px-3 sm:px-5 py-2 sm:py-3 whitespace-nowrap">
               <span
-                class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                class="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold whitespace-nowrap"
                 :style="{ backgroundColor: typeBg[row.qtype] || 'rgba(var(--md-on-surface-variant) / 0.12)', color: typeColor[row.qtype] || 'rgb(var(--md-on-surface-variant))' }"
               >
                 {{ i18n.t((typeLabel[row.qtype] || row.qtype) as any) }}
               </span>
             </td>
-            <td class="px-5 py-3 max-w-xs leading-relaxed font-medium" style="color: rgb(var(--md-on-surface))">{{ row.stem }}</td>
-            <td class="px-5 py-3 text-body-sm max-w-xs leading-relaxed" style="color: rgb(var(--md-on-surface-variant))">{{ row.options || '-' }}</td>
-            <td class="px-5 py-3 font-semibold leading-relaxed" style="color: #1B6D3C">{{ row.answer }}</td>
-            <td class="px-5 py-3 text-body-sm max-w-[200px] leading-relaxed" style="color: rgb(var(--md-on-surface-variant))">{{ row.analysis || '-' }}</td>
+            <td class="px-3 sm:px-5 py-2 sm:py-3 max-w-xs leading-relaxed font-medium" style="color: rgb(var(--md-on-surface))">{{ row.stem }}</td>
+            <td class="px-3 sm:px-5 py-2 sm:py-3 text-body-sm max-w-xs leading-relaxed" style="color: rgb(var(--md-on-surface-variant))">{{ row.options || '-' }}</td>
+            <td class="px-3 sm:px-5 py-2 sm:py-3 font-semibold leading-relaxed whitespace-nowrap" style="color: #1B6D3C">{{ row.answer }}</td>
+            <td class="px-3 sm:px-5 py-2 sm:py-3 text-body-sm max-w-[200px] leading-relaxed hidden sm:table-cell" style="color: rgb(var(--md-on-surface-variant))">{{ row.analysis || '-' }}</td>
           </tr>
         </tbody>
       </table>

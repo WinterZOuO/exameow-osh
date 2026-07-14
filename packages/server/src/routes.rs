@@ -166,7 +166,7 @@ pub async fn export_kaoshibao_handler(
         )
         .header(
             header::CONTENT_DISPOSITION,
-            "attachment; filename=\"exambot_kaoshibao.xlsx\"",
+            "attachment; filename=\"exambot_questions.xlsx\"",
         )
         .body(axum::body::Body::from(data))
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
