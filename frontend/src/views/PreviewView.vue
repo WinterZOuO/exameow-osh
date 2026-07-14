@@ -21,19 +21,31 @@ const baseFileName = computed(() => {
   return 'exambot_questions'
 })
 
+async function getExportPath(defaultName: string): Promise<string | null> {
+  let saveDialog: any
+  try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
+  if (saveDialog) {
+    return await saveDialog({ defaultPath: defaultName, filters: [{ name: 'File', extensions: [defaultName.split('.').pop() || '*'] }] })
+  }
+  try {
+    const { downloadDir } = await import('@tauri-apps/plugin-fs')
+    const dir = await downloadDir()
+    return `${dir}/${defaultName}`
+  } catch (e: any) {
+    exportError.value = 'Export failed: cannot determine save path (' + (e.message || e) + ')'
+    return null
+  }
+}
+
 async function handleExport() {
   exportError.value = ''
   exporting.value = true
   try {
     const defaultName = `${baseFileName.value}.csv`
     if (isTauri) {
-      let saveDialog: any
-      let dialogErr = ''
-      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch (e: any) { dialogErr = e.message || String(e) }
-      if (!saveDialog) { exportError.value = 'Save dialog not available' + (dialogErr ? ': ' + dialogErr : ''); return }
-      const savePath = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'CSV', extensions: ['csv'] }] })
+      const savePath = await getExportPath(defaultName)
       if (!savePath) return
-      await api.exportCsv(examStore.questions, savePath as string)
+      await api.exportCsv(examStore.questions, savePath)
     } else {
       await api.exportCsv(examStore.questions, undefined, defaultName)
     }
@@ -46,13 +58,9 @@ async function handleExportKaoshibao() {
   try {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
-      let saveDialog: any
-      let dialogErr = ''
-      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch (e: any) { dialogErr = e.message || String(e) }
-      if (!saveDialog) { exportError.value = 'Save dialog not available' + (dialogErr ? ': ' + dialogErr : ''); return }
-      const savePath = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'Excel', extensions: ['xlsx'] }] })
+      const savePath = await getExportPath(defaultName)
       if (!savePath) return
-      await api.exportKaoshibao(examStore.questions, savePath as string)
+      await api.exportKaoshibao(examStore.questions, savePath)
     } else {
       await api.exportKaoshibao(examStore.questions, undefined, defaultName)
     }
