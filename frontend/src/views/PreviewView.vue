@@ -28,8 +28,10 @@ async function handleExport() {
     const defaultName = `${baseFileName.value}.csv`
     if (isTauri) {
       let saveDialog: any
-      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
-      const savePath = saveDialog ? await saveDialog({ defaultPath: defaultName, filters: [{ name: 'CSV', extensions: ['csv'] }] }) : null
+      let dialogErr = ''
+      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch (e: any) { dialogErr = e.message || String(e) }
+      if (!saveDialog) { exportError.value = 'Save dialog not available' + (dialogErr ? ': ' + dialogErr : ''); return }
+      const savePath = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'CSV', extensions: ['csv'] }] })
       if (!savePath) return
       await api.exportCsv(examStore.questions, savePath as string)
     } else {
@@ -45,8 +47,10 @@ async function handleExportKaoshibao() {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
       let saveDialog: any
-      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
-      const savePath = saveDialog ? await saveDialog({ defaultPath: defaultName, filters: [{ name: 'Excel', extensions: ['xlsx'] }] }) : null
+      let dialogErr = ''
+      try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch (e: any) { dialogErr = e.message || String(e) }
+      if (!saveDialog) { exportError.value = 'Save dialog not available' + (dialogErr ? ': ' + dialogErr : ''); return }
+      const savePath = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'Excel', extensions: ['xlsx'] }] })
       if (!savePath) return
       await api.exportKaoshibao(examStore.questions, savePath as string)
     } else {

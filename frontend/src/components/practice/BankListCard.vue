@@ -108,28 +108,27 @@ const typeCounts = (bank: QuestionBank) => {
           </div>
         </div>
 
-        <ArrowRightIcon
-          class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-1.5 transition-transform group-hover:translate-x-0.5"
-          :style="{ color: 'rgb(var(--md-on-surface-muted))' }"
-        />
-      </div>
-
-      <div class="flex items-center gap-1 mt-3 sm:mt-0 sm:absolute sm:right-4 sm:top-4">
-        <button
-          class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
-          :style="{ color: 'rgb(var(--md-error))' }"
-          @click.stop="emit('delete', bank.id)"
-        >
-          <TrashIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
-        <button
-          v-if="wrongStore.hasWrongQuestions(bank.id)"
-          class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
-          :style="{ color: 'rgb(var(--md-error))' }"
-          @click.stop="emit('manageWrong', bank.id)"
-        >
-          <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
+        <div class="flex items-center gap-1 shrink-0">
+          <button
+            class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
+            :style="{ color: 'rgb(var(--md-error))' }"
+            @click.stop="emit('delete', bank.id)"
+          >
+            <TrashIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+          <button
+            v-if="wrongStore.hasWrongQuestions(bank.id)"
+            class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
+            :style="{ color: 'rgb(var(--md-error))' }"
+            @click.stop="emit('manageWrong', bank.id)"
+          >
+            <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+          <ArrowRightIcon
+            class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:translate-x-0.5"
+            :style="{ color: 'rgb(var(--md-on-surface-muted))' }"
+          />
+        </div>
       </div>
     </button>
   </div>
