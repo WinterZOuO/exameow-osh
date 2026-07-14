@@ -76,13 +76,9 @@ const headerStyle = {
       >
         <!-- Logo -->
         <router-link to="/practice" class="flex items-center gap-3 shrink-0 no-underline">
-          <!-- Pixel-style rounded square logo -->
-          <div class="w-[38px] h-[38px] rounded-2xl flex items-center justify-center shrink-0 elevation-1"
+          <div class="w-[38px] h-[38px] rounded-2xl flex items-center justify-center shrink-0 elevation-1 overflow-hidden"
                style="background: linear-gradient(135deg, rgb(var(--md-primary)), rgb(var(--md-tertiary)))">
-            <svg width="22" height="22" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 15h6l2.5-3.5L23 15h5v11a2 2 0 01-2 2H14a2 2 0 01-2-2V15z" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M16 21.5l2.5 2.5 5-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="/logo.png" alt="ExamBot" class="w-full h-full object-cover" />
           </div>
           <div class="hidden sm:block">
             <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>

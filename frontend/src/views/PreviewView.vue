@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
+import { generateCsvContent } from '@/api/http'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
 import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
@@ -22,15 +23,32 @@ const baseFileName = computed(() => {
   return 'exambot_questions'
 })
 
-async function getExportPath(defaultName: string): Promise<{ path: string; useDownloadDir: boolean } | null> {
-  let saveDialog: any
-  try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
-  if (saveDialog) {
-    const path = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'File', extensions: [defaultName.split('.').pop() || '*'] }] })
-    if (!path) return null
-    return { path, useDownloadDir: false }
+async function saveFile(filename: string, content: string | Uint8Array): Promise<boolean> {
+  try {
+    const mod: any = await import('@tauri-apps/plugin-dialog')
+    const path = await mod.save({ defaultPath: filename, filters: [{ name: 'File', extensions: [filename.split('.').pop() || '*'] }] })
+    if (!path) return false
+    if (typeof content === 'string') {
+      await api.exportCsv(examStore.questions, path)
+    } else {
+      await api.exportKaoshibao(examStore.questions, path)
+    }
+    exportSuccess.value = 'Saved: ' + path
+    return true
+  } catch {}
+  try {
+    const { writeTextFile, writeFile, BaseDirectory } = await import('@tauri-apps/plugin-fs')
+    if (typeof content === 'string') {
+      await writeTextFile(filename, content, { baseDir: BaseDirectory.Download })
+    } else {
+      await writeFile(filename, content, { baseDir: BaseDirectory.Download })
+    }
+    exportSuccess.value = 'Saved to Downloads/' + filename
+    return true
+  } catch (e: any) {
+    exportError.value = 'Export failed: ' + (e.message || String(e))
+    return false
   }
-  return { path: defaultName, useDownloadDir: true }
 }
 
 async function handleExport() {
@@ -40,10 +58,8 @@ async function handleExport() {
   try {
     const defaultName = `${baseFileName.value}.csv`
     if (isTauri) {
-      const resolved = await getExportPath(defaultName)
-      if (!resolved) return
-      const actualPath = await api.exportCsv(examStore.questions, resolved.path, undefined, resolved.useDownloadDir)
-      exportSuccess.value = 'Saved: ' + (actualPath || resolved.path)
+      const content = generateCsvContent(examStore.questions)
+      await saveFile(defaultName, content)
     } else {
       await api.exportCsv(examStore.questions, undefined, defaultName)
     }
@@ -57,10 +73,9 @@ async function handleExportKaoshibao() {
   try {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
-      const resolved = await getExportPath(defaultName)
-      if (!resolved) return
-      const actualPath = await api.exportKaoshibao(examStore.questions, resolved.path, undefined, resolved.useDownloadDir)
-      exportSuccess.value = 'Saved: ' + (actualPath || resolved.path)
+      const base64 = await api.exportKaoshibaoData(examStore.questions)
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+      await saveFile(defaultName, bytes)
     } else {
       await api.exportKaoshibao(examStore.questions, undefined, defaultName)
     }
@@ -100,10 +115,10 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
           <button class="btn-tonal text-sm" @click="handleNewBatch">
             <ArrowLeftIcon class="w-4 h-4" /> {{ i18n.t('previewNewBatch') }}
           </button>
-          <button class="btn-tonal text-sm" :disabled="exportingKaoshibao" @click="handleExportKaoshibao">
+          <button class="btn-filled text-sm" :disabled="exportingKaoshibao" @click="handleExportKaoshibao">
             <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
           </button>
-          <button class="btn-filled text-sm" :disabled="exporting" @click="handleExport">
+          <button class="btn-tonal text-sm" :disabled="exporting" @click="handleExport">
             <ArrowDownTrayIcon class="w-4 h-4" /> CSV
           </button>
         </div>
@@ -122,7 +137,7 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
       <Transition name="scale">
         <div
           v-if="exportSuccess"
-          class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
+          class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 break-all"
           style="background-color: rgba(var(--md-primary) / 0.12); color: rgb(var(--md-primary))"
         >
           <CheckCircleIcon class="w-5 h-5 shrink-0" />

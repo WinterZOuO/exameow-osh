@@ -40,10 +40,9 @@ export const api = {
     questions: import('@exambot/shared').Question[],
     savePath?: string,
     filename?: string,
-    useDownloadDir?: boolean,
-  ): Promise<string | void> {
+  ): Promise<void> {
     if (isTauri()) {
-      return tauriApi.exportCsv(questions, savePath!, useDownloadDir ?? false)
+      return tauriApi.exportCsv(questions, savePath!)
     }
     return httpApi.exportCsv(questions, filename)
   },
@@ -52,12 +51,17 @@ export const api = {
     questions: import('@exambot/shared').Question[],
     savePath?: string,
     filename?: string,
-    useDownloadDir?: boolean,
-  ): Promise<string | void> {
+  ): Promise<void> {
     if (isTauri()) {
-      return tauriApi.exportKaoshibao(questions, savePath!, useDownloadDir ?? false)
+      return tauriApi.exportKaoshibao(questions, savePath!)
     }
     return httpApi.exportKaoshibao(questions, filename)
+  },
+
+  async exportKaoshibaoData(
+    questions: import('@exambot/shared').Question[],
+  ): Promise<string> {
+    return tauriApi.exportKaoshibaoData(questions)
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

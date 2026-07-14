@@ -85,7 +85,7 @@ export const httpApi = {
   },
 }
 
-function generateCsvContent(questions: Question[]): string {
+export function generateCsvContent(questions: Question[]): string {
   const typeLabels: Record<string, string> = {
     single_choice: '单选题', multi_choice: '多选题',
     true_false: '判断题', fill_blank: '填空题',
