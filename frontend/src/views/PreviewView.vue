@@ -28,7 +28,7 @@ async function getExportPath(defaultName: string): Promise<string | null> {
     return await saveDialog({ defaultPath: defaultName, filters: [{ name: 'File', extensions: [defaultName.split('.').pop() || '*'] }] })
   }
   try {
-    const { downloadDir } = await import('@tauri-apps/plugin-fs')
+    const { downloadDir } = await import('@tauri-apps/api/path')
     const dir = await downloadDir()
     return `${dir}/${defaultName}`
   } catch (e: any) {
