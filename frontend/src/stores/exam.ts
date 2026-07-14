@@ -3,6 +3,7 @@ import { ref, reactive, computed } from 'vue'
 import type { ExamParams, Question, QuestionType, Difficulty } from '@exambot/shared'
 import { api } from '@/api'
 import { useConfigStore } from './config'
+import { usePracticeStore } from './practice'
 
 const ALL_TYPES: QuestionType[] = [
   'single_choice' as QuestionType,
@@ -171,6 +172,7 @@ export const useExamStore = defineStore('exam', () => {
       // Parse all files and concatenate text
       let fullText = ''
       const hasTauriPaths = inputs.some(i => typeof i === 'string')
+      const isTauriEnv = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 
       if (hasTauriPaths) {
         progress.value.message = 'Extracting document text...'
@@ -181,6 +183,17 @@ export const useExamStore = defineStore('exam', () => {
             if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
           }
         }
+      } else if (isTauriEnv) {
+        progress.value.message = 'Parsing files...'
+        const { tauriApi } = await import('@/api/bridge')
+        for (const input of inputs) {
+          const file = input as File
+          const ext = file.name.split('.').pop() || 'txt'
+          const buf = await file.arrayBuffer()
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
+          const text = await tauriApi.parseFileBytes(base64, ext)
+          if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+        }
       } else {
         for (const input of inputs) {
           const file = input as File
@@ -190,6 +203,7 @@ export const useExamStore = defineStore('exam', () => {
       }
 
       baseParams.text = fullText
+      baseParams.source_name = sourceFileName.value
       const batches = buildBatches(baseParams)
       const firstInput = inputs[0]!
       const fileRef = hasTauriPaths ? (firstInput as string) : (firstInput as File)
@@ -221,6 +235,9 @@ export const useExamStore = defineStore('exam', () => {
 
       progress.value = { current: batches.length, total: batches.length, message: 'Complete!' }
       saveCachedQuestions()
+
+      const practiceStore = usePracticeStore()
+      practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
     } finally {
       generating.value = false
     }

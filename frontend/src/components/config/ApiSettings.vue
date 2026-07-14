@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
-import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/vue/24/outline'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
 
 const store = useConfigStore()
+const router = useRouter()
 const i18n = useI18nStore()
 const showKey = ref(false)
 const fetchError = ref('')
@@ -68,7 +70,7 @@ async function handleSave() {
     <div class="card-filled p-5 mb-4">
       <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionModel') }}</label>
 
-      <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex flex-col sm:flex-row items-center gap-3">
         <button
           class="btn-outlined shrink-0 text-sm"
           :disabled="!store.endpoint || !store.apiKey"
@@ -110,10 +112,19 @@ async function handleSave() {
     </Transition>
 
     <!-- Actions -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center justify-center gap-3">
       <button class="btn-filled" :disabled="!store.configured" @click="handleSave">
         <CheckIcon class="w-5 h-5" />
         {{ i18n.t('configSave') }}
+      </button>
+
+      <button
+        class="btn-filled"
+        :disabled="!store.configured"
+        @click="router.push('/generate')"
+      >
+        <ArrowRightIcon class="w-5 h-5" />
+        {{ i18n.t('configReadyCta') }}
       </button>
 
       <Transition name="fade">

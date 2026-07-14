@@ -5,13 +5,13 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/config',
+      redirect: '/practice',
     },
     {
-      path: '/config',
-      name: 'config',
-      component: () => import('@/views/ConfigView.vue'),
-      meta: { title: 'AI Config' },
+      path: '/practice',
+      name: 'practice',
+      component: () => import('@/views/PracticeView.vue'),
+      meta: { title: 'Practice' },
     },
     {
       path: '/generate',
@@ -24,6 +24,12 @@ const router = createRouter({
       name: 'preview',
       component: () => import('@/views/PreviewView.vue'),
       meta: { title: 'Preview & Export' },
+    },
+    {
+      path: '/config',
+      name: 'config',
+      component: () => import('@/views/ConfigView.vue'),
+      meta: { title: 'AI Config' },
     },
   ],
 })

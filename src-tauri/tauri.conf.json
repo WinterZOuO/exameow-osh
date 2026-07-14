@@ -12,9 +12,13 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "ExamBot",
         "width": 1024,
-        "height": 768
+        "height": 768,
+        "minWidth": 320,
+        "minHeight": 480,
+        "create": false
       }
     ],
     "security": {

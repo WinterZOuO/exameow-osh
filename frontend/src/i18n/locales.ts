@@ -7,6 +7,7 @@ export interface LocaleMessages {
   navConfig: string
   navGenerate: string
   navPreview: string
+  navPractice: string
 
   // Config
   configTitle: string
@@ -70,6 +71,130 @@ export interface LocaleMessages {
   diffMedium: string
   diffHard: string
 
+  // Practice
+  practiceTitle: string
+  practiceSubtitle: string
+  practiceEmptyTitle: string
+  practiceEmptyHint: string
+  practiceImportBtn: string
+  practiceImportCsv: string
+  practiceImportExcel: string
+  practiceImportDialogTitle: string
+  practiceImportPreview: string
+  practiceImportConfirm: string
+  practiceImportSuccess: string
+  practiceImportFail: string
+  practiceImportParsing: string
+  practiceModeSequential: string
+  practiceModeSequentialDesc: string
+  practiceModeRandom: string
+  practiceModeRandomDesc: string
+  practiceModeMock: string
+  practiceModeMockDesc: string
+  practiceSelectBank: string
+  practiceSelectModeTitle: string
+  practiceStartBtn: string
+  practiceMockConfigTitle: string
+  practiceMockTypes: string
+  practiceMockCounts: string
+  practiceMockGenerate: string
+  practiceQuestions: string
+  practiceProgress: string
+  practicePrevBtn: string
+  practiceNextBtn: string
+  practiceSubmitBtn: string
+  practiceSubmitConfirm: string
+  practiceSubmitConfirmMsg: string
+  practiceResultTitle: string
+  practiceScore: string
+  practiceCorrect: string
+  practiceIncorrect: string
+  practiceAccuracy: string
+  practiceElapsed: string
+  practiceReviewTitle: string
+  practiceReviewQuestion: string
+  practiceReviewYourAnswer: string
+  practiceReviewCorrectAnswer: string
+  practiceReviewAnalysis: string
+  practiceReviewEmptyAnalysis: string
+  practiceRetryBtn: string
+  practiceBackToBanks: string
+  practiceDeleteBank: string
+  practiceDeleteConfirm: string
+  practiceSelfCheck: string
+  practiceSelfCheckHint: string
+  practiceSaveAsBank: string
+  practiceSavedAsBank: string
+  practiceSourceAI: string
+  practiceSourceImport: string
+  practiceChooseFile: string
+  practiceFileHint: string
+  practiceRemoveFile: string
+  practiceMinutes: string
+  practiceSeconds: string
+  // Practice mode toggle
+  practiceModeExam: string
+  practiceModeFlashcard: string
+  // Practice in-card strings
+  practiceConfirmAnswer: string
+  practiceClickToSubmit: string
+  practiceCorrectAdvancing: string
+  practiceInputAnswer: string
+  practiceInputAnswerShort: string
+  practiceSelfCheckCorrect: string
+  practiceSelfCheckWrong: string
+  practiceUnanswered: string
+  practiceContinuePractice: string
+  practiceWrongPractice: string
+  practiceContinue: string
+  practiceCancel: string
+  practiceClear: string
+  practiceClearProgress: string
+  practiceClearProgressMsg: string
+  practiceUnansweredCount: string
+  practiceAnswerSheet: string
+  practiceQuestionCount: string
+  practiceUnansweredShort: string
+  practiceRemoveWrong: string
+  practiceQuestionGone: string
+  practiceUnknownBank: string
+  practiceAnsweredCount: string
+  practiceQuestionUnit: string
+  // Import / file
+  practiceMultiFileHint: string
+  practiceFileCount: string
+  practiceAddFile: string
+  practiceClearAll: string
+  practiceImportCount: string
+  practiceImportColType: string
+  practiceImportColStem: string
+  practiceImportColAnswer: string
+  practiceImportColAnalysis: string
+  // Language
+  practiceLangZh: string
+  practiceLangEn: string
+
+  // Wrong questions
+  wrongModeTitle: string
+  wrongModeDesc: string
+  wrongQuestionsBtn: string
+  wrongQuestionsManage: string
+  wrongCount: string
+  wrongTimesCount: string
+  wrongSortTitle: string
+  wrongSortCountDesc: string
+  wrongSortCountAsc: string
+  wrongSortTimeDesc: string
+  wrongSortTimeAsc: string
+  wrongRemoved: string
+  wrongAutoRemoved: string
+  wrongClearConfirm: string
+  wrongClearConfirmMsg: string
+  wrongClearBtn: string
+  wrongManagerTitle: string
+  wrongManagerEmpty: string
+  wrongNoWrong: string
+
   // Common
   btnStart: string
   btnBack: string
@@ -84,6 +209,7 @@ export const zh: LocaleMessages = {
   navConfig: '配置',
   navGenerate: '出题',
   navPreview: '预览',
+  navPractice: '刷题',
 
   configTitle: '设置',
   configSubtitle: '连接 AI 后台，开始出题',
@@ -141,6 +267,125 @@ export const zh: LocaleMessages = {
   diffMedium: '中等',
   diffHard: '困难',
 
+  practiceTitle: '刷题',
+  practiceSubtitle: '选择题库开始练习或导入新题库',
+  practiceEmptyTitle: '暂无题库',
+  practiceEmptyHint: '导入 CSV/Excel 文件或将生成的试题保存为题库',
+  practiceImportBtn: '导入题库',
+  practiceImportCsv: 'CSV 文件',
+  practiceImportExcel: 'Excel 文件',
+  practiceImportDialogTitle: '导入题库',
+  practiceImportPreview: '解析预览',
+  practiceImportConfirm: '确认导入',
+  practiceImportSuccess: '成功导入 {n} 道题目',
+  practiceImportFail: '导入失败，请检查文件格式',
+  practiceImportParsing: '正在解析文件...',
+  practiceModeSequential: '顺序练习',
+  practiceModeSequentialDesc: '按照题库顺序逐题练习',
+  practiceModeRandom: '随机练习',
+  practiceModeRandomDesc: '题目和选项顺序随机打乱',
+  practiceModeMock: '模拟考试',
+  practiceModeMockDesc: '从题库中随机抽取生成试卷',
+  practiceSelectBank: '选择题库',
+  practiceSelectModeTitle: '选择练习模式',
+  practiceStartBtn: '开始练习',
+  practiceMockConfigTitle: '模拟考试设置',
+  practiceMockTypes: '选择题型',
+  practiceMockCounts: '题目数量',
+  practiceMockGenerate: '生成试卷',
+  practiceQuestions: '{n} 题',
+  practiceProgress: '第 {c}/{t} 题',
+  practicePrevBtn: '上一题',
+  practiceNextBtn: '下一题',
+  practiceSubmitBtn: '提交答案',
+  practiceSubmitConfirm: '确认提交',
+  practiceSubmitConfirmMsg: '提交后无法修改答案，确定要提交吗？',
+  practiceResultTitle: '练习结果',
+  practiceScore: '得分',
+  practiceCorrect: '正确',
+  practiceIncorrect: '错误',
+  practiceAccuracy: '正确率',
+  practiceElapsed: '用时',
+  practiceReviewTitle: '错题回顾',
+  practiceReviewQuestion: '题目',
+  practiceReviewYourAnswer: '你的答案',
+  practiceReviewCorrectAnswer: '正确答案',
+  practiceReviewAnalysis: '解析',
+  practiceReviewEmptyAnalysis: '暂无解析',
+  practiceRetryBtn: '重新练习',
+  practiceBackToBanks: '返回题库',
+  practiceDeleteBank: '删除',
+  practiceDeleteConfirm: '确定要删除该题库吗？',
+  practiceSelfCheck: '自行判断',
+  practiceSelfCheckHint: '参考答案已显示，请自行判断对错',
+  practiceSaveAsBank: '保存为题库',
+  practiceSavedAsBank: '已保存为题库',
+  practiceSourceAI: 'AI 生成',
+  practiceSourceImport: '外部导入',
+  practiceChooseFile: '选择文件',
+  practiceFileHint: '支持 CSV、考试宝格式 XLSX',
+  practiceRemoveFile: '移除',
+  practiceMinutes: '分',
+  practiceSeconds: '秒',
+
+  practiceModeExam: '做题模式',
+  practiceModeFlashcard: '背题模式',
+  practiceConfirmAnswer: '确认答案',
+  practiceClickToSubmit: '点击选项直接提交',
+  practiceCorrectAdvancing: '回答正确，即将跳转...',
+  practiceInputAnswer: '输入回答...',
+  practiceInputAnswerShort: '输入答案...',
+  practiceSelfCheckCorrect: '对了',
+  practiceSelfCheckWrong: '错了',
+  practiceUnanswered: '(未作答)',
+  practiceContinuePractice: '继续练习',
+  practiceWrongPractice: '错题练习',
+  practiceContinue: '继续',
+  practiceCancel: '取消',
+  practiceClear: '清除',
+  practiceClearProgress: '清除练习进度',
+  practiceClearProgressMsg: '确定要清除当前的练习进度吗？清除后需重新开始。',
+  practiceUnansweredCount: '还有 {n} 道题未作答',
+  practiceAnswerSheet: '答题卡',
+  practiceQuestionCount: '第 {c}/{t} 题',
+  practiceUnansweredShort: '未答 {n}',
+  practiceRemoveWrong: '移出错题本',
+  practiceQuestionGone: '(题目已不存在)',
+  practiceUnknownBank: '未知题库',
+  practiceAnsweredCount: '{a}/{t} 题已答',
+  practiceQuestionUnit: '{n} 题',
+  practiceMultiFileHint: '支持多文件，可拖拽',
+  practiceFileCount: '{n} 个文件',
+  practiceAddFile: '+ 添加文件',
+  practiceClearAll: '清空全部',
+  practiceImportCount: '共 {n} 道题目',
+  practiceImportColType: '题型',
+  practiceImportColStem: '题干',
+  practiceImportColAnswer: '答案',
+  practiceImportColAnalysis: '解析',
+  practiceLangZh: '中文',
+  practiceLangEn: 'English',
+
+  wrongModeTitle: '错题练习',
+  wrongModeDesc: '只练习之前做错的题目',
+  wrongQuestionsBtn: '错题练习',
+  wrongQuestionsManage: '错题',
+  wrongCount: '次错',
+  wrongTimesCount: '做错 {n} 次',
+  wrongSortTitle: '排序方式',
+  wrongSortCountDesc: '做错次数多→少',
+  wrongSortCountAsc: '做错次数少→多',
+  wrongSortTimeDesc: '最近做错优先',
+  wrongSortTimeAsc: '最早做错优先',
+  wrongRemoved: '已移出错题本',
+  wrongAutoRemoved: '已连续答对 3 次，已从错题本移除',
+  wrongClearConfirm: '清空错题本',
+  wrongClearConfirmMsg: '确定要清空该题库的所有错题吗？',
+  wrongClearBtn: '清空全部',
+  wrongManagerTitle: '错题本',
+  wrongManagerEmpty: '暂无错题',
+  wrongNoWrong: '暂无错题',
+
   btnStart: '开始出题',
   btnBack: '返回',
   langZh: '中',
@@ -154,6 +399,7 @@ export const en: LocaleMessages = {
   navConfig: 'Config',
   navGenerate: 'Generate',
   navPreview: 'Preview',
+  navPractice: 'Practice',
 
   configTitle: 'Settings',
   configSubtitle: 'Connect your AI backend to get started',
@@ -210,6 +456,125 @@ export const en: LocaleMessages = {
   diffEasy: 'Easy',
   diffMedium: 'Medium',
   diffHard: 'Hard',
+
+  practiceTitle: 'Practice',
+  practiceSubtitle: 'Select a question bank or import a new one',
+  practiceEmptyTitle: 'No Question Banks',
+  practiceEmptyHint: 'Import a CSV/Excel file or save generated questions as a bank',
+  practiceImportBtn: 'Import Bank',
+  practiceImportCsv: 'CSV File',
+  practiceImportExcel: 'Excel File',
+  practiceImportDialogTitle: 'Import Question Bank',
+  practiceImportPreview: 'Preview',
+  practiceImportConfirm: 'Confirm Import',
+  practiceImportSuccess: 'Successfully imported {n} questions',
+  practiceImportFail: 'Import failed. Please check the file format.',
+  practiceImportParsing: 'Parsing file...',
+  practiceModeSequential: 'Sequential Practice',
+  practiceModeSequentialDesc: 'Go through questions in order from the bank',
+  practiceModeRandom: 'Random Practice',
+  practiceModeRandomDesc: 'Questions and options are shuffled randomly',
+  practiceModeMock: 'Mock Exam',
+  practiceModeMockDesc: 'Randomly generate an exam from different question types',
+  practiceSelectBank: 'Select Bank',
+  practiceSelectModeTitle: 'Choose Practice Mode',
+  practiceStartBtn: 'Start Practice',
+  practiceMockConfigTitle: 'Mock Exam Settings',
+  practiceMockTypes: 'Select Types',
+  practiceMockCounts: 'Question Count',
+  practiceMockGenerate: 'Generate Exam',
+  practiceQuestions: '{n} Q',
+  practiceProgress: 'Q {c}/{t}',
+  practicePrevBtn: 'Previous',
+  practiceNextBtn: 'Next',
+  practiceSubmitBtn: 'Submit Answers',
+  practiceSubmitConfirm: 'Confirm Submission',
+  practiceSubmitConfirmMsg: 'You cannot change your answers after submission. Submit now?',
+  practiceResultTitle: 'Practice Results',
+  practiceScore: 'Score',
+  practiceCorrect: 'Correct',
+  practiceIncorrect: 'Incorrect',
+  practiceAccuracy: 'Accuracy',
+  practiceElapsed: 'Time',
+  practiceReviewTitle: 'Review',
+  practiceReviewQuestion: 'Question',
+  practiceReviewYourAnswer: 'Your Answer',
+  practiceReviewCorrectAnswer: 'Correct Answer',
+  practiceReviewAnalysis: 'Analysis',
+  practiceReviewEmptyAnalysis: 'No analysis available',
+  practiceRetryBtn: 'Retry',
+  practiceBackToBanks: 'Back to Banks',
+  practiceDeleteBank: 'Delete',
+  practiceDeleteConfirm: 'Are you sure you want to delete this bank?',
+  practiceSelfCheck: 'Self Check',
+  practiceSelfCheckHint: 'The correct answer is shown. Please judge your own answer.',
+  practiceSaveAsBank: 'Save as Bank',
+  practiceSavedAsBank: 'Saved as question bank',
+  practiceSourceAI: 'AI Generated',
+  practiceSourceImport: 'Imported',
+  practiceChooseFile: 'Choose File',
+  practiceFileHint: 'CSV or Kaoshibao XLSX format',
+  practiceRemoveFile: 'Remove',
+  practiceMinutes: 'min',
+  practiceSeconds: 'sec',
+
+  practiceModeExam: 'Exam Mode',
+  practiceModeFlashcard: 'Flashcard Mode',
+  practiceConfirmAnswer: 'Confirm Answer',
+  practiceClickToSubmit: 'Click option to submit',
+  practiceCorrectAdvancing: 'Correct! Advancing...',
+  practiceInputAnswer: 'Enter answer...',
+  practiceInputAnswerShort: 'Enter answer...',
+  practiceSelfCheckCorrect: 'Correct',
+  practiceSelfCheckWrong: 'Wrong',
+  practiceUnanswered: '(Unanswered)',
+  practiceContinuePractice: 'Continue Practice',
+  practiceWrongPractice: 'Wrong Questions',
+  practiceContinue: 'Continue',
+  practiceCancel: 'Cancel',
+  practiceClear: 'Clear',
+  practiceClearProgress: 'Clear Practice Progress',
+  practiceClearProgressMsg: 'Clear current practice progress? You will need to start over.',
+  practiceUnansweredCount: '{n} questions unanswered',
+  practiceAnswerSheet: 'Answer Sheet',
+  practiceQuestionCount: 'Q {c}/{t}',
+  practiceUnansweredShort: '{n} Unanswered',
+  practiceRemoveWrong: 'Remove from Wrong',
+  practiceQuestionGone: '(Question no longer exists)',
+  practiceUnknownBank: 'Unknown Bank',
+  practiceAnsweredCount: '{a}/{t} answered',
+  practiceQuestionUnit: '{n} Q',
+  practiceMultiFileHint: 'Multiple files supported, drag & drop',
+  practiceFileCount: '{n} files',
+  practiceAddFile: '+ Add File',
+  practiceClearAll: 'Clear All',
+  practiceImportCount: '{n} questions total',
+  practiceImportColType: 'Type',
+  practiceImportColStem: 'Stem',
+  practiceImportColAnswer: 'Answer',
+  practiceImportColAnalysis: 'Analysis',
+  practiceLangZh: 'Chinese',
+  practiceLangEn: 'English',
+
+  wrongModeTitle: 'Wrong Questions',
+  wrongModeDesc: 'Practice only questions you got wrong before',
+  wrongQuestionsBtn: 'Wrong Qs',
+  wrongQuestionsManage: 'Wrong',
+  wrongCount: 'wrong',
+  wrongTimesCount: 'Wrong {n} times',
+  wrongSortTitle: 'Sort Order',
+  wrongSortCountDesc: 'Most Wrong',
+  wrongSortCountAsc: 'Least Wrong',
+  wrongSortTimeDesc: 'Most Recent',
+  wrongSortTimeAsc: 'Oldest First',
+  wrongRemoved: 'Removed from wrong questions',
+  wrongAutoRemoved: 'Correct 3 times in a row, removed from wrong questions',
+  wrongClearConfirm: 'Clear All Wrong Questions',
+  wrongClearConfirmMsg: 'Are you sure you want to clear all wrong questions for this bank?',
+  wrongClearBtn: 'Clear All',
+  wrongManagerTitle: 'Wrong Questions',
+  wrongManagerEmpty: 'No wrong questions',
+  wrongNoWrong: 'No Wrong Questions',
 
   btnStart: 'Start Generating',
   btnBack: 'Back',

@@ -94,8 +94,8 @@ function toggleType(type: QuestionType) {
       <div>
         <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genLanguage') }}</label>
         <select v-model="store.language" class="input-outlined text-sm !py-2.5">
-          <option value="zh-CN">中文</option>
-          <option value="en-US">English</option>
+          <option value="zh-CN">{{ i18n.t('practiceLangZh') }}</option>
+          <option value="en-US">{{ i18n.t('practiceLangEn') }}</option>
         </select>
       </div>
 

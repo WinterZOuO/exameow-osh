@@ -150,6 +150,17 @@ fn dirs_next() -> Option<PathBuf> {
             return Some(PathBuf::from(home).join(".config"));
         }
     }
+    #[cfg(target_os = "android")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            let p = PathBuf::from(home).join(".config");
+            let _ = std::fs::create_dir_all(&p);
+            return Some(p);
+        }
+        if let Ok(tmp) = std::env::var("TMPDIR") {
+            return Some(PathBuf::from(tmp));
+        }
+    }
     #[cfg(target_os = "windows")]
     {
         if let Ok(appdata) = std::env::var("APPDATA") {

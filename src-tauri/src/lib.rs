@@ -6,6 +6,7 @@ use exambot_core::export::export_kaoshibao as core_export_kaoshibao;
 use exambot_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
+use base64::Engine;
 
 const APP_NAME: &str = "ExamBot";
 
@@ -65,6 +66,24 @@ fn parse_file_text(file_path: String) -> Result<String, CommandError> {
 }
 
 #[tauri::command]
+fn parse_file_bytes(base64_data: String, file_ext: String) -> Result<String, CommandError> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(&base64_data)
+        .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
+
+    let dir = std::env::temp_dir();
+    let file_name = format!("exambot_upload.{}", file_ext);
+    let file_path = dir.join(&file_name);
+
+    std::fs::write(&file_path, &bytes)
+        .map_err(|e| CommandError(format!("Write temp file error: {e}")))?;
+
+    let result = parse_file(file_path.to_string_lossy().as_ref());
+    let _ = std::fs::remove_file(&file_path);
+    result.map_err(|e| CommandError(format!("File parse error: {e}")))
+}
+
+#[tauri::command]
 fn export_csv(questions_json: String, save_path: String) -> Result<(), CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
@@ -109,11 +128,33 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let config = &app.config().app.windows[0];
+            let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), config)?;
+
+            #[cfg(target_os = "macos")]
+            {
+                builder = builder
+                    .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    .hidden_title(true);
+            }
+
+            #[cfg(any(target_os = "windows", target_os = "linux"))]
+            {
+                builder = builder.decorations(false);
+            }
+
+            let window = builder.build()?;
+            window.show()?;
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             get_models,
             generate_exam,
             parse_file_text,
+            parse_file_bytes,
             export_csv,
             export_kaoshibao,
             save_config,

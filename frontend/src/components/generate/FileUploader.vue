@@ -40,7 +40,7 @@ function clearOne(index: number) {
 }
 
 async function pick() {
-  if (props.isTauri) {
+  if (props.isTauri && dialogReady.value) {
     const openFn = (window as any).__tauriDialogOpen
     if (!openFn) return
     const result: any = await openFn({
@@ -109,11 +109,10 @@ function onDrop(e: DragEvent) {
       <div>
         <div class="text-title-sm" style="color: rgb(var(--md-primary))">{{ i18n.t('genSelectFile') }}</div>
         <div class="text-body-sm mt-1.5" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genFileHint') }}</div>
-        <div class="text-[11px] mt-1" style="color: rgb(var(--md-on-surface-muted))">{{ '支持多文件，可拖拽' }}</div>
+        <div class="text-[11px] mt-1" style="color: rgb(var(--md-on-surface-muted))">{{ i18n.t('practiceMultiFileHint') }}</div>
       </div>
 
       <input
-        v-if="!isTauri"
         ref="webFileInput"
         type="file"
         accept=".txt,.docx,.pdf"
@@ -127,9 +126,9 @@ function onDrop(e: DragEvent) {
     <div v-else class="w-full">
       <div class="flex items-center justify-between mb-2 px-1">
         <span class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">
-          {{ fileNames.length }} 个文件
+          {{ i18n.t('practiceFileCount', { n: fileNames.length }) }}
         </span>
-        <button class="btn-text !h-8 !text-xs !px-3" @click="pick">{{ '+ 添加文件' }}</button>
+        <button class="btn-text !h-8 !text-xs !px-3" @click="pick">{{ i18n.t('practiceAddFile') }}</button>
       </div>
 
       <TransitionGroup name="list" tag="div" class="space-y-1.5 max-h-[280px] overflow-y-auto px-1">
@@ -152,12 +151,11 @@ function onDrop(e: DragEvent) {
 
       <div class="mt-3 flex justify-center gap-2">
         <button class="btn-text !h-8 !text-xs !px-3" style="color: rgb(var(--md-error))" @click="clearAll">
-          清空全部
+           {{ i18n.t('practiceClearAll') }}
         </button>
       </div>
 
       <input
-        v-if="!isTauri"
         ref="webFileInput"
         type="file"
         accept=".txt,.docx,.pdf"

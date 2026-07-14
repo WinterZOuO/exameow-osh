@@ -2,12 +2,16 @@
 import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { isTauri, isMacOS } from '@/utils/platform'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import WindowControls from './WindowControls.vue'
 import {
   Cog6ToothIcon,
   SparklesIcon,
   DocumentTextIcon,
   SunIcon,
   MoonIcon,
+  AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -15,6 +19,22 @@ const route = useRoute()
 const i18n = useI18nStore()
 
 const isDark = ref(false)
+const showWindowControls = isTauri() && !isMacOS()
+const isMacOSOverlay = isTauri() && isMacOS()
+
+function handleHeaderMouseDown(event: MouseEvent) {
+  if (!isTauri()) return
+  const target = event.target as HTMLElement
+  if (target.closest('button, a, input, select')) return
+  getCurrentWindow().startDragging()
+}
+
+function handleHeaderDblClick(event: MouseEvent) {
+  if (!isTauri()) return
+  const target = event.target as HTMLElement
+  if (target.closest('button, a, input, select')) return
+  getCurrentWindow().toggleMaximize()
+}
 
 function applyDark() {
   document.documentElement.classList.toggle('dark', isDark.value)
@@ -27,24 +47,35 @@ const saved = localStorage.getItem('exambot-dark')
 if (saved === '1') isDark.value = true
 
 const navItems = [
-  { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
+  { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
   { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
   { key: 'navPreview', path: '/preview', icon: DocumentTextIcon },
+  { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
 ]
 
 const currentNavIndex = computed(() => navItems.findIndex(item => item.path === route.path))
+
+const headerStyle = {
+  backgroundColor: 'rgb(var(--md-surface))',
+  borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.4)',
+} as any
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col" :style="{ backgroundColor: 'rgb(var(--md-surface))' }">
     <!-- ====== Top App Bar ====== -->
     <header
-      class="sticky top-0 z-30 safe-top"
-      :style="{ backgroundColor: 'rgb(var(--md-surface))', borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.4)' }"
+      class="sticky top-0 z-30 safe-top select-none"
+      :style="headerStyle"
+      @mousedown="handleHeaderMouseDown"
+      @dblclick="handleHeaderDblClick"
     >
-      <div class="mx-auto w-full max-w-[90rem] flex items-center h-14 sm:h-16 px-3 sm:px-6 gap-2 sm:gap-3">
+      <div
+        class="mx-auto w-full max-w-[90rem] flex items-center h-14 sm:h-16 gap-2 sm:gap-3"
+        :class="isMacOSOverlay ? 'pl-[80px] pr-3 sm:pl-[84px] sm:pr-6' : 'px-3 sm:px-6'"
+      >
         <!-- Logo -->
-        <router-link to="/" class="flex items-center gap-3 shrink-0 no-underline">
+        <router-link to="/practice" class="flex items-center gap-3 shrink-0 no-underline">
           <!-- Pixel-style rounded square logo -->
           <div class="w-[38px] h-[38px] rounded-2xl flex items-center justify-center shrink-0 elevation-1"
                style="background: linear-gradient(135deg, rgb(var(--md-primary)), rgb(var(--md-tertiary)))">
@@ -80,7 +111,8 @@ const currentNavIndex = computed(() => navItems.findIndex(item => item.path === 
           </nav>
         </div>
 
-        <div class="flex-1" />
+        <!-- Drag target spacer — fills remaining height to receive clicks -->
+        <div class="flex-1 self-stretch cursor-default" />
 
         <!-- Actions -->
         <div class="flex items-center gap-1">
@@ -96,7 +128,11 @@ const currentNavIndex = computed(() => navItems.findIndex(item => item.path === 
             <MoonIcon v-else class="w-5 h-5" />
           </button>
         </div>
+
       </div>
+
+      <!-- Window Controls (Windows/Linux only) — absolutely positioned at right edge -->
+      <WindowControls v-if="showWindowControls" class="absolute right-0 top-0 h-14 sm:h-16" />
     </header>
 
     <!-- ====== Main Content ====== -->
@@ -122,18 +158,18 @@ const currentNavIndex = computed(() => navItems.findIndex(item => item.path === 
         <!-- Active indicator bar -->
         <div class="relative flex items-center justify-around w-full">
           <!-- Active indicator -->
-          <div
-            class="absolute top-0 h-8 rounded-2xl transition-all duration-400 ease-out"
-            style="width: 33.33%; background-color: rgb(var(--md-secondary-container))"
-            :style="{ left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0) * 33.33}%)` }"
-          />
+            <div
+                class="absolute top-0 h-8 rounded-2xl transition-all duration-400 ease-out"
+                style="width: 25%; background-color: rgb(var(--md-secondary-container))"
+                :style="{ left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0) * 25}%)` }"
+            />
 
           <button
             v-for="item in navItems"
             :key="item.path"
             class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-2"
-            :style="{
-              width: '33.33%',
+              :style="{
+                width: '25%',
               color: route.path === item.path ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
             }"
             @click="router.push(item.path)"
@@ -147,3 +183,6 @@ const currentNavIndex = computed(() => navItems.findIndex(item => item.path === 
     </nav>
   </div>
 </template>
+
+<style>
+</style>

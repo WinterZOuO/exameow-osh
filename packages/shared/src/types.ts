@@ -21,6 +21,40 @@ export interface Question {
   analysis: string
 }
 
+export interface QuestionBank {
+  id: string
+  name: string
+  questions: Question[]
+  createdAt: number
+  source: 'ai-generated' | 'csv-import' | 'kaoshibao-import'
+}
+
+export type PracticeMode = 'sequential' | 'random' | 'mock' | 'wrong'
+
+export type WrongSort = 'count-desc' | 'count-asc' | 'time-desc' | 'time-asc'
+
+export interface WrongQuestionEntry {
+  questionId: string
+  wrongCount: number
+  consecutiveCorrect: number
+  lastWrongAt: number
+  addedAt: number
+}
+
+export interface MockExamConfig {
+  typeCounts: Record<string, number>
+}
+
+export interface PracticeSession {
+  bankId: string
+  mode: PracticeMode
+  questions: { question: Question; userAnswer: string | null; isCorrect: boolean | null; submitted: boolean }[]
+  currentIndex: number
+  startedAt: number
+  finishedAt: number | null
+  mockConfig?: MockExamConfig
+}
+
 export interface ExamParams {
   question_types: QuestionType[]
   count: number
@@ -31,6 +65,7 @@ export interface ExamParams {
   text?: string
   batch_index?: number
   batch_total?: number
+  source_name?: string
 }
 
 export interface AIConfig {

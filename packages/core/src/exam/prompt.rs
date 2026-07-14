@@ -11,6 +11,7 @@ pub fn build_system_prompt() -> String {
 - EVERY question MUST be unique — do NOT generate two questions that test the same concept, fact, or sentence.
 - Cover DIFFERENT parts of the document for each question. Avoid clustering questions on the same paragraph.
 - Vary question wording, angles, and tested knowledge points.
+- When the question stem or analysis refers to the document, ALWAYS use the specific document name provided — NEVER use vague phrases like "the document", "the text", "the passage", "the article", or "the material".
 
 ## Output Rules
 1. Respond ONLY with a valid JSON array — no explanation, no markdown fences.
@@ -65,6 +66,11 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
         _ => String::new(),
     };
 
+    let doc_name = match &params.source_name {
+        Some(name) => format!("\nThe document title is: {name}\nWhen questions need to reference this document, use \"{name}\" — do NOT say \"the document\" or \"the text\".", name = name),
+        None => String::new(),
+    };
+
     let max_chars = 32000;
     let text_section = if text.len() > max_chars {
         let head_size = max_chars * 6 / 10;
@@ -113,7 +119,7 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
     format!(
         r#"{count_instruction}
 Difficulty: {difficulty_str}
-Language: {language}{topic_note}{batch_note}
+Language: {language}{topic_note}{batch_note}{doc_name}
 
 DOCUMENT CONTENT:
 {text_content}
@@ -123,6 +129,7 @@ DOCUMENT CONTENT:
         language = params.language,
         topic_note = topic_note,
         batch_note = batch_note,
+        doc_name = doc_name,
         text_content = text_section,
     )
 }

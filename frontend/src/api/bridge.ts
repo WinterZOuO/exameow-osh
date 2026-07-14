@@ -10,6 +10,10 @@ export const tauriApi = {
     return invoke<string>('parse_file_text', { filePath })
   },
 
+  async parseFileBytes(base64Data: string, fileExt: string): Promise<string> {
+    return invoke<string>('parse_file_bytes', { base64Data, fileExt })
+  },
+
   async getModels(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
     return invoke<ModelInfo[]>('get_models', { endpoint, apiKey })
   },

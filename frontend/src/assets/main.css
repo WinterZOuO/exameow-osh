@@ -547,7 +547,32 @@
   .list-enter-from { opacity: 0; transform: translateY(20px); }
   .list-leave-to { opacity: 0; transform: translateY(-10px); }
 
-  /* ---- Scrim / Overlay ---- */
+  /* ---- Mode Toggle Pill ---- */
+
+.mode-toggle-track {
+  @apply relative flex rounded-full p-1 border;
+  width: fit-content;
+}
+
+.mode-toggle-thumb {
+  @apply absolute top-1 bottom-1 left-1 rounded-full z-0;
+  width: calc(50% - 4px);
+  transition: transform 0.3s cubic-bezier(0.05, 0.7, 0.1, 1.0);
+}
+
+.mode-toggle-option {
+  @apply relative z-10 flex-1 px-3 py-1.5 rounded-full text-center cursor-pointer select-none transition-colors duration-200;
+  min-width: 64px;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.mode-toggle-option--active {
+  /* active styling handled by thumb overlay */;
+}
+
+/* ---- Scrim / Overlay ---- */
 
   .scrim {
     @apply fixed inset-0 z-40;
