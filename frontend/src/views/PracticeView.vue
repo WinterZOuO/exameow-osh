@@ -444,6 +444,10 @@ function handleBack() {
     viewState.value = 'browse'
     selectedBankId.value = null
     selectedMode.value = null
+  } else if (viewState.value === 'result') {
+    viewState.value = 'browse'
+    selectedBankId.value = null
+    selectedMode.value = null
   }
 }
 </script>
@@ -578,14 +582,14 @@ function handleBack() {
       <div ref="swipeContainer" class="space-y-4 cursor-grab select-none">
         <!-- Progress Bar + Mode Toggle -->
         <div class="card-outlined p-3">
-          <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <ProgressBar
               :mode="practiceStore.session.mode"
               :current="practiceStore.progress.current"
               :total="practiceStore.progress.total"
               :answered-count="practiceStore.answeredCount"
               @open-sheet="showAnswerSheet = true"
-              class="flex-1"
+              class="flex-1 min-w-0"
             />
             <PracticeModeToggle
               v-model="flashcardMode"

@@ -78,7 +78,7 @@ const typeCounts = (bank: QuestionBank) => {
     <button
       v-for="bank in banks"
       :key="bank.id"
-      class="w-full text-left card-elevated p-3 sm:p-5 transition-all duration-200 group relative"
+      class="w-full text-left card-elevated p-3 sm:p-5 transition-all duration-200 group"
       :style="
         selectedId === bank.id
           ? { outline: '2px solid rgb(var(--md-primary))', outlineOffset: '1px' }
@@ -108,27 +108,36 @@ const typeCounts = (bank: QuestionBank) => {
           </div>
         </div>
 
-        <div class="flex items-center gap-1 shrink-0">
-          <button
-            class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
-            :style="{ color: 'rgb(var(--md-error))' }"
-            @click.stop="emit('delete', bank.id)"
-          >
-            <TrashIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
-          <button
-            v-if="wrongStore.hasWrongQuestions(bank.id)"
-            class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
-            :style="{ color: 'rgb(var(--md-error))' }"
-            @click.stop="emit('manageWrong', bank.id)"
-          >
-            <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
-          <ArrowRightIcon
-            class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:translate-x-0.5"
-            :style="{ color: 'rgb(var(--md-on-surface-muted))' }"
-          />
-        </div>
+        <ArrowRightIcon
+          class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-1.5 transition-transform group-hover:translate-x-0.5"
+          :style="{ color: 'rgb(var(--md-on-surface-muted))' }"
+        />
+      </div>
+
+      <div class="flex items-center gap-2 mt-3">
+        <button
+          class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8 shrink-0"
+          :style="{ color: 'rgb(var(--md-error))' }"
+          @click.stop="emit('delete', bank.id)"
+        >
+          <TrashIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
+        <button
+          v-if="wrongStore.hasWrongQuestions(bank.id)"
+          class="btn-tonal !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0"
+          :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
+          @click.stop="emit('manageWrong', bank.id)"
+        >
+          <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          {{ i18n.t('practiceWrongPractice') }}
+        </button>
+        <button
+          class="btn-filled !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 ml-auto"
+          @click.stop="emit('select', bank.id)"
+        >
+          <ArrowRightIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          {{ i18n.t('practiceEnterBank') }}
+        </button>
       </div>
     </button>
   </div>

@@ -5,13 +5,14 @@ import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
-import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const examStore = useExamStore()
 const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 const exportError = ref('')
+const exportSuccess = ref('')
 const exporting = ref(false)
 const exportingKaoshibao = ref(false)
 
@@ -21,31 +22,28 @@ const baseFileName = computed(() => {
   return 'exambot_questions'
 })
 
-async function getExportPath(defaultName: string): Promise<string | null> {
+async function getExportPath(defaultName: string): Promise<{ path: string; useDownloadDir: boolean } | null> {
   let saveDialog: any
   try { const mod: any = await import('@tauri-apps/plugin-dialog'); saveDialog = mod.save } catch {}
   if (saveDialog) {
-    return await saveDialog({ defaultPath: defaultName, filters: [{ name: 'File', extensions: [defaultName.split('.').pop() || '*'] }] })
+    const path = await saveDialog({ defaultPath: defaultName, filters: [{ name: 'File', extensions: [defaultName.split('.').pop() || '*'] }] })
+    if (!path) return null
+    return { path, useDownloadDir: false }
   }
-  try {
-    const { downloadDir } = await import('@tauri-apps/api/path')
-    const dir = await downloadDir()
-    return `${dir}/${defaultName}`
-  } catch (e: any) {
-    exportError.value = 'Export failed: cannot determine save path (' + (e.message || e) + ')'
-    return null
-  }
+  return { path: defaultName, useDownloadDir: true }
 }
 
 async function handleExport() {
   exportError.value = ''
+  exportSuccess.value = ''
   exporting.value = true
   try {
     const defaultName = `${baseFileName.value}.csv`
     if (isTauri) {
-      const savePath = await getExportPath(defaultName)
-      if (!savePath) return
-      await api.exportCsv(examStore.questions, savePath)
+      const resolved = await getExportPath(defaultName)
+      if (!resolved) return
+      const actualPath = await api.exportCsv(examStore.questions, resolved.path, undefined, resolved.useDownloadDir)
+      exportSuccess.value = 'Saved: ' + (actualPath || resolved.path)
     } else {
       await api.exportCsv(examStore.questions, undefined, defaultName)
     }
@@ -54,13 +52,15 @@ async function handleExport() {
 
 async function handleExportKaoshibao() {
   exportError.value = ''
+  exportSuccess.value = ''
   exportingKaoshibao.value = true
   try {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
-      const savePath = await getExportPath(defaultName)
-      if (!savePath) return
-      await api.exportKaoshibao(examStore.questions, savePath)
+      const resolved = await getExportPath(defaultName)
+      if (!resolved) return
+      const actualPath = await api.exportKaoshibao(examStore.questions, resolved.path, undefined, resolved.useDownloadDir)
+      exportSuccess.value = 'Saved: ' + (actualPath || resolved.path)
     } else {
       await api.exportKaoshibao(examStore.questions, undefined, defaultName)
     }
@@ -116,6 +116,17 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
           style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
         >
           {{ exportError }}
+        </div>
+      </Transition>
+
+      <Transition name="scale">
+        <div
+          v-if="exportSuccess"
+          class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
+          style="background-color: rgba(var(--md-primary) / 0.12); color: rgb(var(--md-primary))"
+        >
+          <CheckCircleIcon class="w-5 h-5 shrink-0" />
+          {{ exportSuccess }}
         </div>
       </Transition>
 

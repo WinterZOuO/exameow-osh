@@ -147,6 +147,7 @@ export interface LocaleMessages {
   practiceContinuePractice: string
   practiceWrongPractice: string
   practiceContinue: string
+  practiceEnterBank: string
   practiceCancel: string
   practiceClear: string
   practiceClearProgress: string
@@ -341,6 +342,7 @@ export const zh: LocaleMessages = {
   practiceContinuePractice: '继续练习',
   practiceWrongPractice: '错题练习',
   practiceContinue: '继续',
+  practiceEnterBank: '进入题库',
   practiceCancel: '取消',
   practiceClear: '清除',
   practiceClearProgress: '清除练习进度',
@@ -531,6 +533,7 @@ export const en: LocaleMessages = {
   practiceContinuePractice: 'Continue Practice',
   practiceWrongPractice: 'Wrong Questions',
   practiceContinue: 'Continue',
+  practiceEnterBank: 'Enter',
   practiceCancel: 'Cancel',
   practiceClear: 'Clear',
   practiceClearProgress: 'Clear Practice Progress',

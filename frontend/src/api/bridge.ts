@@ -45,12 +45,12 @@ export const tauriApi = {
     }
   },
 
-  async exportCsv(questions: Question[], savePath: string): Promise<void> {
-    return invoke<void>('export_csv', { questionsJson: JSON.stringify(questions), savePath })
+  async exportCsv(questions: Question[], savePath: string, useDownloadDir: boolean = false): Promise<string> {
+    return invoke<string>('export_csv', { questionsJson: JSON.stringify(questions), savePath, useDownloadDir })
   },
 
-  async exportKaoshibao(questions: Question[], savePath: string): Promise<void> {
-    return invoke<void>('export_kaoshibao', { questionsJson: JSON.stringify(questions), savePath })
+  async exportKaoshibao(questions: Question[], savePath: string, useDownloadDir: boolean = false): Promise<string> {
+    return invoke<string>('export_kaoshibao', { questionsJson: JSON.stringify(questions), savePath, useDownloadDir })
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

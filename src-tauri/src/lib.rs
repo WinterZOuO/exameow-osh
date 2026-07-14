@@ -7,6 +7,7 @@ use exambot_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
 use base64::Engine;
+use tauri::Manager;
 
 const APP_NAME: &str = "ExamBot";
 
@@ -84,19 +85,49 @@ fn parse_file_bytes(base64_data: String, file_ext: String) -> Result<String, Com
 }
 
 #[tauri::command]
-fn export_csv(questions_json: String, save_path: String) -> Result<(), CommandError> {
+fn export_csv(
+    app_handle: tauri::AppHandle,
+    questions_json: String,
+    save_path: String,
+    use_download_dir: bool,
+) -> Result<String, CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
-    core_export_csv(&questions, &save_path)
-        .map_err(|e| CommandError(format!("CSV export error: {e}")))
+    let final_path = if use_download_dir {
+        let dir = app_handle
+            .path()
+            .download_dir()
+            .map_err(|e| CommandError(format!("Cannot get download dir: {e}")))?;
+        dir.join(&save_path)
+    } else {
+        std::path::PathBuf::from(&save_path)
+    };
+    core_export_csv(&questions, final_path.to_string_lossy().as_ref())
+        .map_err(|e| CommandError(format!("CSV export error: {e}")))?;
+    Ok(final_path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
-fn export_kaoshibao(questions_json: String, save_path: String) -> Result<(), CommandError> {
+fn export_kaoshibao(
+    app_handle: tauri::AppHandle,
+    questions_json: String,
+    save_path: String,
+    use_download_dir: bool,
+) -> Result<String, CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
-    core_export_kaoshibao(&questions, &save_path)
-        .map_err(|e| CommandError(format!("Kaoshibao export error: {e}")))
+    let final_path = if use_download_dir {
+        let dir = app_handle
+            .path()
+            .download_dir()
+            .map_err(|e| CommandError(format!("Cannot get download dir: {e}")))?;
+        dir.join(&save_path)
+    } else {
+        std::path::PathBuf::from(&save_path)
+    };
+    core_export_kaoshibao(&questions, final_path.to_string_lossy().as_ref())
+        .map_err(|e| CommandError(format!("Kaoshibao export error: {e}")))?;
+    Ok(final_path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
