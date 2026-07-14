@@ -96,16 +96,27 @@ fn export_kaoshibao(questions_json: String, save_path: String) -> Result<(), Com
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
     core_export_kaoshibao(&questions, &save_path)
-        .map_err(|e| CommandError(format!("Kaoshibao export error: {e}")))
+        .map_err(|e| CommandError(format!("XLSX export error: {e}")))
 }
 
 #[tauri::command]
-fn export_kaoshibao_data(questions_json: String) -> Result<String, CommandError> {
+fn export_xlsx_data(questions_json: String) -> Result<String, CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
     let data = exambot_core::export::export_kaoshibao_to_writer(&questions)
-        .map_err(|e| CommandError(format!("Kaoshibao export error: {e}")))?;
+        .map_err(|e| CommandError(format!("Export XLSX error: {e}")))?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
+}
+
+#[tauri::command]
+fn save_to_downloads(filename: String, content_base64: String) -> Result<String, CommandError> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(&content_base64)
+        .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
+    let path = std::path::Path::new("/storage/emulated/0/Download").join(&filename);
+    std::fs::write(&path, &bytes)
+        .map_err(|e| CommandError(format!("Write error: {e}")))?;
+    Ok(path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
@@ -166,7 +177,8 @@ pub fn run() {
             parse_file_bytes,
             export_csv,
             export_kaoshibao,
-            export_kaoshibao_data,
+            export_xlsx_data,
+            save_to_downloads,
             save_config,
             load_config,
         ])

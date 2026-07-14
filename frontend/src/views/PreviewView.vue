@@ -33,17 +33,14 @@ async function saveFile(filename: string, content: string | Uint8Array): Promise
     } else {
       await api.exportKaoshibao(examStore.questions, path)
     }
-    exportSuccess.value = 'Saved: ' + path
+    exportSuccess.value = i18n.t('previewExportSaved') + path
     return true
   } catch {}
   try {
-    const { writeTextFile, writeFile, BaseDirectory } = await import('@tauri-apps/plugin-fs')
-    if (typeof content === 'string') {
-      await writeTextFile(filename, content, { baseDir: BaseDirectory.Download })
-    } else {
-      await writeFile(filename, content, { baseDir: BaseDirectory.Download })
-    }
-    exportSuccess.value = 'Saved to Downloads/' + filename
+    const b64 = typeof content === 'string' ? btoa(unescape(encodeURIComponent(content))) : btoa(String.fromCharCode(...content))
+    const { tauriApi } = await import('@/api/bridge')
+    const savedPath = await tauriApi.saveToDownloads(filename, b64)
+    exportSuccess.value = i18n.t('previewExportSaved') + savedPath
     return true
   } catch (e: any) {
     exportError.value = 'Export failed: ' + (e.message || String(e))
@@ -73,7 +70,7 @@ async function handleExportKaoshibao() {
   try {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
-      const base64 = await api.exportKaoshibaoData(examStore.questions)
+      const base64 = await api.exportXlsxData(examStore.questions)
       const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
       await saveFile(defaultName, bytes)
     } else {

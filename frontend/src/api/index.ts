@@ -58,10 +58,10 @@ export const api = {
     return httpApi.exportKaoshibao(questions, filename)
   },
 
-  async exportKaoshibaoData(
+  async exportXlsxData(
     questions: import('@exambot/shared').Question[],
   ): Promise<string> {
-    return tauriApi.exportKaoshibaoData(questions)
+    return tauriApi.exportXlsxData(questions)
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

@@ -49,6 +49,7 @@ export interface LocaleMessages {
   previewGotoGenerate: string
   previewNewBatch: string
   previewExportCsv: string
+  previewExportSaved: string
   previewQuestionCount: string
 
   // Table
@@ -249,6 +250,7 @@ export const zh: LocaleMessages = {
   previewGotoGenerate: '去出题',
   previewNewBatch: '重新出题',
   previewExportCsv: '导出 CSV',
+  previewExportSaved: '已保存至 ',
   previewQuestionCount: '{n} 道题目已生成',
 
   tableNum: '#',
@@ -440,6 +442,7 @@ export const en: LocaleMessages = {
   previewGotoGenerate: 'Go to Generate',
   previewNewBatch: 'New Batch',
   previewExportCsv: 'Export CSV',
+  previewExportSaved: 'Saved to ',
   previewQuestionCount: '{n} questions generated',
 
   tableNum: '#',
