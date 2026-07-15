@@ -150,13 +150,12 @@ export const useExamStore = defineStore('exam', () => {
 
   function extractFileName(inputs: (string | File)[]): string {
     if (inputs.length === 0) return ''
-    const first = inputs[0]!
-    const rawName = first instanceof File
-      ? first.name
-      : first.replace(/\\/g, '/').split('/').pop() || first
-    const dot = rawName.lastIndexOf('.')
-    const base = dot > 0 ? rawName.substring(0, dot) : rawName
-    return inputs.length > 1 ? `${base}等文件` : base
+    const names = inputs.map(i => {
+      const raw = i instanceof File ? i.name : i.replace(/\\/g, '/').split('/').pop() || i
+      const dot = raw.lastIndexOf('.')
+      return dot > 0 ? raw.substring(0, dot) : raw
+    })
+    return names.join('、')
   }
 
   function uint8ToBase64(bytes: Uint8Array): string {

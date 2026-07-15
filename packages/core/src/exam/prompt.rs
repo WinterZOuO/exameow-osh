@@ -67,6 +67,7 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
     };
 
     let doc_name = match &params.source_name {
+        Some(name) if name.contains('、') => format!("\nThe documents are collectively titled: {name}\nWhen questions need to reference a specific document, use its individual title above — do NOT say \"the document\" or \"the text\".", name = name),
         Some(name) => format!("\nThe document title is: {name}\nWhen questions need to reference this document, use \"{name}\" — do NOT say \"the document\" or \"the text\".", name = name),
         None => String::new(),
     };
