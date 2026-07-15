@@ -48,24 +48,58 @@ export const useExamStore = defineStore('exam', () => {
 
   const MAX_CHARS_PER_CHUNK = 32000
   const MAX_Q_PER_CHUNK = 15
+  const TABLE_SEP_RE = /^\|(\s*:?-{3,}:?\s*\|)+$/
 
   function chunkTextBySize(text: string, chunkCount: number): string[] {
     let paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 10)
+    let lineMode = false
     if (paragraphs.some(p => p.length > MAX_CHARS_PER_CHUNK) || paragraphs.length < chunkCount) {
-      paragraphs = text.split(/\n+/).filter((p) => p.trim().length > 10)
+      paragraphs = text.split(/\n+/).filter((p) => {
+        const t = p.trim()
+        return t.length > 10 || (t.startsWith('|') && t.length > 2)
+      })
+      lineMode = true
     }
     if (paragraphs.length === 0 || chunkCount <= 1) return [text]
+
+    // For each paragraph, the table header context (### heading + header row + separator)
+    // to prepend if a new chunk starts on that paragraph. Null when not inside a table.
+    let heading = ''
+    let tableHeader: string | null = null
+    const contexts: (string | null)[] = paragraphs.map((p, i) => {
+      const t = p.trim()
+      if (t.startsWith('#')) {
+        heading = t
+        tableHeader = null
+        return null
+      }
+      if (t.startsWith('|')) {
+        if (TABLE_SEP_RE.test(t)) return null
+        if (tableHeader === null) {
+          const next = paragraphs[i + 1]?.trim() ?? ''
+          if (TABLE_SEP_RE.test(next)) {
+            tableHeader = (heading ? heading + '\n\n' : '') + t + '\n' + next
+          }
+          return null
+        }
+        return tableHeader
+      }
+      tableHeader = null
+      return null
+    })
 
     const targetSize = Math.ceil(text.length / chunkCount)
     const chunks: string[] = []
     let current = ''
+    const sep = lineMode ? '\n' : '\n\n'
 
-    for (const para of paragraphs) {
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i]!
       if (current.length + para.length > targetSize && current.length > 0 && chunks.length < chunkCount - 1) {
         chunks.push(current.trim())
-        current = para
+        current = contexts[i] ? contexts[i] + '\n' + para : para
       } else {
-        current += (current ? '\n\n' : '') + para
+        current += (current ? sep : '') + para
       }
     }
     if (current.trim()) chunks.push(current.trim())
@@ -209,10 +243,20 @@ export const useExamStore = defineStore('exam', () => {
         body = chunk.substring(nl + 1)
       }
     }
+    // Preserve a leading markdown table header (row + separator) on both halves
+    let tableHeader = ''
+    const lines = body.split('\n')
+    if (lines.length > 2 && lines[0]!.trim().startsWith('|') && TABLE_SEP_RE.test(lines[1]!.trim() ?? '')) {
+      tableHeader = lines[0]! + '\n' + lines[1]! + '\n'
+      body = lines.slice(2).join('\n')
+    }
     const mid = Math.floor(body.length / 2)
     const nl = body.indexOf('\n', mid)
     const split = nl > 0 && nl < body.length - 1 ? nl + 1 : mid
-    return [header + body.substring(0, split).trim(), header + body.substring(split).trim()]
+    return [
+      header + tableHeader + body.substring(0, split).trim(),
+      header + tableHeader + body.substring(split).trim(),
+    ]
   }
 
   function loadCachedQuestions(): Question[] {
