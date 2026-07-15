@@ -101,7 +101,7 @@ pub async fn generate_exam_handler(
     let params: ExamParams = serde_json::from_str(&params_json)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid params: {e}")))?;
 
-    let ext = file_name.rsplit('.').next().unwrap_or("txt");
+    let ext = file_name.rsplit_once('.').map(|(_, e)| e).unwrap_or("txt");
     let mut temp_file = tempfile::Builder::new()
         .suffix(&format!(".{ext}"))
         .tempfile()
@@ -115,13 +115,8 @@ pub async fn generate_exam_handler(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     let temp_path_str = temp_path.to_string_lossy().to_string();
 
-    let text = if ext == "txt" {
-        std::fs::read_to_string(&temp_path_str)
-            .map_err(|e| (StatusCode::BAD_REQUEST, format!("Read error: {e}")))?
-    } else {
-        parse_file(&temp_path_str)
-            .map_err(|e| (StatusCode::BAD_REQUEST, format!("Parse error: {e}")))?
-    };
+    let text = parse_file(&temp_path_str)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Parse error: {e}")))?;
 
     let _ = std::fs::remove_file(&temp_path_str);
 
