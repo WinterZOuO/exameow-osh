@@ -89,7 +89,9 @@ export const useExamStore = defineStore('exam', () => {
 
     // Split by file sections first (--- separated)
     const fileSections = splitByFileSections(fullText)
+    console.log('[ExamBot] File sections:', fileSections.length, '| sizes:', fileSections.map(s => s.label + ':' + s.text.length).join(', '))
     const textChunks = chunkByFileProportion(fileSections, chunkCount, fullText)
+    console.log('[ExamBot] Chunks:', textChunks.length, '| labels:', textChunks.map(c => c.substring(0, 50).replace(/\n/g, '\\n')).join(' | '))
     const remaining: Record<string, number> = {}
     for (const [k, v] of typeEntries) remaining[k] = v
 
