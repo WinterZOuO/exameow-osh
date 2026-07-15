@@ -2,7 +2,7 @@ use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
 use exambot_core::exam::{generate_exam as core_generate_exam, ExamParams, Question};
 use exambot_core::export::export_csv as core_export_csv;
-use exambot_core::export::export_kaoshibao as core_export_kaoshibao;
+use exambot_core::export::export_xlsx as core_export_xlsx;
 use exambot_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
@@ -92,10 +92,10 @@ fn export_csv(questions_json: String, save_path: String) -> Result<(), CommandEr
 }
 
 #[tauri::command]
-fn export_kaoshibao(questions_json: String, save_path: String) -> Result<(), CommandError> {
+fn export_xlsx(questions_json: String, save_path: String) -> Result<(), CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
-    core_export_kaoshibao(&questions, &save_path)
+    core_export_xlsx(&questions, &save_path)
         .map_err(|e| CommandError(format!("XLSX export error: {e}")))
 }
 
@@ -103,7 +103,7 @@ fn export_kaoshibao(questions_json: String, save_path: String) -> Result<(), Com
 fn export_xlsx_data(questions_json: String) -> Result<String, CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
-    let data = exambot_core::export::export_kaoshibao_to_writer(&questions)
+    let data = exambot_core::export::export_xlsx_to_writer(&questions)
         .map_err(|e| CommandError(format!("Export XLSX error: {e}")))?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
 }
@@ -182,7 +182,7 @@ pub fn run() {
             parse_file_text,
             parse_file_bytes,
             export_csv,
-            export_kaoshibao,
+            export_xlsx,
             export_xlsx_data,
             save_to_downloads,
             save_config,

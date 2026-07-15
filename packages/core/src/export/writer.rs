@@ -3,7 +3,7 @@ use crate::exam::Question;
 use csv::WriterBuilder;
 use std::io::Write;
 
-use super::kaoshibao::to_chinese_type;
+use super::xlsx::to_chinese_type;
 
 pub fn export_csv(questions: &[Question], path: &str) -> Result<(), CoreError> {
     let mut wtr = WriterBuilder::new()

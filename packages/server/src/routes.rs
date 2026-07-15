@@ -148,10 +148,10 @@ pub async fn export_handler(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-pub async fn export_kaoshibao_handler(
+pub async fn export_xlsx_handler(
     Json(questions): Json<Vec<Question>>,
 ) -> Result<Response, (StatusCode, String)> {
-    let data = exambot_core::export::export_kaoshibao_to_writer(&questions)
+    let data = exambot_core::export::export_xlsx_to_writer(&questions)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Response::builder()

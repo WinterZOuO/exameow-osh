@@ -26,7 +26,7 @@ export interface QuestionBank {
   name: string
   questions: Question[]
   createdAt: number
-  source: 'ai-generated' | 'csv-import' | 'kaoshibao-import'
+  source: 'ai-generated' | 'csv-import' | 'xlsx-import'
 }
 
 export type PracticeMode = 'sequential' | 'random' | 'mock' | 'wrong'

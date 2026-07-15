@@ -47,15 +47,15 @@ export const api = {
     return httpApi.exportCsv(questions, filename)
   },
 
-  async exportKaoshibao(
+  async exportXlsx(
     questions: import('@exambot/shared').Question[],
     savePath?: string,
     filename?: string,
   ): Promise<void> {
     if (isTauri()) {
-      return tauriApi.exportKaoshibao(questions, savePath!)
+      return tauriApi.exportXlsx(questions, savePath!)
     }
-    return httpApi.exportKaoshibao(questions, filename)
+    return httpApi.exportXlsx(questions, filename)
   },
 
   async exportXlsxData(

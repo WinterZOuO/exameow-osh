@@ -28,8 +28,7 @@ const wrongStore = useWrongQuestionsStore()
 
 const sourceLabel = (source: string): string => {
   if (source === 'ai-generated') return i18n.t('practiceSourceAI')
-  if (source === 'csv-import' || source === 'kaoshibao-import') return i18n.t('practiceSourceImport')
-  return source
+  return i18n.t('practiceSourceImport')
 }
 
 const formatDate = (ts: number): string => {

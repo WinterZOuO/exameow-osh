@@ -4,7 +4,7 @@ use std::io::{Cursor, Write};
 use zip::write::FileOptions;
 use zip::CompressionMethod;
 
-const KAOSHIBAO_TYPE_MAP: &[(&str, &str)] = &[
+const XLSX_TYPE_MAP: &[(&str, &str)] = &[
     ("single_choice", "单选题"),
     ("multi_choice", "多选题"),
     ("true_false", "判断题"),
@@ -13,7 +13,7 @@ const KAOSHIBAO_TYPE_MAP: &[(&str, &str)] = &[
 ];
 
 pub(super) fn to_chinese_type(qtype: &str) -> &str {
-    for (key, label) in KAOSHIBAO_TYPE_MAP {
+    for (key, label) in XLSX_TYPE_MAP {
         if qtype == *key {
             return label;
         }
@@ -175,17 +175,17 @@ impl SheetDataWriter {
     }
 }
 
-pub fn export_kaoshibao(questions: &[Question], path: &str) -> Result<(), CoreError> {
-    let data = generate_kaoshibao_xlsx(questions)?;
+pub fn export_xlsx(questions: &[Question], path: &str) -> Result<(), CoreError> {
+    let data = generate_xlsx(questions)?;
     std::fs::write(path, data)
         .map_err(|e| CoreError::Export(format!("cannot write file: {e}")))
 }
 
-pub fn export_kaoshibao_to_writer(questions: &[Question]) -> Result<Vec<u8>, CoreError> {
-    generate_kaoshibao_xlsx(questions)
+pub fn export_xlsx_to_writer(questions: &[Question]) -> Result<Vec<u8>, CoreError> {
+    generate_xlsx(questions)
 }
 
-fn generate_kaoshibao_xlsx(questions: &[Question]) -> Result<Vec<u8>, CoreError> {
+fn generate_xlsx(questions: &[Question]) -> Result<Vec<u8>, CoreError> {
     let mut writer = SheetDataWriter::default();
 
     // Row 1: Header

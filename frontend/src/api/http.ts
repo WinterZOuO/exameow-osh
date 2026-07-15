@@ -45,8 +45,8 @@ export const httpApi = {
     URL.revokeObjectURL(url)
   },
 
-  async exportKaoshibao(questions: Question[], filename: string = 'exambot_questions.xlsx'): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/export/kaoshibao`, {
+  async exportXlsx(questions: Question[], filename: string = 'exambot_questions.xlsx'): Promise<void> {
+    const res = await fetch(`${BASE_URL}/api/export/xlsx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(questions),

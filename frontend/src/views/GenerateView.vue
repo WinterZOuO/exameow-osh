@@ -21,7 +21,7 @@ const exportError = ref('')
 const exportSuccess = ref('')
 const exportFilePath = ref('')
 const exporting = ref(false)
-const exportingKaoshibao = ref(false)
+const exportingXlsx = ref(false)
 
 const baseFileName = computed(() => examStore.sourceFileName || 'exambot_questions')
 
@@ -57,7 +57,7 @@ async function saveFile(filename: string, content: string | Uint8Array): Promise
     if (typeof content === 'string') {
       await api.exportCsv(examStore.questions, path)
     } else {
-      await api.exportKaoshibao(examStore.questions, path)
+      await api.exportXlsx(examStore.questions, path)
     }
     exportSuccess.value = i18n.t('previewExportSaved') + path
     exportFilePath.value = path
@@ -89,7 +89,7 @@ async function handleExportCsv() {
 }
 
 async function handleExportXlsx() {
-  exportingKaoshibao.value = true
+  exportingXlsx.value = true
   try {
     const defaultName = `${baseFileName.value}.xlsx`
     if (isTauri) {
@@ -97,9 +97,9 @@ async function handleExportXlsx() {
       const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
       await saveFile(defaultName, bytes)
     } else {
-      await api.exportKaoshibao(examStore.questions, undefined, defaultName)
+      await api.exportXlsx(examStore.questions, undefined, defaultName)
     }
-  } catch (e: any) { exportError.value = e.message || String(e) } finally { exportingKaoshibao.value = false }
+  } catch (e: any) { exportError.value = e.message || String(e) } finally { exportingXlsx.value = false }
 }
 
 async function handleShare() {
@@ -184,8 +184,8 @@ async function handleShare() {
           <button class="btn-tonal text-sm" :disabled="exporting" @click="handleExportCsv">
             <ArrowDownTrayIcon class="w-4 h-4" /> CSV
           </button>
-          <button class="btn-filled text-sm" :disabled="exportingKaoshibao" @click="handleExportXlsx">
-            <ArrowDownTrayIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
+          <button class="btn-filled text-sm" :disabled="exportingXlsx" @click="handleExportXlsx">
+            <ArrowDownTrayIcon class="w-4 h-4" /> {{ exportingXlsx ? '...' : 'XLSX' }}
           </button>
         </div>
       </div>

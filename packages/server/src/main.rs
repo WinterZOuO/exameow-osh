@@ -20,7 +20,7 @@ async fn main() {
         .route("/api/models", get(routes::get_models))
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/export", get(routes::export_handler))
-        .route("/api/export/kaoshibao", post(routes::export_kaoshibao_handler))
+        .route("/api/export/xlsx", post(routes::export_xlsx_handler))
         .route("/api/config/save", post(routes::save_config_handler))
         .route("/api/config/load", get(routes::load_config_handler))
         .fallback_service(ServeDir::new("../frontend/dist"))

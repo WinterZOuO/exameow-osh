@@ -345,7 +345,7 @@ export const usePracticeStore = defineStore('practice', () => {
 
   function confirmImport(): string {
     if (!importPreview.value || importPreview.value.length === 0) return ''
-    const source = importPreview.value[0]?.id.startsWith('kaoshibao') ? 'kaoshibao-import' as const : 'csv-import' as const
+    const source = importPreview.value[0]?.id.startsWith('xlsx') ? 'xlsx-import' as const : 'csv-import' as const
     const nameBase = importFileName.value.replace(/\.[^/.]+$/, '')
     const bank: QuestionBank = {
       id: generateId(),

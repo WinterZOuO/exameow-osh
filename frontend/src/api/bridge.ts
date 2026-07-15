@@ -49,8 +49,8 @@ export const tauriApi = {
     return invoke<void>('export_csv', { questionsJson: JSON.stringify(questions), savePath })
   },
 
-  async exportKaoshibao(questions: Question[], savePath: string): Promise<void> {
-    return invoke<void>('export_kaoshibao', { questionsJson: JSON.stringify(questions), savePath })
+  async exportXlsx(questions: Question[], savePath: string): Promise<void> {
+    return invoke<void>('export_xlsx', { questionsJson: JSON.stringify(questions), savePath })
   },
 
   async exportXlsxData(questions: Question[]): Promise<string> {

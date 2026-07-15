@@ -135,7 +135,7 @@ function buildColumnMap(headers: string[]): ColumnMap {
   return map
 }
 
-function buildKaoshibaoMap(): ColumnMap {
+function buildXlsxColumnMap(): ColumnMap {
   return {
     stem: 0,
     type: 1,
@@ -200,7 +200,7 @@ function parseRawData(rows: string[][], columnMap: ColumnMap, source: string): Q
   return questions
 }
 
-function detectIsKaoshibao(headers: string[]): boolean {
+function detectXlsxFormat(headers: string[]): boolean {
   if (headers.length < 11) return false
   const checks = [
     normalize(headers[0] ?? '').includes('题干'),
@@ -260,11 +260,11 @@ export function parseExcel(buffer: ArrayBuffer, fileName: string): { questions: 
   let columnMap: ColumnMap
   const headers = (rows[0] ?? []).map(c => String(c ?? ''))
 
-  if (detectIsKaoshibao(headers)) {
-    columnMap = buildKaoshibaoMap()
+  if (detectXlsxFormat(headers)) {
+    columnMap = buildXlsxColumnMap()
     const dataRows = rows.slice(1).filter((r): r is string[] => r !== undefined)
-    const questions = parseRawData(dataRows, columnMap, 'kaoshibao')
-    return { questions, source: 'kaoshibao' }
+    const questions = parseRawData(dataRows, columnMap, 'xlsx')
+    return { questions, source: 'xlsx' }
   }
 
   let headerIndex = 0
