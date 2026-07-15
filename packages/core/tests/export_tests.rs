@@ -25,28 +25,36 @@ fn make_questions() -> Vec<Question> {
 #[test]
 fn test_export_csv() {
     let questions = make_questions();
-    let path = "tests/fixtures/test_output.csv";
-    export_csv(&questions, path).unwrap();
+    let dir = std::env::temp_dir();
+    let path = dir.join("test_output.csv");
+    let path_str = path.to_str().unwrap();
+    export_csv(&questions, path_str).unwrap();
 
-    let content = std::fs::read_to_string(path).unwrap();
-    assert!(content.contains("id,type,stem,options,answer,analysis"));
-    assert!(content.contains("q1"));
-    assert!(content.contains("3|4|5|6"));
-    assert!(content.contains("q2"));
+    let content = std::fs::read_to_string(path_str).unwrap();
+    assert!(content.contains("题干,题型,选项A,选项B,选项C,选项D,选项E,选项F,选项G,选项H,正确答案,解析,章节,难度"));
+    assert!(content.contains("What is 2+2?"));
+    assert!(content.contains("单选题"));
+    assert!(content.contains("3,4,5,6"));
+    assert!(content.contains("The sky is blue."));
+    assert!(content.contains("判断题"));
+    assert!(content.contains("Basic arithmetic"));
 
-    std::fs::remove_file(path).ok();
+    std::fs::remove_file(&path).ok();
 }
 
 #[test]
 fn test_export_empty_csv() {
     let questions: Vec<Question> = vec![];
-    let path = "tests/fixtures/test_empty.csv";
-    export_csv(&questions, path).unwrap();
+    let dir = std::env::temp_dir();
+    let path = dir.join("test_empty.csv");
+    let path_str = path.to_str().unwrap();
+    export_csv(&questions, path_str).unwrap();
 
-    let content = std::fs::read_to_string(path).unwrap();
+    let content = std::fs::read_to_string(path_str).unwrap();
     let lines: Vec<_> = content.lines().collect();
     assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains("id,type,stem"));
+    assert!(lines[0].contains("题干"));
+    assert!(lines[0].contains("正确答案"));
 
-    std::fs::remove_file(path).ok();
+    std::fs::remove_file(&path).ok();
 }
