@@ -17,6 +17,9 @@ fn test_build_user_prompt() {
         topic_filter: Some("Machine Learning".to_string()),
         type_counts: None,
         text: None,
+        batch_index: None,
+        batch_total: None,
+        source_name: None,
     };
     let text = "Sample document content about ML.";
     let prompt = build_user_prompt(text, &params);
@@ -41,6 +44,9 @@ fn test_build_user_prompt_with_counts() {
         topic_filter: None,
         type_counts: Some(type_counts),
         text: None,
+        batch_index: None,
+        batch_total: None,
+        source_name: None,
     };
     let text = "Test content.";
     let prompt = build_user_prompt(text, &params);
