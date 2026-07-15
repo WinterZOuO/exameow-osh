@@ -53,10 +53,10 @@ async function saveFile(filename: string, content: string | Uint8Array): Promise
 
 async function handleShare() {
   try {
-    const { tauriApi } = await import('@/api/bridge')
-    await tauriApi.shareFile(exportFilePath.value!)
+    const { openPath } = await import('@tauri-apps/plugin-opener')
+    await openPath(exportFilePath.value!)
   } catch (e: any) {
-    exportError.value = 'Share failed: ' + (e.message || String(e))
+    exportError.value = 'Open failed: ' + (e.message || String(e))
   }
 }
 
