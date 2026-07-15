@@ -104,8 +104,9 @@ async function handleExportXlsx() {
 
 async function handleShare() {
   try {
-    const { tauriApi } = await import('@/api/bridge')
-    await tauriApi.shareFile(exportFilePath.value!)
+    const { shareFile } = await import('@choochmeque/tauri-plugin-sharekit-api')
+    const mime = exportFilePath.value!.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'
+    await shareFile('file://' + exportFilePath.value!, { mimeType: mime, title: exportFilePath.value!.split('/').pop() || 'File' })
   } catch (e: any) {
     exportError.value = 'Share failed: ' + (e.message || String(e))
   }
