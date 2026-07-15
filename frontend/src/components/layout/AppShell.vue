@@ -8,7 +8,6 @@ import WindowControls from './WindowControls.vue'
 import {
   Cog6ToothIcon,
   SparklesIcon,
-  DocumentTextIcon,
   SunIcon,
   MoonIcon,
   AcademicCapIcon,
@@ -49,7 +48,6 @@ if (saved === '1') isDark.value = true
 const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
   { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
-  { key: 'navPreview', path: '/preview', icon: DocumentTextIcon },
   { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
 ]
 

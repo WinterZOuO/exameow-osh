@@ -20,12 +20,6 @@ const router = createRouter({
       meta: { title: 'Generate Exam' },
     },
     {
-      path: '/preview',
-      name: 'preview',
-      component: () => import('@/views/PreviewView.vue'),
-      meta: { title: 'Preview & Export' },
-    },
-    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
