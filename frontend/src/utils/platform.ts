@@ -23,3 +23,7 @@ export function isWindows(): boolean {
 export function isLinux(): boolean {
   return /Linux/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent)
 }
+
+export function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent)
+}

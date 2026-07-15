@@ -1,23 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
+import QuestionTable from '@/components/preview/QuestionTable.vue'
 import { getFileInputs, fileInputsRef } from '@/stores/fileInput'
-import { SparklesIcon } from '@heroicons/vue/24/outline'
+import { api } from '@/api'
+import { generateCsvContent } from '@/api/http'
+import { isAndroid } from '@/utils/platform'
+import { SparklesIcon, ArrowDownTrayIcon, TableCellsIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
-const router = useRouter()
 const examStore = useExamStore()
 const configStore = useConfigStore()
 const i18n = useI18nStore()
 
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
+const exportError = ref('')
+const exportSuccess = ref('')
+const exportFilePath = ref('')
+const exporting = ref(false)
+const exportingKaoshibao = ref(false)
+
+const baseFileName = computed(() => examStore.sourceFileName || 'exambot_questions')
 
 const canGenerate = computed(() =>
-  fileInputsRef.value.length > 0 && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured,
+  fileInputsRef.value.length > 0 && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured && !examStore.generating,
 )
 
 const progressPercent = computed(() => {
@@ -33,9 +42,72 @@ async function handleGenerate() {
   if (inputs.length === 0) return
   try {
     await examStore.generate(inputs)
-    router.push('/preview')
-  } catch (_e) {
-    // error displayed via examStore.error
+  } catch (_e) {}
+}
+
+function handleNewBatch() { examStore.reset() }
+
+async function saveFile(filename: string, content: string | Uint8Array): Promise<string | null> {
+  exportError.value = ''
+  exportSuccess.value = ''
+  try {
+    const mod: any = await import('@tauri-apps/plugin-dialog')
+    const path = await mod.save({ defaultPath: filename, filters: [{ name: 'File', extensions: [filename.split('.').pop() || '*'] }] })
+    if (!path) return null
+    if (typeof content === 'string') {
+      await api.exportCsv(examStore.questions, path)
+    } else {
+      await api.exportKaoshibao(examStore.questions, path)
+    }
+    exportSuccess.value = i18n.t('previewExportSaved') + path
+    exportFilePath.value = path
+    return path
+  } catch {}
+  try {
+    const b64 = typeof content === 'string' ? btoa(unescape(encodeURIComponent(content))) : btoa(String.fromCharCode(...content))
+    const { tauriApi } = await import('@/api/bridge')
+    const savedPath = await tauriApi.saveToDownloads(filename, b64)
+    exportSuccess.value = i18n.t('previewExportSaved') + savedPath
+    exportFilePath.value = savedPath
+    return savedPath
+  } catch (e: any) {
+    exportError.value = 'Export failed: ' + (e.message || String(e))
+    return null
+  }
+}
+
+async function handleExportCsv() {
+  exporting.value = true
+  try {
+    const defaultName = `${baseFileName.value}.csv`
+    if (isTauri) {
+      await saveFile(defaultName, generateCsvContent(examStore.questions))
+    } else {
+      await api.exportCsv(examStore.questions, undefined, defaultName)
+    }
+  } catch (e: any) { exportError.value = e.message || String(e) } finally { exporting.value = false }
+}
+
+async function handleExportXlsx() {
+  exportingKaoshibao.value = true
+  try {
+    const defaultName = `${baseFileName.value}.xlsx`
+    if (isTauri) {
+      const base64 = await api.exportXlsxData(examStore.questions)
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+      await saveFile(defaultName, bytes)
+    } else {
+      await api.exportKaoshibao(examStore.questions, undefined, defaultName)
+    }
+  } catch (e: any) { exportError.value = e.message || String(e) } finally { exportingKaoshibao.value = false }
+}
+
+async function handleShare() {
+  try {
+    const { openPath } = await import('@tauri-apps/plugin-opener')
+    await openPath(exportFilePath.value!)
+  } catch (e: any) {
+    exportError.value = 'Open failed: ' + (e.message || String(e))
   }
 }
 </script>
@@ -83,10 +155,10 @@ async function handleGenerate() {
     </Transition>
 
     <!-- Generate Button -->
-    <div class="text-center">
+    <div class="flex flex-wrap items-center justify-center gap-2">
       <button
         class="btn-filled text-base !px-10 !h-12"
-        :disabled="!canGenerate || examStore.generating"
+        :disabled="!canGenerate"
         @click="handleGenerate"
       >
         <SparklesIcon v-if="!examStore.generating" class="w-5 h-5" />
@@ -96,6 +168,43 @@ async function handleGenerate() {
         </svg>
         {{ examStore.generating ? i18n.t('genGenerating') : i18n.t('genGenerateBtn') }}
       </button>
+      <button
+        v-if="examStore.generated"
+        class="btn-tonal text-sm !h-12"
+        @click="handleNewBatch"
+      >
+        {{ i18n.t('previewNewBatch') }}
+      </button>
     </div>
+
+    <!-- Export & Preview -->
+    <template v-if="examStore.generated && !examStore.generating">
+      <div class="mt-6 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-body-lg" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('previewQuestionCount', { n: examStore.questions.length }) }}</p>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn-tonal text-sm" :disabled="exporting" @click="handleExportCsv">
+            <ArrowDownTrayIcon class="w-4 h-4" /> CSV
+          </button>
+          <button class="btn-filled text-sm" :disabled="exportingKaoshibao" @click="handleExportXlsx">
+            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
+          </button>
+        </div>
+      </div>
+
+      <Transition name="scale">
+        <div v-if="exportError" class="mb-4 px-4 py-3 rounded-2xl text-sm" style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))">{{ exportError }}</div>
+      </Transition>
+      <Transition name="scale">
+        <div v-if="exportSuccess" class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 break-all" style="background-color: rgba(var(--md-primary) / 0.12); color: rgb(var(--md-primary))">
+          <CheckCircleIcon class="w-5 h-5 shrink-0" />
+          <span class="flex-1 min-w-0">{{ exportSuccess }}</span>
+          <button v-if="exportFilePath && isAndroid()" class="btn-tonal !h-7 !px-3 !text-xs shrink-0" @click="handleShare">
+            <ShareIcon class="w-3.5 h-3.5" /> {{ i18n.t('previewExportShare') }}
+          </button>
+        </div>
+      </Transition>
+
+      <QuestionTable :questions="examStore.questions" />
+    </template>
   </div>
 </template>

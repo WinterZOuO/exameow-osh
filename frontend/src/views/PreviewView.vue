@@ -7,6 +7,7 @@ import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
 import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { isAndroid } from '@/utils/platform'
 
 const router = useRouter()
 const examStore = useExamStore()
@@ -152,7 +153,7 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
           <CheckCircleIcon class="w-5 h-5 shrink-0" />
           <span class="flex-1 min-w-0">{{ exportSuccess }}</span>
           <button
-            v-if="exportFilePath && isTauri"
+            v-if="exportFilePath && isAndroid()"
             class="btn-tonal !h-7 !px-3 !text-xs shrink-0"
             @click="handleShare"
           >
