@@ -6,7 +6,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
-import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const examStore = useExamStore()
@@ -14,6 +14,7 @@ const i18n = useI18nStore()
 const isTauri = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 const exportError = ref('')
 const exportSuccess = ref('')
+const exportFilePath = ref('')
 const exporting = ref(false)
 const exportingKaoshibao = ref(false)
 
@@ -23,28 +24,39 @@ const baseFileName = computed(() => {
   return 'exambot_questions'
 })
 
-async function saveFile(filename: string, content: string | Uint8Array): Promise<boolean> {
+async function saveFile(filename: string, content: string | Uint8Array): Promise<string | null> {
   try {
     const mod: any = await import('@tauri-apps/plugin-dialog')
     const path = await mod.save({ defaultPath: filename, filters: [{ name: 'File', extensions: [filename.split('.').pop() || '*'] }] })
-    if (!path) return false
+    if (!path) return null
     if (typeof content === 'string') {
       await api.exportCsv(examStore.questions, path)
     } else {
       await api.exportKaoshibao(examStore.questions, path)
     }
     exportSuccess.value = i18n.t('previewExportSaved') + path
-    return true
+    exportFilePath.value = path
+    return path
   } catch {}
   try {
     const b64 = typeof content === 'string' ? btoa(unescape(encodeURIComponent(content))) : btoa(String.fromCharCode(...content))
     const { tauriApi } = await import('@/api/bridge')
     const savedPath = await tauriApi.saveToDownloads(filename, b64)
     exportSuccess.value = i18n.t('previewExportSaved') + savedPath
-    return true
+    exportFilePath.value = savedPath
+    return savedPath
   } catch (e: any) {
     exportError.value = 'Export failed: ' + (e.message || String(e))
-    return false
+    return null
+  }
+}
+
+async function handleShare() {
+  try {
+    const { tauriApi } = await import('@/api/bridge')
+    await tauriApi.shareFile(exportFilePath.value!)
+  } catch (e: any) {
+    exportError.value = 'Share failed: ' + (e.message || String(e))
   }
 }
 
@@ -138,7 +150,14 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
           style="background-color: rgba(var(--md-primary) / 0.12); color: rgb(var(--md-primary))"
         >
           <CheckCircleIcon class="w-5 h-5 shrink-0" />
-          {{ exportSuccess }}
+          <span class="flex-1 min-w-0">{{ exportSuccess }}</span>
+          <button
+            v-if="exportFilePath && isTauri"
+            class="btn-tonal !h-7 !px-3 !text-xs shrink-0"
+            @click="handleShare"
+          >
+            <ShareIcon class="w-3.5 h-3.5" /> {{ i18n.t('previewExportShare') }}
+          </button>
         </div>
       </Transition>
 
