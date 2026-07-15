@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
-import { isTauri, isMacOS } from '@/utils/platform'
+import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import WindowControls from './WindowControls.vue'
 import {
@@ -19,7 +19,7 @@ const route = useRoute()
 const i18n = useI18nStore()
 
 const isDark = ref(false)
-const showWindowControls = isTauri() && !isMacOS()
+const showWindowControls = isTauri() && (isWindows() || isLinux())
 const isMacOSOverlay = isTauri() && isMacOS()
 
 function handleHeaderMouseDown(event: MouseEvent) {

@@ -165,6 +165,8 @@ pub fn run() {
             }
 
             let window = builder.build()?;
+
+            #[cfg(not(target_os = "android"))]
             window.show()?;
 
             Ok(())
