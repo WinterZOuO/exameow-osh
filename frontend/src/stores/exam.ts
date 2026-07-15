@@ -95,10 +95,10 @@ export const useExamStore = defineStore('exam', () => {
     const remaining: Record<string, number> = {}
     for (const [k, v] of typeEntries) remaining[k] = v
 
+    const chunks = textChunks
     const batches: ExamParams[] = []
-    let chunkIdx = 0
-    while (Object.values(remaining).some(c => c > 0)) {
-      const chunk = textChunks[chunkIdx % textChunks.length]!
+    for (let i = 0; i < chunks.length && Object.values(remaining).some(c => c > 0); i++) {
+      const chunk = chunks[i]!
       const counts: Record<string, number> = {}
       let batchTotal = 0
 
@@ -123,7 +123,6 @@ export const useExamStore = defineStore('exam', () => {
           batch_total: 0,
         } as ExamParams)
       }
-      chunkIdx++
     }
 
     const totalBatches = batches.length
@@ -173,14 +172,42 @@ export const useExamStore = defineStore('exam', () => {
     // Chunk each section using chunkTextBySize, prefix with label
     const result: string[] = []
     for (let i = 0; i < sections.length; i++) {
-      const sectionChunks = chunkTextBySize(sections[i]!.text, allocated[i]!)
+      const sectionChunks = chunkTextBySize(sections[i]!.text, Math.max(1, allocated[i]!))
       for (const chunk of sectionChunks) {
         const prefix = sections[i]!.label ? `## ${sections[i]!.label}\n` : ''
         result.push(prefix + chunk)
       }
     }
+
+    // If we have fewer chunks than requested, split the largest chunk
+    while (result.length < chunkCount) {
+      let maxIdx = 0
+      for (let i = 1; i < result.length; i++) {
+        if (result[i]!.length > result[maxIdx]!.length) maxIdx = i
+      }
+      const [a, b] = splitTextChunk(result[maxIdx]!)
+      result.splice(maxIdx, 1, a, b)
+    }
+    // If we have too many, merge the two shortest adjacent chunks
+    while (result.length > chunkCount) {
+      let minIdx = 0
+      let minLen = result[0]!.length + (result[1]?.length ?? Infinity)
+      for (let i = 1; i < result.length - 1; i++) {
+        const combined = result[i]!.length + result[i + 1]!.length
+        if (combined < minLen) { minLen = combined; minIdx = i }
+      }
+      result.splice(minIdx, 2, result[minIdx]! + '\n\n' + result[minIdx + 1]!)
+    }
     if (result.length === 0) return [fallbackText]
     return result
+  }
+
+  function splitTextChunk(chunk: string): [string, string] {
+    const mid = Math.floor(chunk.length / 2)
+    // Try to split at newline near the middle
+    const nl = chunk.indexOf('\n', mid)
+    const split = nl > 0 && nl < chunk.length - 1 ? nl + 1 : mid
+    return [chunk.substring(0, split).trim(), chunk.substring(split).trim()]
   }
 
   function loadCachedQuestions(): Question[] {
