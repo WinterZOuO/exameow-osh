@@ -622,3 +622,31 @@
     border-radius: 28px;
   }
 }
+
+/* ===== iOS-style overlay scrollbars ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover,
+*:focus-within {
+  scrollbar-color: rgb(var(--md-outline-variant) / 0.5) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+*:hover::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb {
+  background: rgb(var(--md-outline-variant) / 0.5);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--md-outline-variant) / 0.8);
+}
