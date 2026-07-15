@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_pptx, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -144,5 +144,33 @@ fn test_extract_html_empty_rejected() {
     let path = std::env::temp_dir().join("exambot_test_empty.html");
     std::fs::write(&path, "<html><body><script>only()</script></body></html>").unwrap();
     assert!(extract_html(path.to_str().unwrap()).is_err());
+    let _ = std::fs::remove_file(&path);
+}
+
+fn write_min_pptx(path: &std::path::Path) {
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    let f = std::fs::File::create(path).unwrap();
+    let mut z = zip::ZipWriter::new(f);
+    let o = SimpleFileOptions::default();
+    let slide = |body: &str| format!(r#"<?xml version="1.0"?><p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>{body}</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>"#);
+    // write slide2 before slide1 to prove numeric ordering
+    z.start_file("ppt/slides/slide2.xml", o).unwrap();
+    z.write_all(slide("Second slide").as_bytes()).unwrap();
+    z.start_file("ppt/slides/slide1.xml", o).unwrap();
+    z.write_all(slide("First slide").as_bytes()).unwrap();
+    z.finish().unwrap();
+}
+
+#[test]
+fn test_extract_pptx_slides_in_order() {
+    let path = std::env::temp_dir().join("exambot_test.pptx");
+    write_min_pptx(&path);
+    let text = extract_pptx(path.to_str().unwrap()).unwrap();
+    let first = text.find("First slide").unwrap();
+    let second = text.find("Second slide").unwrap();
+    assert!(first < second);
+    assert!(text.contains("### Slide 1"));
+    assert!(text.contains("### Slide 2"));
     let _ = std::fs::remove_file(&path);
 }
