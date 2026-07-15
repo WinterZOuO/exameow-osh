@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_excel, extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -122,5 +122,27 @@ fn test_extract_excel_invalid_rejected() {
     let path = std::env::temp_dir().join("exambot_test_bad.xlsx");
     std::fs::write(&path, "not a zip").unwrap();
     assert!(extract_excel(path.to_str().unwrap()).is_err());
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_html_strips_tags() {
+    let path = std::env::temp_dir().join("exambot_test.html");
+    std::fs::write(&path, "<html><head><title>T</title><style>body{color:red}</style></head><body><script>var x=1;</script><h1>Chapter &amp; Intro</h1><p>Hello <b>world</b>&nbsp;&#20013;</p><!-- comment --></body></html>").unwrap();
+    let text = extract_html(path.to_str().unwrap()).unwrap();
+    assert!(text.contains("Chapter & Intro"));
+    assert!(text.contains("Hello world \u{4e2d}"));
+    assert!(!text.contains("var x"));
+    assert!(!text.contains("color:red"));
+    assert!(!text.contains("<"));
+    assert!(!text.contains("comment"));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_html_empty_rejected() {
+    let path = std::env::temp_dir().join("exambot_test_empty.html");
+    std::fs::write(&path, "<html><body><script>only()</script></body></html>").unwrap();
+    assert!(extract_html(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
 }
