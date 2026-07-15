@@ -10,7 +10,7 @@ pub use pdf::extract_pdf;
 
 #[derive(Debug)]
 pub enum FileFormat {
-    Txt,
+    PlainText,
     Docx,
     Pdf,
 }
@@ -23,10 +23,9 @@ impl FileFormat {
             .unwrap_or("")
             .to_lowercase();
         match ext.as_str() {
-            "txt" => Ok(FileFormat::Txt),
             "docx" => Ok(FileFormat::Docx),
             "pdf" => Ok(FileFormat::Pdf),
-            other => Err(ParserError::Unsupported(format!("unsupported extension: .{other}"))),
+            _ => Ok(FileFormat::PlainText),
         }
     }
 }
@@ -55,7 +54,7 @@ impl From<std::io::Error> for ParserError {
 pub fn parse_file(path: &str) -> Result<String, ParserError> {
     let format = FileFormat::from_extension(path)?;
     match format {
-        FileFormat::Txt => extract_txt(path),
+        FileFormat::PlainText => extract_txt(path),
         FileFormat::Docx => extract_docx(path),
         FileFormat::Pdf => extract_pdf(path),
     }

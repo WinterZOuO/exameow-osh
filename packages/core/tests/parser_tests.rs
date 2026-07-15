@@ -15,22 +15,14 @@ fn test_extract_txt_not_found() {
 
 #[test]
 fn test_file_format_from_extension() {
-    assert!(matches!(
-        FileFormat::from_extension("doc.pdf"),
-        Ok(FileFormat::Pdf)
-    ));
-    assert!(matches!(
-        FileFormat::from_extension("doc.docx"),
-        Ok(FileFormat::Docx)
-    ));
-    assert!(matches!(
-        FileFormat::from_extension("doc.txt"),
-        Ok(FileFormat::Txt)
-    ));
-    assert!(matches!(
-        FileFormat::from_extension("doc.png"),
-        Err(ParserError::Unsupported(_))
-    ));
+    assert!(matches!(FileFormat::from_extension("doc.pdf"), Ok(FileFormat::Pdf)));
+    assert!(matches!(FileFormat::from_extension("doc.docx"), Ok(FileFormat::Docx)));
+    assert!(matches!(FileFormat::from_extension("doc.txt"), Ok(FileFormat::PlainText)));
+    assert!(matches!(FileFormat::from_extension("main.py"), Ok(FileFormat::PlainText)));
+    assert!(matches!(FileFormat::from_extension("README.md"), Ok(FileFormat::PlainText)));
+    // unknown extensions fall back to PlainText (binary content is rejected at read time)
+    assert!(matches!(FileFormat::from_extension("doc.png"), Ok(FileFormat::PlainText)));
+    assert!(matches!(FileFormat::from_extension("Makefile"), Ok(FileFormat::PlainText)));
 }
 
 #[test]
