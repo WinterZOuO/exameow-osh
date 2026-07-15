@@ -3,6 +3,7 @@ mod docx;
 mod pdf;
 mod table;
 mod csv;
+mod excel;
 
 use std::path::Path;
 
@@ -10,6 +11,7 @@ pub use txt::extract_txt;
 pub use docx::extract_docx;
 pub use pdf::extract_pdf;
 pub use csv::extract_csv;
+pub use excel::extract_excel;
 
 #[derive(Debug)]
 pub enum FileFormat {
@@ -17,6 +19,7 @@ pub enum FileFormat {
     Docx,
     Pdf,
     Csv,
+    Excel,
 }
 
 impl FileFormat {
@@ -30,6 +33,7 @@ impl FileFormat {
             "docx" => Ok(FileFormat::Docx),
             "pdf" => Ok(FileFormat::Pdf),
             "csv" => Ok(FileFormat::Csv),
+            "xlsx" | "xlsm" | "xls" | "ods" => Ok(FileFormat::Excel),
             _ => Ok(FileFormat::PlainText),
         }
     }
@@ -63,5 +67,6 @@ pub fn parse_file(path: &str) -> Result<String, ParserError> {
         FileFormat::Docx => extract_docx(path),
         FileFormat::Pdf => extract_pdf(path),
         FileFormat::Csv => extract_csv(path),
+        FileFormat::Excel => extract_excel(path),
     }
 }

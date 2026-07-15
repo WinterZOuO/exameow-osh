@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_excel, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -84,5 +84,43 @@ fn test_extract_csv_empty_rejected() {
     let path = std::env::temp_dir().join("exambot_test_empty.csv");
     std::fs::write(&path, "\n\n").unwrap();
     assert!(extract_csv(path.to_str().unwrap()).is_err());
+    let _ = std::fs::remove_file(&path);
+}
+
+fn write_min_xlsx(path: &std::path::Path) {
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    let f = std::fs::File::create(path).unwrap();
+    let mut z = zip::ZipWriter::new(f);
+    let o = SimpleFileOptions::default();
+    z.start_file("[Content_Types].xml", o).unwrap();
+    z.write_all(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>"#).unwrap();
+    z.start_file("_rels/.rels", o).unwrap();
+    z.write_all(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>"#).unwrap();
+    z.start_file("xl/workbook.xml", o).unwrap();
+    z.write_all(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Scores" sheetId="1" r:id="rId1"/></sheets></workbook>"#).unwrap();
+    z.start_file("xl/_rels/workbook.xml.rels", o).unwrap();
+    z.write_all(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>"#).unwrap();
+    z.start_file("xl/worksheets/sheet1.xml", o).unwrap();
+    z.write_all(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Name</t></is></c><c r="B1" t="inlineStr"><is><t>Score</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>Alice</t></is></c><c r="B2"><v>95</v></c></row></sheetData></worksheet>"#).unwrap();
+    z.finish().unwrap();
+}
+
+#[test]
+fn test_extract_excel_markdown_table() {
+    let path = std::env::temp_dir().join("exambot_test.xlsx");
+    write_min_xlsx(&path);
+    let text = extract_excel(path.to_str().unwrap()).unwrap();
+    assert!(text.contains("| Name | Score |"));
+    assert!(text.contains("| --- | --- |"));
+    assert!(text.contains("| Alice | 95 |"));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_excel_invalid_rejected() {
+    let path = std::env::temp_dir().join("exambot_test_bad.xlsx");
+    std::fs::write(&path, "not a zip").unwrap();
+    assert!(extract_excel(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
 }
