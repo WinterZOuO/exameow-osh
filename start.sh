@@ -34,7 +34,7 @@ fi
 echo ""
 echo "  Select launch mode:"
 echo "  [1] Desktop (Tauri)  — full desktop app with native shell"
-echo "  [2] Web (Browser)    — Axum server + Vue dev, open http://localhost:5173"
+echo "  [2] Web (Browser)    — Axum server + Vue dev, open http://localhost:5273"
 echo "  [3] Web Production   — Axum serving built frontend, open http://localhost:3000"
 echo ""
 read -p "  Choice [1-3] (default: 1): " MODE
@@ -44,7 +44,7 @@ case $MODE in
     1)
         echo ""
         echo -e "${GREEN}Starting Tauri desktop app...${NC}"
-        echo "  Vite:  http://localhost:5173"
+        echo "  Vite:  http://localhost:5273"
         echo "  Press Ctrl+C to stop"
         echo ""
         set +e
@@ -54,7 +54,7 @@ case $MODE in
     2)
         echo ""
         echo -e "${GREEN}Starting Web dev mode...${NC}"
-        echo "  Frontend:      http://localhost:5173"
+        echo "  Frontend:      http://localhost:5273"
         echo "  API server:    http://localhost:3000"
         echo "  Press Ctrl+C to stop both"
         echo ""
