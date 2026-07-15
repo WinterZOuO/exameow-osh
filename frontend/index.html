@@ -17,7 +17,7 @@
             t = legacy === '1' ? 'dark' : legacy === '0' ? 'light' : 'system';
           }
           var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (dark) document.documentElement.classList.add('dark');
+          document.documentElement.classList.toggle('dark', dark);
         } catch (e) {}
       })();
     </script>
