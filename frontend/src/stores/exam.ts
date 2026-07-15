@@ -78,7 +78,8 @@ export const useExamStore = defineStore('exam', () => {
     if (typeEntries.length === 0) return [{ ...baseParams }]
 
     const totalQ = typeEntries.reduce((s, [, c]) => s + c, 0)
-    const textLen = (baseParams.text || '').length
+    const fullText = baseParams.text || ''
+    const textLen = fullText.length
 
     const docChunks = Math.max(1, Math.ceil(textLen / MAX_CHARS_PER_CHUNK))
     const qChunks = Math.max(1, Math.ceil(totalQ / MAX_Q_PER_CHUNK))
@@ -86,7 +87,9 @@ export const useExamStore = defineStore('exam', () => {
 
     if (chunkCount <= 1) return [{ ...baseParams }]
 
-    const textChunks = chunkTextBySize(baseParams.text || '', chunkCount)
+    // Split by file sections first (--- separated)
+    const fileSections = splitByFileSections(fullText)
+    const textChunks = chunkByFileProportion(fileSections, chunkCount, fullText)
     const remaining: Record<string, number> = {}
     for (const [k, v] of typeEntries) remaining[k] = v
 
@@ -127,6 +130,55 @@ export const useExamStore = defineStore('exam', () => {
     }
 
     return batches
+  }
+
+  // File sections are separated by "\n\n---\n\n## "
+  // Returns array of { text, label } for each file section.
+  // If no file markers found, treat entire text as a single section.
+  function splitByFileSections(text: string): { text: string; label: string }[] {
+    const parts = text.split(/\n\n---\n\n(?=## )/)
+    if (parts.length <= 1) return [{ text, label: '' }]
+    return parts.map((p, i) => {
+      // Extract the label from "## filename\n..."
+      const nl = p.indexOf('\n')
+      const label = nl > 0 ? p.substring(3, nl).trim() : `File ${i + 1}`
+      const content = nl > 0 ? p.substring(nl + 1) : p
+      return { text: content, label }
+    })
+  }
+
+  // Allocate `chunkCount` chunks proportionally across file sections by their text length.
+  function chunkByFileProportion(sections: { text: string; label: string }[], chunkCount: number, fallbackText: string): string[] {
+    const sectionLengths = sections.map(s => s.text.length)
+    const totalLen = sectionLengths.reduce((s, l) => s + l, 0)
+
+    // Allocate chunks proportionally, ensuring at least 1 chunk per section if possible
+    const allocated: number[] = sectionLengths.map((len) => Math.max(1, Math.round(chunkCount * len / totalLen)))
+
+    // Adjust to match chunkCount exactly
+    let sum = allocated.reduce((s, n) => s + n, 0)
+    while (sum > chunkCount) {
+      const maxIdx = allocated.indexOf(Math.max(...allocated))
+      allocated[maxIdx]!--
+      sum--
+    }
+    while (sum < chunkCount) {
+      const minIdx = allocated.indexOf(Math.min(...allocated))
+      allocated[minIdx]!++
+      sum++
+    }
+
+    // Chunk each section using chunkTextBySize, prefix with label
+    const result: string[] = []
+    for (let i = 0; i < sections.length; i++) {
+      const sectionChunks = chunkTextBySize(sections[i]!.text, allocated[i]!)
+      for (const chunk of sectionChunks) {
+        const prefix = sections[i]!.label ? `## ${sections[i]!.label}\n` : ''
+        result.push(prefix + chunk)
+      }
+    }
+    if (result.length === 0) return [fallbackText]
+    return result
   }
 
   function loadCachedQuestions(): Question[] {
