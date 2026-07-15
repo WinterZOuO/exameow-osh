@@ -123,7 +123,6 @@ fn save_to_downloads(filename: String, content_base64: String) -> Result<String,
 }
 
 #[tauri::command]
-#[tauri::command]
 fn save_config(endpoint: String, api_key: String, model: String) -> Result<(), CommandError> {
     let store = ConfigStore::new(APP_NAME)
         .map_err(|e| CommandError(format!("Config init error: {e}")))?;
