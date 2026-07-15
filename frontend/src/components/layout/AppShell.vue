@@ -3,8 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
-import { getCurrentWindow } from '@tauri-apps/api/window'
-import WindowControls from './WindowControls.vue'
+import TitleBar from './TitleBar.vue'
 import {
   Cog6ToothIcon,
   SparklesIcon,
@@ -18,22 +17,7 @@ const route = useRoute()
 const i18n = useI18nStore()
 
 const isDark = ref(false)
-const showWindowControls = isTauri() && (isWindows() || isLinux())
-const isMacOSOverlay = isTauri() && isMacOS()
-
-function handleHeaderMouseDown(event: MouseEvent) {
-  if (!isTauri()) return
-  const target = event.target as HTMLElement
-  if (target.closest('button, a, input, select')) return
-  getCurrentWindow().startDragging()
-}
-
-function handleHeaderDblClick(event: MouseEvent) {
-  if (!isTauri()) return
-  const target = event.target as HTMLElement
-  if (target.closest('button, a, input, select')) return
-  getCurrentWindow().toggleMaximize()
-}
+const isDesktopTauri = isTauri() && (isWindows() || isMacOS() || isLinux())
 
 function applyDark() {
   document.documentElement.classList.toggle('dark', isDark.value)
@@ -61,19 +45,22 @@ const headerStyle = {
 
 <template>
   <div class="min-h-screen flex flex-col" :style="{ backgroundColor: 'rgb(var(--md-surface))' }">
+    <!-- ====== Desktop TitleBar (Tauri only) ====== -->
+    <TitleBar v-if="isDesktopTauri" />
+
     <!-- ====== Top App Bar ====== -->
     <header
-      class="sticky top-0 z-30 safe-top select-none"
+      class="sticky z-30 select-none"
+      :class="isDesktopTauri ? 'top-[38px]' : 'top-0 safe-top'"
       :style="headerStyle"
-      @mousedown="handleHeaderMouseDown"
-      @dblclick="handleHeaderDblClick"
     >
-      <div
-        class="mx-auto w-full max-w-[90rem] flex items-center h-14 sm:h-16 gap-2 sm:gap-3"
-        :class="isMacOSOverlay ? 'pl-[80px] pr-3 sm:pl-[84px] sm:pr-6' : 'px-3 sm:px-6'"
-      >
-        <!-- Logo -->
-        <router-link to="/practice" class="flex items-center gap-3 shrink-0 no-underline">
+      <div class="mx-auto w-full max-w-[90rem] flex items-center h-14 sm:h-16 gap-2 sm:gap-3 px-3 sm:px-6">
+        <!-- Logo (browser / mobile only — desktop shows it in TitleBar) -->
+        <router-link
+          v-if="!isDesktopTauri"
+          to="/practice"
+          class="flex items-center gap-3 shrink-0 no-underline"
+        >
           <img src="/logo.png" alt="ExamBot" class="w-[38px] h-[38px] rounded-xl shrink-0" />
           <div class="hidden sm:block">
             <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
@@ -82,7 +69,7 @@ const headerStyle = {
         </router-link>
 
         <!-- Desktop Nav — Segmented-like pills -->
-        <div class="hidden sm:flex items-center ml-6">
+        <div class="hidden sm:flex items-center" :class="isDesktopTauri ? '' : 'ml-6'">
           <nav
             class="flex items-center p-1 rounded-full gap-0.5"
             style="background-color: rgb(var(--md-surface-container-high))"
@@ -102,7 +89,7 @@ const headerStyle = {
           </nav>
         </div>
 
-        <!-- Drag target spacer — fills remaining height to receive clicks -->
+        <!-- Spacer -->
         <div class="flex-1 self-stretch cursor-default" />
 
         <!-- Actions -->
@@ -121,9 +108,6 @@ const headerStyle = {
         </div>
 
       </div>
-
-      <!-- Window Controls (Windows/Linux only) — absolutely positioned at right edge -->
-      <WindowControls v-if="showWindowControls" class="absolute right-0 top-0 h-14 sm:h-16" />
     </header>
 
     <!-- ====== Main Content ====== -->
