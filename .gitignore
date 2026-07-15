@@ -5,3 +5,4 @@ target/
 *.jks
 test/
 gen/
+.superpowers/
