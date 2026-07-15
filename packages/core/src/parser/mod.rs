@@ -7,6 +7,7 @@ mod excel;
 mod html;
 mod xml_text;
 mod pptx;
+mod odt;
 
 use std::path::Path;
 
@@ -17,12 +18,14 @@ pub use csv::extract_csv;
 pub use excel::extract_excel;
 pub use html::extract_html;
 pub use pptx::extract_pptx;
+pub use odt::extract_odt;
 
 #[derive(Debug)]
 pub enum FileFormat {
     PlainText,
     Docx,
     Pdf,
+    Odt,
     Pptx,
     Csv,
     Excel,
@@ -43,6 +46,7 @@ impl FileFormat {
             "xlsx" | "xlsm" | "xls" | "ods" => Ok(FileFormat::Excel),
             "html" | "htm" => Ok(FileFormat::Html),
             "pptx" => Ok(FileFormat::Pptx),
+            "odt" => Ok(FileFormat::Odt),
             _ => Ok(FileFormat::PlainText),
         }
     }
@@ -76,6 +80,7 @@ pub fn parse_file(path: &str) -> Result<String, ParserError> {
         FileFormat::Docx => extract_docx(path),
         FileFormat::Pdf => extract_pdf(path),
         FileFormat::Pptx => extract_pptx(path),
+        FileFormat::Odt => extract_odt(path),
         FileFormat::Csv => extract_csv(path),
         FileFormat::Excel => extract_excel(path),
         FileFormat::Html => extract_html(path),

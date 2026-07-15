@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_pptx, extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_odt, extract_pptx, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -172,5 +172,30 @@ fn test_extract_pptx_slides_in_order() {
     assert!(first < second);
     assert!(text.contains("### Slide 1"));
     assert!(text.contains("### Slide 2"));
+    let _ = std::fs::remove_file(&path);
+}
+
+fn write_min_odt(path: &std::path::Path) {
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    let f = std::fs::File::create(path).unwrap();
+    let mut z = zip::ZipWriter::new(f);
+    let o = SimpleFileOptions::default();
+    z.start_file("content.xml", o).unwrap();
+    z.write_all(br#"<?xml version="1.0"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text><text:h>Title Here</text:h><text:p>First paragraph.</text:p><text:p>Second <text:span>styled</text:span> paragraph.</text:p></office:text></office:body></office:document-content>"#).unwrap();
+    z.finish().unwrap();
+}
+
+#[test]
+fn test_extract_odt_paragraphs() {
+    let path = std::env::temp_dir().join("exambot_test.odt");
+    write_min_odt(&path);
+    let text = extract_odt(path.to_str().unwrap()).unwrap();
+    assert!(text.contains("Title Here"));
+    assert!(text.contains("First paragraph."));
+    assert!(text.contains("Second styled paragraph."));
+    let title_pos = text.find("Title Here").unwrap();
+    let first_pos = text.find("First paragraph.").unwrap();
+    assert!(title_pos < first_pos);
     let _ = std::fs::remove_file(&path);
 }
