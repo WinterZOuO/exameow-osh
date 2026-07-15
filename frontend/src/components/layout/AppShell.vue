@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
@@ -9,6 +9,7 @@ import {
   SparklesIcon,
   SunIcon,
   MoonIcon,
+  ComputerDesktopIcon,
   AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -16,18 +17,39 @@ const router = useRouter()
 const route = useRoute()
 const i18n = useI18nStore()
 
-const isDark = ref(false)
-const isDesktopTauri = isTauri() && (isWindows() || isMacOS() || isLinux())
+type Theme = 'system' | 'light' | 'dark'
+const THEME_KEY = 'exambot-theme'
 
-function applyDark() {
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('exambot-dark', isDark.value ? '1' : '0')
+function loadTheme(): Theme {
+  const saved = localStorage.getItem(THEME_KEY)
+  if (saved === 'system' || saved === 'light' || saved === 'dark') return saved
+  const legacy = localStorage.getItem('exambot-dark')
+  if (legacy === '1') return 'dark'
+  if (legacy === '0') return 'light'
+  return 'system'
 }
 
-watch(isDark, applyDark, { immediate: true })
+const theme = ref<Theme>(loadTheme())
+const media = window.matchMedia('(prefers-color-scheme: dark)')
+const isDesktopTauri = isTauri() && (isWindows() || isMacOS() || isLinux())
 
-const saved = localStorage.getItem('exambot-dark')
-if (saved === '1') isDark.value = true
+function applyTheme() {
+  const dark = theme.value === 'dark' || (theme.value === 'system' && media.matches)
+  document.documentElement.classList.toggle('dark', dark)
+  localStorage.setItem(THEME_KEY, theme.value)
+}
+
+function onMediaChange() {
+  if (theme.value === 'system') applyTheme()
+}
+
+function cycleTheme() {
+  theme.value = theme.value === 'system' ? 'light' : theme.value === 'light' ? 'dark' : 'system'
+}
+
+watch(theme, applyTheme, { immediate: true })
+onMounted(() => media.addEventListener('change', onMediaChange))
+onUnmounted(() => media.removeEventListener('change', onMediaChange))
 
 const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
@@ -101,8 +123,9 @@ const headerStyle = {
           >
             {{ i18n.locale === 'zh' ? '中' : 'En' }}
           </button>
-          <button class="btn-icon" @click="isDark = !isDark">
-            <SunIcon v-if="isDark" class="w-5 h-5" />
+          <button class="btn-icon" @click="cycleTheme" :title="theme">
+            <ComputerDesktopIcon v-if="theme === 'system'" class="w-5 h-5" />
+            <SunIcon v-else-if="theme === 'light'" class="w-5 h-5" />
             <MoonIcon v-else class="w-5 h-5" />
           </button>
         </div>
