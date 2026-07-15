@@ -79,19 +79,15 @@ export const useExamStore = defineStore('exam', () => {
 
     const totalQ = typeEntries.reduce((s, [, c]) => s + c, 0)
     const fullText = baseParams.text || ''
-    const textLen = fullText.length
 
-    const docChunks = Math.max(1, Math.ceil(textLen / MAX_CHARS_PER_CHUNK))
-    const qChunks = Math.max(1, Math.ceil(totalQ / MAX_Q_PER_CHUNK))
-    const chunkCount = Math.min(Math.max(docChunks, qChunks), totalQ)
+    const chunkCount = Math.max(1, Math.ceil(totalQ / MAX_Q_PER_CHUNK))
 
     if (chunkCount <= 1) return [{ ...baseParams }]
 
-    // Split by file sections first (--- separated)
     const fileSections = splitByFileSections(fullText)
     console.log('[ExamBot] File sections:', fileSections.length, '| sizes:', fileSections.map(s => s.label + ':' + s.text.length).join(', '))
     const textChunks = chunkByFileProportion(fileSections, chunkCount, fullText)
-    console.log('[ExamBot] Chunks:', textChunks.length, '| labels:', textChunks.map(c => c.substring(0, 50).replace(/\n/g, '\\n')).join(' | '))
+    console.log('[ExamBot] Chunks (should = chunkCount =', chunkCount, '):', textChunks.length, '| labels:', textChunks.map(c => c.substring(0, 50).replace(/\n/g, '\\n')).join(' | '))
     const remaining: Record<string, number> = {}
     for (const [k, v] of typeEntries) remaining[k] = v
 
