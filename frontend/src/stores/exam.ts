@@ -199,11 +199,20 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function splitTextChunk(chunk: string): [string, string] {
-    const mid = Math.floor(chunk.length / 2)
-    // Try to split at newline near the middle
-    const nl = chunk.indexOf('\n', mid)
-    const split = nl > 0 && nl < chunk.length - 1 ? nl + 1 : mid
-    return [chunk.substring(0, split).trim(), chunk.substring(split).trim()]
+    // Preserve "## label\n" header on both halves
+    let header = ''
+    let body = chunk
+    if (chunk.startsWith('## ')) {
+      const nl = chunk.indexOf('\n')
+      if (nl > 0) {
+        header = chunk.substring(0, nl + 1)
+        body = chunk.substring(nl + 1)
+      }
+    }
+    const mid = Math.floor(body.length / 2)
+    const nl = body.indexOf('\n', mid)
+    const split = nl > 0 && nl < body.length - 1 ? nl + 1 : mid
+    return [header + body.substring(0, split).trim(), header + body.substring(split).trim()]
   }
 
   function loadCachedQuestions(): Question[] {
