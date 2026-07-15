@@ -123,6 +123,41 @@ fn save_to_downloads(filename: String, content_base64: String) -> Result<String,
 }
 
 #[tauri::command]
+fn share_file(path: String) -> Result<(), CommandError> {
+    #[cfg(target_os = "android")]
+    {
+        std::thread::spawn(move || {
+            let ctx = ndk_context::android_context();
+            let jvm = ctx.vm() as *mut jni::sys::JavaVM;
+            let activity = ctx.context();
+            if jvm.is_null() || activity.is_null() { return; }
+            let vm = unsafe { jni::JavaVM::from_raw(jvm) }.unwrap();
+            let mut env = vm.attach_current_thread().unwrap();
+
+            let intent = env.new_object("android/content/Intent", "()V", &[]).unwrap();
+            let action_send = env.get_static_field("android/content/Intent", "ACTION_SEND", "Ljava/lang/String;").unwrap().l().unwrap();
+            env.call_method(&intent, "setAction", "(Ljava/lang/String;)Landroid/content/Intent;", &[(&action_send).into()]).unwrap();
+
+            let mime = if path.ends_with(".xlsx") { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } else { "text/csv" };
+            env.call_method(&intent, "setType", "(Ljava/lang/String;)Landroid/content/Intent;", &[env.new_string(mime).unwrap().into()]).unwrap();
+
+            let uri = env.call_static_method("android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;", &[env.new_string(&format!("file://{}", path)).unwrap().into()]).unwrap().l().unwrap();
+            let extra_stream = env.get_static_field("android/content/Intent", "EXTRA_STREAM", "Ljava/lang/String;").unwrap().l().unwrap();
+            env.call_method(&intent, "putExtra", "(Ljava/lang/String;Landroid/os/Parcelable;)Landroid/content/Intent;", &[(&extra_stream).into(), (&uri).into()]).unwrap();
+
+            let read_flags = env.get_static_field("android/content/Intent", "FLAG_GRANT_READ_URI_PERMISSION", "I").unwrap().i().unwrap();
+            env.call_method(&intent, "addFlags", "(I)Landroid/content/Intent;", &[read_flags.into()]).unwrap();
+
+            let chooser = env.call_static_method("android/content/Intent", "createChooser", "(Landroid/content/Intent;Ljava/lang/CharSequence;)Landroid/content/Intent;", &[(&intent).into(), env.new_string("Share via").unwrap().into()]).unwrap().l().unwrap();
+
+            let activity_obj = unsafe { jni::objects::JObject::from_raw(activity as jni::sys::jobject) };
+            env.call_method(&activity_obj, "startActivity", "(Landroid/content/Intent;)V", &[(&chooser).into()]).unwrap();
+        });
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn save_config(endpoint: String, api_key: String, model: String) -> Result<(), CommandError> {
     let store = ConfigStore::new(APP_NAME)
         .map_err(|e| CommandError(format!("Config init error: {e}")))?;
@@ -184,6 +219,7 @@ pub fn run() {
             export_kaoshibao,
             export_xlsx_data,
             save_to_downloads,
+            share_file,
             save_config,
             load_config,
         ])

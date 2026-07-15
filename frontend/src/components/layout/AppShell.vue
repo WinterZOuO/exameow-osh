@@ -146,13 +146,13 @@ const headerStyle = {
       }"
     >
       <div class="flex items-center justify-around h-[72px] px-2">
-        <!-- Active indicator bar -->
-        <div class="relative flex items-center justify-around w-full">
+          <!-- Active indicator bar -->
+          <div class="relative flex items-center justify-around w-full">
           <!-- Active indicator -->
             <div
                 class="absolute top-0 h-8 rounded-2xl transition-all duration-400 ease-out"
-                style="width: 25%; background-color: rgb(var(--md-secondary-container))"
-                :style="{ left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0) * 25}%)` }"
+                style="background-color: rgb(var(--md-secondary-container))"
+                :style="{ width: `calc(100% / ${navItems.length})`, left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0)} * 100% / ${navItems.length})` }"
             />
 
           <button
@@ -160,7 +160,7 @@ const headerStyle = {
             :key="item.path"
             class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-2"
               :style="{
-                width: '25%',
+                width: `calc(100% / ${navItems.length})`,
               color: route.path === item.path ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
             }"
             @click="router.push(item.path)"

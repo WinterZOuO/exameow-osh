@@ -104,10 +104,10 @@ async function handleExportXlsx() {
 
 async function handleShare() {
   try {
-    const { openPath } = await import('@tauri-apps/plugin-opener')
-    await openPath(exportFilePath.value!)
+    const { tauriApi } = await import('@/api/bridge')
+    await tauriApi.shareFile(exportFilePath.value!)
   } catch (e: any) {
-    exportError.value = 'Open failed: ' + (e.message || String(e))
+    exportError.value = 'Share failed: ' + (e.message || String(e))
   }
 }
 </script>

@@ -61,8 +61,8 @@ export const tauriApi = {
     return invoke<string>('save_to_downloads', { filename, contentBase64 })
   },
 
-  async shareFile(filePath: string): Promise<void> {
-    return invoke<void>('share_file', { filePath })
+  async shareFile(path: string): Promise<void> {
+    return invoke<void>('share_file', { path })
   },
 
   async saveConfig(config: AIConfig): Promise<void> {
