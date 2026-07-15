@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -53,5 +53,36 @@ fn test_read_utf8_bom_stripped() {
     std::fs::write(&path, &bytes).unwrap();
     let text = extract_txt(path.to_str().unwrap()).unwrap();
     assert_eq!(text, "hello bom");
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_csv_markdown_table() {
+    let path = std::env::temp_dir().join("exambot_test.csv");
+    std::fs::write(&path, "name,score\nAlice,95\nBob,87\n").unwrap();
+    let text = extract_csv(path.to_str().unwrap()).unwrap();
+    let lines: Vec<&str> = text.lines().collect();
+    assert_eq!(lines[0], "| name | score |");
+    assert_eq!(lines[1], "| --- | --- |");
+    assert_eq!(lines[2], "| Alice | 95 |");
+    assert_eq!(lines[3], "| Bob | 87 |");
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_csv_escapes_pipes_and_newlines() {
+    let path = std::env::temp_dir().join("exambot_test_esc.csv");
+    std::fs::write(&path, "a,b\n\"x|y\",\"line1\nline2\"\n").unwrap();
+    let text = extract_csv(path.to_str().unwrap()).unwrap();
+    assert!(text.contains("x\\|y"));
+    assert!(text.contains("line1 line2"));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_extract_csv_empty_rejected() {
+    let path = std::env::temp_dir().join("exambot_test_empty.csv");
+    std::fs::write(&path, "\n\n").unwrap();
+    assert!(extract_csv(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
 }

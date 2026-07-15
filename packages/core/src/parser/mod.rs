@@ -1,18 +1,22 @@
 mod txt;
 mod docx;
 mod pdf;
+mod table;
+mod csv;
 
 use std::path::Path;
 
 pub use txt::extract_txt;
 pub use docx::extract_docx;
 pub use pdf::extract_pdf;
+pub use csv::extract_csv;
 
 #[derive(Debug)]
 pub enum FileFormat {
     PlainText,
     Docx,
     Pdf,
+    Csv,
 }
 
 impl FileFormat {
@@ -25,6 +29,7 @@ impl FileFormat {
         match ext.as_str() {
             "docx" => Ok(FileFormat::Docx),
             "pdf" => Ok(FileFormat::Pdf),
+            "csv" => Ok(FileFormat::Csv),
             _ => Ok(FileFormat::PlainText),
         }
     }
@@ -57,5 +62,6 @@ pub fn parse_file(path: &str) -> Result<String, ParserError> {
         FileFormat::PlainText => extract_txt(path),
         FileFormat::Docx => extract_docx(path),
         FileFormat::Pdf => extract_pdf(path),
+        FileFormat::Csv => extract_csv(path),
     }
 }
