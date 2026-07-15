@@ -12,6 +12,10 @@ const webFileInput = ref<HTMLInputElement>()
 const dialogReady = ref(false)
 const isDragOver = ref(false)
 
+const DOC_EXTENSIONS = ['txt', 'md', 'markdown', 'docx', 'pdf', 'pptx', 'html', 'htm', 'odt', 'epub', 'csv', 'xlsx', 'xlsm', 'xls', 'ods']
+const CODE_EXTENSIONS = ['py', 'js', 'ts', 'jsx', 'tsx', 'mjs', 'cjs', 'java', 'c', 'cpp', 'cc', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'kts', 'sql', 'sh', 'bash', 'zsh', 'bat', 'ps1', 'json', 'yaml', 'yml', 'toml', 'xml', 'ini', 'cfg', 'conf', 'log', 'tex', 'r', 'lua', 'pl', 'scala', 'dart', 'vue', 'svelte', 'css', 'scss', 'less']
+const acceptAttr = [...DOC_EXTENSIONS, ...CODE_EXTENSIONS].map((e) => '.' + e).join(',')
+
 onMounted(async () => {
   if (props.isTauri) {
     try {
@@ -50,7 +54,11 @@ async function pick() {
     if (!openFn) return
     const result: any = await openFn({
       multiple: true,
-      filters: [{ name: 'Documents', extensions: ['txt', 'docx', 'pdf'] }],
+      filters: [
+        { name: 'Documents', extensions: DOC_EXTENSIONS },
+        { name: 'Text & Code', extensions: CODE_EXTENSIONS },
+        { name: 'All Files', extensions: ['*'] },
+      ],
     })
     console.log('[FileUploader] open result:', typeof result, result)
     if (result) {
@@ -124,7 +132,7 @@ function onDrop(e: DragEvent) {
       <input
         ref="webFileInput"
         type="file"
-        accept=".txt,.docx,.pdf"
+        :accept="acceptAttr"
         multiple
         class="hidden"
         @change="onWebFilesChange"
@@ -167,7 +175,7 @@ function onDrop(e: DragEvent) {
       <input
         ref="webFileInput"
         type="file"
-        accept=".txt,.docx,.pdf"
+        :accept="acceptAttr"
         multiple
         class="hidden"
         @change="onWebFilesChange"

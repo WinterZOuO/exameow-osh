@@ -282,7 +282,8 @@ export const useExamStore = defineStore('exam', () => {
         const { tauriApi } = await import('@/api/bridge')
         for (const input of inputs) {
           if (typeof input === 'string') {
-            const ext = input.split('.').pop()?.toLowerCase() || 'txt'
+            const fname = fileNameFromInput(input)
+            const ext = fname.includes('.') ? fname.split('.').pop()!.toLowerCase() : 'txt'
             const buf = await readFile(input)
             const base64 = uint8ToBase64(new Uint8Array(buf))
             const text = await tauriApi.parseFileBytes(base64, ext)
@@ -297,7 +298,7 @@ export const useExamStore = defineStore('exam', () => {
         const { tauriApi } = await import('@/api/bridge')
         for (const input of inputs) {
           const file = input as File
-          const ext = file.name.split('.').pop() || 'txt'
+          const ext = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'txt'
           const buf = await file.arrayBuffer()
           const base64 = uint8ToBase64(new Uint8Array(buf))
           const text = await tauriApi.parseFileBytes(base64, ext)
