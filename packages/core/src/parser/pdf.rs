@@ -6,8 +6,9 @@ pub fn extract_pdf(path: &str) -> Result<String, ParserError> {
         .map_err(|e| ParserError::Parse(format!("pdf load error: {e}")))?;
 
     let mut texts = Vec::new();
+    let total = doc.get_pages().len();
 
-    for page_num in 1..=doc.get_pages().len() as u32 {
+    for page_num in 1..=total as u32 {
         match doc.extract_text(&[page_num]) {
             Ok(text) => {
                 let cleaned = text.trim().to_string();
@@ -15,7 +16,9 @@ pub fn extract_pdf(path: &str) -> Result<String, ParserError> {
                     texts.push(cleaned);
                 }
             }
-            Err(e) => return Err(ParserError::Parse(format!("text extraction error: {e}"))),
+            Err(e) => {
+                eprintln!("[ExamBot] PDF page {}/{} extraction failed: {e}", page_num, total);
+            }
         }
     }
 
