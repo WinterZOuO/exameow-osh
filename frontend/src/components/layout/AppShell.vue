@@ -76,10 +76,7 @@ const headerStyle = {
       >
         <!-- Logo -->
         <router-link to="/practice" class="flex items-center gap-3 shrink-0 no-underline">
-          <div class="w-[38px] h-[38px] rounded-2xl flex items-center justify-center shrink-0 elevation-1 overflow-hidden"
-               style="background: linear-gradient(135deg, rgb(var(--md-primary)), rgb(var(--md-tertiary)))">
-            <img src="/logo.png" alt="ExamBot" class="w-full h-full object-cover" />
-          </div>
+          <img src="/logo.png" alt="ExamBot" class="w-[38px] h-[38px] rounded-xl shrink-0" />
           <div class="hidden sm:block">
             <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
             <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('appSubtitle') }}</div>
