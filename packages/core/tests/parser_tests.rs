@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_excel, extract_html, extract_odt, extract_pptx, extract_txt, FileFormat, ParserError};
+use exambot_core::parser::{extract_csv, extract_epub, extract_excel, extract_html, extract_odt, extract_pptx, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -184,6 +184,34 @@ fn write_min_odt(path: &std::path::Path) {
     z.start_file("content.xml", o).unwrap();
     z.write_all(br#"<?xml version="1.0"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text><text:h>Title Here</text:h><text:p>First paragraph.</text:p><text:p>Second <text:span>styled</text:span> paragraph.</text:p></office:text></office:body></office:document-content>"#).unwrap();
     z.finish().unwrap();
+}
+
+fn write_min_epub(path: &std::path::Path) {
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    let f = std::fs::File::create(path).unwrap();
+    let mut z = zip::ZipWriter::new(f);
+    let o = SimpleFileOptions::default();
+    z.start_file("META-INF/container.xml", o).unwrap();
+    z.write_all(br#"<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>"#).unwrap();
+    z.start_file("OEBPS/content.opf", o).unwrap();
+    z.write_all(br#"<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0"><manifest><item id="c1" href="ch1.xhtml" media-type="application/xhtml+xml"/><item id="c2" href="ch2.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="c2"/><itemref idref="c1"/></spine></package>"#).unwrap();
+    z.start_file("OEBPS/ch1.xhtml", o).unwrap();
+    z.write_all(br#"<html><body><p>Alpha chapter</p></body></html>"#).unwrap();
+    z.start_file("OEBPS/ch2.xhtml", o).unwrap();
+    z.write_all(br#"<html><body><p>Beta chapter</p></body></html>"#).unwrap();
+    z.finish().unwrap();
+}
+
+#[test]
+fn test_extract_epub_spine_order() {
+    let path = std::env::temp_dir().join("exambot_test.epub");
+    write_min_epub(&path);
+    let text = extract_epub(path.to_str().unwrap()).unwrap();
+    let beta = text.find("Beta chapter").unwrap();
+    let alpha = text.find("Alpha chapter").unwrap();
+    assert!(beta < alpha, "spine order (c2 before c1) must be respected");
+    let _ = std::fs::remove_file(&path);
 }
 
 #[test]

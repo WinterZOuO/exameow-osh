@@ -4,6 +4,7 @@ mod pdf;
 mod table;
 mod csv;
 mod excel;
+mod epub;
 mod html;
 mod xml_text;
 mod pptx;
@@ -16,6 +17,7 @@ pub use docx::extract_docx;
 pub use pdf::extract_pdf;
 pub use csv::extract_csv;
 pub use excel::extract_excel;
+pub use epub::extract_epub;
 pub use html::extract_html;
 pub use pptx::extract_pptx;
 pub use odt::extract_odt;
@@ -30,6 +32,7 @@ pub enum FileFormat {
     Csv,
     Excel,
     Html,
+    Epub,
 }
 
 impl FileFormat {
@@ -47,6 +50,7 @@ impl FileFormat {
             "html" | "htm" => Ok(FileFormat::Html),
             "pptx" => Ok(FileFormat::Pptx),
             "odt" => Ok(FileFormat::Odt),
+            "epub" => Ok(FileFormat::Epub),
             _ => Ok(FileFormat::PlainText),
         }
     }
@@ -84,5 +88,6 @@ pub fn parse_file(path: &str) -> Result<String, ParserError> {
         FileFormat::Csv => extract_csv(path),
         FileFormat::Excel => extract_excel(path),
         FileFormat::Html => extract_html(path),
+        FileFormat::Epub => extract_epub(path),
     }
 }
