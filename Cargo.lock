@@ -1193,6 +1193,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "csv",
+ "encoding_rs",
  "lopdf",
  "pdf-extract",
  "quick-xml 0.37.5",
