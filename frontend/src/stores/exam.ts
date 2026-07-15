@@ -158,6 +158,12 @@ export const useExamStore = defineStore('exam', () => {
     return names.join('、')
   }
 
+  function fileNameFromInput(input: string | File): string {
+    const raw = input instanceof File ? input.name : input.replace(/\\/g, '/').split('/').pop() || input
+    const dot = raw.lastIndexOf('.')
+    return dot > 0 ? raw.substring(0, dot) : raw
+  }
+
   function uint8ToBase64(bytes: Uint8Array): string {
     const CHUNK = 4096
     const parts: string[] = []
@@ -194,7 +200,10 @@ export const useExamStore = defineStore('exam', () => {
             const buf = await readFile(input)
             const base64 = uint8ToBase64(new Uint8Array(buf))
             const text = await tauriApi.parseFileBytes(base64, ext)
-            if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+            if (text) {
+              const label = fileNameFromInput(input)
+              fullText += (fullText ? `\n\n---\n\n## ${label}\n` : `## ${label}\n`) + text
+            }
           }
         }
       } else if (isTauriEnv) {
@@ -206,13 +215,17 @@ export const useExamStore = defineStore('exam', () => {
           const buf = await file.arrayBuffer()
           const base64 = uint8ToBase64(new Uint8Array(buf))
           const text = await tauriApi.parseFileBytes(base64, ext)
-          if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+          if (text) {
+            fullText += (fullText ? `\n\n---\n\n## ${file.name}\n` : `## ${file.name}\n`) + text
+          }
         }
       } else {
         for (const input of inputs) {
           const file = input as File
           const text = await (file as File).text()
-          if (text) fullText += (fullText ? '\n\n---\n\n' : '') + text
+          if (text) {
+            fullText += (fullText ? `\n\n---\n\n## ${file.name}\n` : `## ${file.name}\n`) + text
+          }
         }
       }
 
