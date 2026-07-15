@@ -6,7 +6,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
-import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, TableCellsIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowDownTrayIcon, DocumentTextIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 import { isAndroid } from '@/utils/platform'
 
 const router = useRouter()
@@ -129,7 +129,7 @@ function handleNewBatch() { examStore.reset(); router.push('/generate') }
             <ArrowDownTrayIcon class="w-4 h-4" /> CSV
           </button>
           <button class="btn-filled text-sm" :disabled="exportingKaoshibao" @click="handleExportKaoshibao">
-            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
+            <ArrowDownTrayIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
           </button>
         </div>
       </div>

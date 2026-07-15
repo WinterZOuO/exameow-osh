@@ -10,7 +10,7 @@ import { getFileInputs, fileInputsRef } from '@/stores/fileInput'
 import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import { isAndroid } from '@/utils/platform'
-import { SparklesIcon, ArrowDownTrayIcon, TableCellsIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
 const examStore = useExamStore()
 const configStore = useConfigStore()
@@ -185,7 +185,7 @@ async function handleShare() {
             <ArrowDownTrayIcon class="w-4 h-4" /> CSV
           </button>
           <button class="btn-filled text-sm" :disabled="exportingKaoshibao" @click="handleExportXlsx">
-            <TableCellsIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
+            <ArrowDownTrayIcon class="w-4 h-4" /> {{ exportingKaoshibao ? '...' : 'XLSX' }}
           </button>
         </div>
       </div>
