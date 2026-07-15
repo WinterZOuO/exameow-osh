@@ -5,3 +5,10 @@ members = [
     "packages/server",
     "src-tauri",
 ]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
