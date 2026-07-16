@@ -245,6 +245,17 @@ export interface LocaleMessages {
   searchSimilarity: string
   searchNotConfigured: string
   searchGotoConfig: string
+
+  // Practice grading
+  practiceSubmitAuto: string
+  practiceSubmitAutoHint: string
+  practiceRevealAnswer: string
+  practiceRevealHint: string
+  practiceAiJudge: string
+  practiceAiJudgeHint: string
+  practiceAiJudging: string
+  practiceAiFeedback: string
+  practiceRegradeHint: string
 }
 
 export const zh: LocaleMessages = {
@@ -480,6 +491,17 @@ export const zh: LocaleMessages = {
   searchSimilarity: '相似度',
   searchNotConfigured: '请先完成 AI 配置',
   searchGotoConfig: '前往配置',
+
+  // Practice grading
+  practiceSubmitAuto: '提交',
+  practiceSubmitAutoHint: '提交＝自动判断，需与答案完全一致（忽略大小写）',
+  practiceRevealAnswer: '查看答案',
+  practiceRevealHint: '查看答案＝看完答案后自行判断对错',
+  practiceAiJudge: '提交并 AI 判断',
+  practiceAiJudgeHint: '提交＝AI 对照参考答案自动评判',
+  practiceAiJudging: 'AI 判卷中…',
+  practiceAiFeedback: 'AI 评语',
+  practiceRegradeHint: '对判定结果不满意？可人工改判',
 }
 
 export const en: LocaleMessages = {
@@ -715,4 +737,15 @@ export const en: LocaleMessages = {
   searchSimilarity: 'Similarity',
   searchNotConfigured: 'Please configure AI first',
   searchGotoConfig: 'Go to settings',
+
+  // Practice grading
+  practiceSubmitAuto: 'Submit',
+  practiceSubmitAutoHint: 'Submit = auto-graded; must match the answer exactly (case-insensitive)',
+  practiceRevealAnswer: 'Show answer',
+  practiceRevealHint: 'Show answer = judge yourself after viewing it',
+  practiceAiJudge: 'Submit & AI grade',
+  practiceAiJudgeHint: 'Submit = AI grades against the reference answer',
+  practiceAiJudging: 'AI grading…',
+  practiceAiFeedback: 'AI feedback',
+  practiceRegradeHint: 'Disagree with the verdict? Regrade manually',
 }
