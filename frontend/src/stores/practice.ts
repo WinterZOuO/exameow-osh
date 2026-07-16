@@ -238,6 +238,10 @@ export const usePracticeStore = defineStore('practice', () => {
       const userAns = normalizeTF(answer ?? '')
       const correctAns = normalizeTF(q.answer)
       item.isCorrect = userAns === correctAns
+    } else if (q.type === 'fill_blank') {
+      const userAns = (answer ?? '').trim().toLowerCase()
+      const correctAns = q.answer.trim().toLowerCase()
+      item.isCorrect = userAns !== '' && userAns === correctAns
     }
 
     saveSession(session.value)
