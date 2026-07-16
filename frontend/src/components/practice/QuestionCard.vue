@@ -253,12 +253,12 @@ function getBadgeStyle(opt: string) {
       <!-- Remove from wrong questions button -->
       <button
         v-if="isWrongMode && !submitted"
-        class="btn-icon !w-8 !h-8"
-        :style="{ color: 'rgb(var(--md-on-surface-variant))' }"
-        :title="i18n.t('practiceRemoveWrong')"
+        class="btn-tonal !h-8 text-xs !px-3 shrink-0"
+        :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
         @click="emit('removeWrong')"
       >
-        <XMarkIcon class="w-4 h-4" />
+        <XMarkIcon class="w-3.5 h-3.5" />
+        {{ i18n.t('practiceRemoveWrong') }}
       </button>
     </div>
 

@@ -179,6 +179,7 @@ export interface LocaleMessages {
   practiceImportColStem: string
   practiceImportColAnswer: string
   practiceImportColAnalysis: string
+  practiceDownloadTemplate: string
   // Language
   practiceLangZh: string
   practiceLangEn: string
@@ -381,6 +382,7 @@ export const zh: LocaleMessages = {
   practiceImportColStem: '题干',
   practiceImportColAnswer: '答案',
   practiceImportColAnalysis: '解析',
+  practiceDownloadTemplate: '下载题库模板',
   practiceLangZh: '中文',
   practiceLangEn: 'English',
 
@@ -580,6 +582,7 @@ export const en: LocaleMessages = {
   practiceImportColStem: 'Stem',
   practiceImportColAnswer: 'Answer',
   practiceImportColAnalysis: 'Analysis',
+  practiceDownloadTemplate: 'Download Template',
   practiceLangZh: 'Chinese',
   practiceLangEn: 'English',
 

@@ -14,7 +14,6 @@ import ProgressBar from '@/components/practice/ProgressBar.vue'
 import PracticeResult from '@/components/practice/PracticeResult.vue'
 import AnswerSheet from '@/components/practice/AnswerSheet.vue'
 import WrongQuestionsSortDialog from '@/components/practice/WrongQuestionsSortDialog.vue'
-import WrongQuestionManager from '@/components/practice/WrongQuestionManager.vue'
 import PracticeModeToggle from '@/components/practice/PracticeModeToggle.vue'
 import {
   ArrowLeftIcon,
@@ -48,8 +47,6 @@ const autoAdvancing = ref(false)
 const elapsedText = ref('')
 const showWrongSortDialog = ref(false)
 const wrongSort = ref<WrongSort>('count-desc')
-const showWrongManagerDialog = ref(false)
-const wrongManagerBankId = ref<string | null>(null)
 const wrongToast = ref<string | null>(null)
 const savedMainSession = ref<any>(null)
 const flashcardMode = ref<'exam' | 'flashcard'>('exam')
@@ -297,8 +294,8 @@ function handleRemoveWrong() {
 }
 
 function handleManageWrong(bankId: string) {
-  wrongManagerBankId.value = bankId
-  showWrongManagerDialog.value = true
+  selectedBankId.value = bankId
+  showWrongSortDialog.value = true
 }
 
 function showToast(msg: string) {
@@ -308,6 +305,13 @@ function showToast(msg: string) {
       wrongToast.value = null
     }
   }, 2500)
+}
+
+function handleImportDone(count: number) {
+  showImportDialog.value = false
+  if (count > 0) {
+    showToast(i18n.t('practiceImportSuccess', { n: count }))
+  }
 }
 
 function handleSelect(answer: string | null) {
@@ -664,7 +668,7 @@ function handleBack() {
     <Transition name="scale">
       <div v-if="showImportDialog" class="scrim flex items-center justify-center p-4" @click.self="showImportDialog = false">
         <div class="card-elevated w-full max-w-lg max-h-[80vh] overflow-y-auto p-5">
-          <ImportDialog @close="showImportDialog = false" />
+          <ImportDialog @close="showImportDialog = false" @imported="handleImportDone" />
         </div>
       </div>
     </Transition>
@@ -683,13 +687,6 @@ function handleBack() {
       :wrong-count="selectedBankId ? wrongStore.getWrongCount(selectedBankId) : 0"
       @start="handleStartWrongPractice"
       @close="showWrongSortDialog = false"
-    />
-
-    <!-- Wrong Question Manager Dialog -->
-    <WrongQuestionManager
-      v-if="showWrongManagerDialog && wrongManagerBankId"
-      :bank-id="wrongManagerBankId"
-      @close="showWrongManagerDialog = false; wrongManagerBankId = null"
     />
 
     <!-- Toast -->
