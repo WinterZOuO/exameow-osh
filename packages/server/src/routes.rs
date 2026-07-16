@@ -6,7 +6,9 @@ use axum::{
 };
 use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
-use exambot_core::exam::{answer_question, generate_exam, AnswerResult, ExamParams, Question};
+use exambot_core::exam::{
+    answer_question, generate_exam, judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
+};
 use exambot_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -253,5 +255,59 @@ pub async fn answer_handler(
     let result = answer_question(&client, &req.question, &language, &model)
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
+    Ok(Json(result))
+}
+
+#[derive(Deserialize)]
+pub struct JudgeRequest {
+    pub stem: String,
+    pub reference_answer: String,
+    pub analysis: Option<String>,
+    pub user_answer: String,
+    pub language: Option<String>,
+    pub endpoint: Option<String>,
+    pub api_key: Option<String>,
+    pub model: Option<String>,
+}
+
+pub async fn judge_handler(
+    Json(req): Json<JudgeRequest>,
+) -> Result<Json<JudgeResult>, (StatusCode, String)> {
+    if req.user_answer.trim().is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "User answer is empty".to_string()));
+    }
+
+    let endpoint = req
+        .endpoint
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(ai_endpoint);
+    let api_key = req
+        .api_key
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(ai_api_key);
+    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
+
+    if endpoint.is_empty() || api_key.is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
+        ));
+    }
+
+    let language = req.language.filter(|s| !s.is_empty()).unwrap_or_else(|| "Chinese".to_string());
+    let analysis = req.analysis.unwrap_or_default();
+
+    let client = AIClient::new(&endpoint, &api_key);
+    let result = judge_answer(
+        &client,
+        &req.stem,
+        &req.reference_answer,
+        &analysis,
+        &req.user_answer,
+        &language,
+        &model,
+    )
+    .await
+    .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
     Ok(Json(result))
 }
