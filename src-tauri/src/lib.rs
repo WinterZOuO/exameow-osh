@@ -1,8 +1,8 @@
 use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
 use exambot_core::exam::{
-    answer_question as core_answer_question, generate_exam as core_generate_exam, AnswerResult,
-    ExamParams, Question,
+    answer_question as core_answer_question, generate_exam as core_generate_exam,
+    judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
 use exambot_core::export::export_csv as core_export_csv;
 use exambot_core::export::export_xlsx as core_export_xlsx;
@@ -78,6 +78,34 @@ async fn answer_question(
     core_answer_question(&client, &question, &language, &model)
         .await
         .map_err(|e| CommandError(format!("Answer error: {e}")))
+}
+
+#[tauri::command]
+async fn judge_answer(
+    stem: String,
+    reference_answer: String,
+    analysis: String,
+    user_answer: String,
+    language: String,
+    endpoint: String,
+    api_key: String,
+    model: String,
+) -> Result<JudgeResult, CommandError> {
+    if user_answer.trim().is_empty() {
+        return Err(CommandError("User answer is empty".to_string()));
+    }
+    let client = AIClient::new(&endpoint, &api_key);
+    core_judge_answer(
+        &client,
+        &stem,
+        &reference_answer,
+        &analysis,
+        &user_answer,
+        &language,
+        &model,
+    )
+    .await
+    .map_err(|e| CommandError(format!("Judge error: {e}")))
 }
 
 #[tauri::command]
@@ -200,6 +228,7 @@ pub fn run() {
             get_models,
             generate_exam,
             answer_question,
+            judge_answer,
             parse_file_text,
             parse_file_bytes,
             export_csv,
