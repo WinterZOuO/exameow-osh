@@ -3,6 +3,10 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
+import { useConfigStore } from '@/stores/config'
+import { api } from '@/api'
+import { isCloudflare } from '@/utils/platform'
+import type { JudgeResult } from '@exambot/shared'
 import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 import type { PracticeMode, MockExamConfig, WrongSort } from '@exambot/shared'
 import BankListCard from '@/components/practice/BankListCard.vue'
@@ -30,6 +34,7 @@ import {
 const i18n = useI18nStore()
 const practiceStore = usePracticeStore()
 const wrongStore = useWrongQuestionsStore()
+const configStore = useConfigStore()
 
 type ViewState = 'browse' | 'select-mode' | 'mock-config' | 'practice' | 'result'
 
@@ -44,6 +49,10 @@ const deleteBankId = ref<string | null>(null)
 const showSubmitConfirm = ref(false)
 const showAnswerSheet = ref(false)
 const autoAdvancing = ref(false)
+const aiJudging = ref(false)
+const aiFeedback = ref<string | null>(null)
+const aiJudgeError = ref<string | null>(null)
+let judgeAbort: AbortController | null = null
 const elapsedText = ref('')
 const showWrongSortDialog = ref(false)
 const wrongSort = ref<WrongSort>('count-desc')
@@ -162,6 +171,7 @@ const resumeSessionHasWrong = computed(() => {
 })
 
 onMounted(() => {
+  if (!configStore.configured) configStore.loadSaved()
   if (practiceStore.session) {
     wrongStore.syncSession(practiceStore.session)
   }
@@ -178,7 +188,19 @@ watch([viewState, () => practiceStore.session], ([state]) => {
   })
 })
 
+watch(
+  [() => practiceStore.session?.currentIndex, () => practiceStore.session?.startedAt],
+  () => {
+    judgeAbort?.abort()
+    judgeAbort = null
+    aiJudging.value = false
+    aiFeedback.value = null
+    aiJudgeError.value = null
+  },
+)
+
 onUnmounted(() => {
+  judgeAbort?.abort()
   if (swipeContainer.value) {
     detach(swipeContainer.value)
   }
@@ -346,7 +368,7 @@ function handleSubmit(answer: string | null) {
   }
 }
 
-function handleSelfCheck(correct: boolean) {
+function applyGrade(correct: boolean) {
   practiceStore.selfCheck(correct)
 
   if (practiceStore.currentQuestion && sessionBankId.value) {
@@ -360,6 +382,10 @@ function handleSelfCheck(correct: boolean) {
       wrongStore.recordWrong(sessionBankId.value, originalId)
     }
   }
+}
+
+function handleSelfCheck(correct: boolean) {
+  applyGrade(correct)
 
   if (correct && !isMockMode.value) {
     autoAdvancing.value = true
@@ -371,6 +397,58 @@ function handleSelfCheck(correct: boolean) {
         goNext()
       }
     }, 600)
+  }
+}
+
+function handleRegrade(correct: boolean) {
+  applyGrade(correct)
+}
+
+function handleAiCancel() {
+  judgeAbort?.abort()
+}
+
+async function handleAiJudge() {
+  const item = practiceStore.currentQuestion
+  if (!item || !item.userAnswer || aiJudging.value || item.submitted) return
+
+  if (!configStore.configured) {
+    await configStore.loadSaved()
+    if (!configStore.configured) {
+      aiJudgeError.value = i18n.t('searchNotConfigured')
+      return
+    }
+  }
+
+  aiJudging.value = true
+  aiJudgeError.value = null
+  aiFeedback.value = null
+  judgeAbort = new AbortController()
+  const language = i18n.locale === 'zh' ? 'Chinese' : 'English'
+  const q = item.question
+  const params = {
+    stem: q.stem,
+    reference_answer: q.answer,
+    analysis: q.analysis || undefined,
+    user_answer: item.userAnswer,
+  }
+
+  try {
+    const config = configStore.getConfig()
+    let result: JudgeResult
+    if (isCloudflare() && configStore.aiProvider === 'custom') {
+      const { judgeViaCustomAI } = await import('@/utils/answerClient')
+      result = await judgeViaCustomAI(params, language, config, judgeAbort.signal)
+    } else {
+      result = await api.judgeAnswer(params, language, config, judgeAbort.signal)
+    }
+    aiFeedback.value = result.feedback
+    applyGrade(result.correct)
+  } catch (e: any) {
+    if (e?.name !== 'AbortError') aiJudgeError.value = e?.message || String(e)
+  } finally {
+    aiJudging.value = false
+    judgeAbort = null
   }
 }
 
@@ -621,6 +699,13 @@ function handleBack() {
             :wrong-count="currentWrongCount"
             :is-wrong-mode="isWrongMode"
             :flashcard-mode="flashcardMode === 'flashcard'"
+            :ai-configured="configStore.configured"
+            :ai-judging="aiJudging"
+            :ai-feedback="aiFeedback"
+            :ai-judge-error="aiJudgeError"
+            @ai-judge="handleAiJudge"
+            @ai-cancel="handleAiCancel"
+            @regrade="handleRegrade"
             @submit="handleSubmit"
             @select="handleSelect"
             @self-check="handleSelfCheck"

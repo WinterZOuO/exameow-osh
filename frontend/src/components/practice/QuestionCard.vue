@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import type { Question, PracticeMode } from '@exambot/shared'
 import {
   CheckCircleIcon,
   XCircleIcon,
   XMarkIcon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -19,6 +20,10 @@ const props = defineProps<{
   wrongCount?: number
   isWrongMode?: boolean
   flashcardMode?: boolean
+  aiConfigured?: boolean
+  aiJudging?: boolean
+  aiFeedback?: string | null
+  aiJudgeError?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -26,9 +31,14 @@ const emit = defineEmits<{
   (e: 'selfCheck', correct: boolean): void
   (e: 'select', answer: string | null): void
   (e: 'removeWrong'): void
+  (e: 'aiJudge'): void
+  (e: 'aiCancel'): void
+  (e: 'regrade', correct: boolean): void
 }>()
 
 const i18n = useI18nStore()
+
+const answerRevealed = ref(false)
 
 const isChoiceType = computed(() => {
   return props.question.type === 'single_choice' ||
@@ -378,8 +388,82 @@ function getBadgeStyle(opt: string) {
         @input="handleTextInput"
       />
 
-      <!-- Self-check buttons -->
-      <div v-if="userAnswer && interactive" class="flex gap-2 mt-3">
+      <!-- Action buttons (before reveal, before submit) -->
+      <template v-if="userAnswer && interactive && !answerRevealed">
+        <div class="flex gap-2 mt-3">
+          <button
+            v-if="question.type === 'fill_blank'"
+            class="btn-filled !h-9 text-sm flex-1"
+            @click="emit('submit', userAnswer)"
+          >
+            {{ i18n.t('practiceSubmitAuto') }}
+          </button>
+          <button
+            v-if="question.type === 'short_answer'"
+            class="btn-filled !h-9 text-sm flex-1"
+            :disabled="!aiConfigured || aiJudging"
+            @click="emit('aiJudge')"
+          >
+            <SparklesIcon class="w-4 h-4" />
+            {{ aiJudging ? i18n.t('practiceAiJudging') : i18n.t('practiceAiJudge') }}
+          </button>
+          <button
+            v-if="aiJudging"
+            class="btn-outlined !h-9 text-sm shrink-0"
+            @click="emit('aiCancel')"
+          >
+            {{ i18n.t('searchCancel') }}
+          </button>
+          <button
+            v-else
+            class="btn-outlined !h-9 text-sm flex-1"
+            @click="answerRevealed = true"
+          >
+            {{ i18n.t('practiceRevealAnswer') }}
+          </button>
+        </div>
+        <div class="text-xs mt-2 text-center" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          {{ question.type === 'fill_blank' ? i18n.t('practiceSubmitAutoHint') : i18n.t('practiceAiJudgeHint') }}
+          · {{ i18n.t('practiceRevealHint') }}
+        </div>
+        <div
+          v-if="question.type === 'short_answer' && !aiConfigured"
+          class="text-xs mt-1 text-center"
+          :style="{ color: 'rgb(var(--md-error))' }"
+        >
+          {{ i18n.t('searchNotConfigured') }}
+        </div>
+        <div
+          v-if="aiJudgeError"
+          class="mt-2 p-3 rounded-xl text-sm flex items-center justify-between gap-2"
+          :style="{ backgroundColor: 'rgba(var(--md-error), 0.08)', color: 'rgb(var(--md-error))' }"
+        >
+          <span class="min-w-0 break-words">{{ aiJudgeError }}</span>
+          <button class="btn-tonal !h-7 !px-3 text-xs shrink-0" @click="emit('aiJudge')">
+            {{ i18n.t('searchRetry') }}
+          </button>
+        </div>
+      </template>
+
+      <!-- Revealed answer panel (before submit) -->
+      <div
+        v-if="answerRevealed && interactive"
+        class="mt-3 p-3 rounded-xl"
+        :style="{ backgroundColor: 'rgb(var(--md-surface-container-low))' }"
+      >
+        <div class="text-label-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          {{ i18n.t('practiceReviewCorrectAnswer') }}
+        </div>
+        <div class="text-sm" :style="{ color: 'rgb(var(--md-primary))' }">
+          {{ question.answer }}
+        </div>
+        <div v-if="question.analysis" class="mt-2 text-sm" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          <span class="text-label-sm">{{ i18n.t('practiceReviewAnalysis') }}：</span>{{ question.analysis }}
+        </div>
+      </div>
+
+      <!-- Self-check buttons (only after reveal) -->
+      <div v-if="userAnswer && interactive && answerRevealed" class="flex gap-2 mt-3">
         <button class="btn-tonal !h-9 text-sm flex-1" @click="handleSelfCheck(true)">
           <CheckCircleIcon class="w-4 h-4" />
           {{ i18n.t('practiceSelfCheckCorrect') }}
@@ -389,7 +473,7 @@ function getBadgeStyle(opt: string) {
         </button>
       </div>
 
-      <!-- Result after self-check -->
+      <!-- Result after submit -->
       <div v-if="submitted" class="mt-3 p-3 rounded-xl" :style="{ backgroundColor: 'rgb(var(--md-surface-container-low))' }">
         <div class="text-label-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
           {{ i18n.t('practiceReviewYourAnswer') }}
@@ -405,6 +489,25 @@ function getBadgeStyle(opt: string) {
         </div>
         <div v-if="question.analysis" class="mt-2 text-sm" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
           <span class="text-label-sm">{{ i18n.t('practiceReviewAnalysis') }}：</span>{{ question.analysis }}
+        </div>
+        <div v-if="aiFeedback" class="mt-2 text-sm" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          <span class="text-label-sm">{{ i18n.t('practiceAiFeedback') }}：</span>{{ aiFeedback }}
+        </div>
+      </div>
+
+      <!-- Regrade (short answer, after submit) -->
+      <div v-if="submitted && question.type === 'short_answer' && !flashcardMode" class="mt-3">
+        <div class="text-xs mb-2 text-center" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          {{ i18n.t('practiceRegradeHint') }}
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-tonal !h-9 text-sm flex-1" @click="emit('regrade', true)">
+            <CheckCircleIcon class="w-4 h-4" />
+            {{ i18n.t('practiceSelfCheckCorrect') }}
+          </button>
+          <button class="btn-outlined !h-9 text-sm flex-1" @click="emit('regrade', false)">
+            {{ i18n.t('practiceSelfCheckWrong') }}
+          </button>
         </div>
       </div>
 
