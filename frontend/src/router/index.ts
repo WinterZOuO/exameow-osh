@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { title: 'Search' },
     },
     {
+      path: '/search/text',
+      name: 'search-text',
+      component: () => import('@/views/TextSearchView.vue'),
+      meta: { title: 'Text Search' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
