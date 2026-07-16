@@ -20,6 +20,12 @@ const router = createRouter({
       meta: { title: 'Generate Exam' },
     },
     {
+      path: '/search',
+      name: 'search',
+      component: () => import('@/views/SearchHomeView.vue'),
+      meta: { title: 'Search' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),

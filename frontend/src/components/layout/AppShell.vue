@@ -11,6 +11,7 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
   AcademicCapIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -54,10 +55,15 @@ onUnmounted(() => media.removeEventListener('change', onMediaChange))
 const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
   { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
+  { key: 'navSearch', path: '/search', icon: MagnifyingGlassIcon },
   { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
 ]
 
-const currentNavIndex = computed(() => navItems.findIndex(item => item.path === route.path))
+function isNavActive(item: { path: string }): boolean {
+  return route.path === item.path || route.path.startsWith(item.path + '/')
+}
+
+const currentNavIndex = computed(() => navItems.findIndex(item => isNavActive(item)))
 
 const headerStyle = {
   backgroundColor: 'rgb(var(--md-surface))',
@@ -100,7 +106,7 @@ const headerStyle = {
               v-for="item in navItems"
               :key="item.path"
               class="relative flex items-center gap-1.5 px-4 h-9 rounded-full text-sm font-medium transition-all duration-300 ease-out"
-              :style="route.path === item.path
+              :style="isNavActive(item)
                 ? { backgroundColor: 'rgb(var(--md-secondary-container))', color: 'rgb(var(--md-on-secondary-container))' }
                 : { color: 'rgb(var(--md-on-surface-variant))' }"
               @click="router.push(item.path)"
@@ -168,12 +174,12 @@ const headerStyle = {
             class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-2"
               :style="{
                 width: `calc(100% / ${navItems.length})`,
-              color: route.path === item.path ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
+              color: isNavActive(item) ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
             }"
             @click="router.push(item.path)"
           >
             <component :is="item.icon" class="w-6 h-6 transition-transform duration-300"
-                       :style="{ transform: route.path === item.path ? 'scale(1.1)' : 'scale(1)' }" />
+                       :style="{ transform: isNavActive(item) ? 'scale(1.1)' : 'scale(1)' }" />
             <span class="text-[11px] font-medium leading-none">{{ i18n.t(item.key as any) }}</span>
           </button>
         </div>
