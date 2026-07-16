@@ -76,9 +76,9 @@ pub fn build_user_prompt(text: &str, params: &ExamParams) -> String {
     let text_section = if text.len() > max_chars {
         let head_size = max_chars * 6 / 10;
         let tail_size = max_chars - head_size;
-        let head_len = text.floor_char_boundary(head_size);
+        let head_len = safe_char_boundary(text, head_size);
         let head = &text[..head_len];
-        let tail_start = text.floor_char_boundary(text.len().saturating_sub(tail_size));
+        let tail_start = safe_char_boundary(text, text.len().saturating_sub(tail_size));
         let tail = if tail_start > head_len + 100 {
             format!("\n\n...(middle omitted)...\n\n{}", &text[tail_start..])
         } else {
@@ -151,6 +151,16 @@ pub fn parse_questions(json_str: &str) -> Result<Vec<Question>, CoreError> {
     }
 
     Ok(questions)
+}
+
+fn safe_char_boundary(s: &str, mut index: usize) -> usize {
+    if index >= s.len() {
+        return s.len();
+    }
+    while index > 0 && !s.is_char_boundary(index) {
+        index -= 1;
+    }
+    index
 }
 
 pub async fn generate_exam(

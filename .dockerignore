@@ -1,0 +1,15 @@
+node_modules
+target
+frontend/node_modules
+workers/node_modules
+.DS_Store
+.git
+*.md
+docs
+test
+scripts
+start.bat
+start.sh
+opencode.json
+exambot.jks
+pnpm-lock.yaml

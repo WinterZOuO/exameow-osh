@@ -68,7 +68,7 @@ async function parseExcel(arrayBuffer: ArrayBuffer): Promise<string> {
 
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName]
-    const csvText = XLSX.utils.sheet_to_csv(sheet, { FS: '\t' })
+    const csvText = XLSX.utils.sheet_to_csv(sheet!, { FS: '\t' })
     if (csvText.trim()) {
       texts.push(`[${sheetName}]\n${csvText}`)
     }
@@ -87,7 +87,8 @@ async function parsePptx(arrayBuffer: ArrayBuffer): Promise<string> {
 
   const texts: string[] = []
   for (let i = 0; i < slideFiles.length; i++) {
-    const xml = new TextDecoder('utf-8').decode(zip[slideFiles[i]])
+    const key = slideFiles[i]!
+    const xml = new TextDecoder('utf-8').decode(zip[key]!)
     const slideText = extractXmlText(xml, 'a:t').join('\n')
     if (slideText.trim()) texts.push(`[Slide ${i + 1}]\n${slideText}`)
   }
@@ -136,7 +137,7 @@ function extractXmlText(xml: string, tagNames: string): string[] {
     const regex = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'gi')
     let match
     while ((match = regex.exec(xml)) !== null) {
-      const text = match[1].replace(/<[^>]+>/g, '').trim()
+      const text = match[1]!.replace(/<[^>]+>/g, '').trim()
       if (text) results.push(text)
     }
   }
@@ -201,7 +202,7 @@ async function inflateDeflate(compressed: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate-raw')
   const writer = ds.writable.getWriter()
   const reader = ds.readable.getReader()
-  writer.write(compressed)
+  writer.write(compressed as unknown as BufferSource)
   writer.close()
 
   const chunks: Uint8Array[] = []

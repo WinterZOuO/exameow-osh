@@ -22,7 +22,7 @@ async function handleFetchModels() {
 }
 
 async function handleSave() {
-  saveError.value = false
+  saveError.value = ''
   try {
     await store.save()
     saveSuccess.value = true

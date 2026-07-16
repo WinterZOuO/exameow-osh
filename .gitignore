@@ -6,3 +6,5 @@ target/
 test/
 gen/
 .superpowers/
+.env
+*.tar.gz

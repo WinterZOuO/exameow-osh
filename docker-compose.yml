@@ -1,0 +1,11 @@
+services:
+  exambot:
+    build: .
+    container_name: exambot-server
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - API_KEY=${API_KEY:-your-secret-key-change-me}
+      - PORT=3000
+      - RUST_LOG=info
+    restart: unless-stopped
