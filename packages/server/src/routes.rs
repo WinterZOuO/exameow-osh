@@ -18,8 +18,8 @@ pub struct AppState {
 
 #[derive(Deserialize)]
 pub struct ModelsQuery {
-    pub endpoint: String,
-    pub api_key: String,
+    pub endpoint: Option<String>,
+    pub api_key: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -32,10 +32,28 @@ pub struct ExportQuery {
     pub questions: String,
 }
 
+fn ai_endpoint() -> String { std::env::var("AI_ENDPOINT").unwrap_or_default() }
+fn ai_api_key() -> String { std::env::var("AI_API_KEY").unwrap_or_default() }
+fn ai_model() -> String { std::env::var("AI_MODEL").unwrap_or_default() }
+
 pub async fn get_models(
     Query(params): Query<ModelsQuery>,
 ) -> Result<Json<Vec<ModelInfo>>, (StatusCode, String)> {
-    let client = AIClient::new(&params.endpoint, &params.api_key);
+    let endpoint = params.endpoint.as_deref().unwrap_or("");
+    let api_key = params.api_key.as_deref().unwrap_or("");
+
+    let (endpoint, api_key) = if endpoint.is_empty() || api_key.is_empty() {
+        let e = ai_endpoint();
+        let k = ai_api_key();
+        if e.is_empty() || k.is_empty() {
+            return Err((StatusCode::BAD_REQUEST, "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string()));
+        }
+        (e, k)
+    } else {
+        (endpoint.to_string(), api_key.to_string())
+    };
+
+    let client = AIClient::new(&endpoint, &api_key);
     let models = client
         .fetch_models()
         .await
@@ -97,6 +115,14 @@ pub async fn generate_exam_handler(
 
     let file_data =
         file_data.ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
+
+    let endpoint = if endpoint.is_empty() { ai_endpoint() } else { endpoint };
+    let api_key = if api_key.is_empty() { ai_api_key() } else { api_key };
+    let model = if model.is_empty() { ai_model() } else { model };
+
+    if endpoint.is_empty() || api_key.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string()));
+    }
 
     let params: ExamParams = serde_json::from_str(&params_json)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid params: {e}")))?;

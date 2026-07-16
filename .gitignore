@@ -6,5 +6,10 @@ target/
 test/
 gen/
 .superpowers/
+.opencode/
 .env
 *.tar.gz
+
+# Internal tooling (not part of the open-source release)
+docs/
+opencode.json

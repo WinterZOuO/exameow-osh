@@ -3,9 +3,11 @@ services:
     build: .
     container_name: exambot-server
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     environment:
-      - API_KEY=${API_KEY:-your-secret-key-change-me}
+      - AI_ENDPOINT=${AI_ENDPOINT:-https://api.openai.com/v1}
+      - AI_API_KEY=${AI_API_KEY:-sk-your-ai-key}
+      - AI_MODEL=${AI_MODEL:-gpt-4o}
       - PORT=3000
       - RUST_LOG=info
     restart: unless-stopped
