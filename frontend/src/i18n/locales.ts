@@ -8,6 +8,7 @@ export interface LocaleMessages {
   navGenerate: string
   navPreview: string
   navPractice: string
+  navSearch: string
 
   // Config
   configTitle: string
@@ -210,6 +211,40 @@ export interface LocaleMessages {
   btnBack: string
   langZh: string
   langEn: string
+
+  // Search
+  searchTitle: string
+  searchSubtitle: string
+  searchModeText: string
+  searchModeTextDesc: string
+  searchModePhoto: string
+  searchModePhotoDesc: string
+  searchModeScreen: string
+  searchModeScreenDesc: string
+  searchModeFloat: string
+  searchModeFloatDesc: string
+  searchComingSoon: string
+  searchInputPlaceholder: string
+  searchSettings: string
+  searchBankScope: string
+  searchAllBanks: string
+  searchMatchScope: string
+  searchMatchStem: string
+  searchMatchStemOptions: string
+  searchTypeFilter: string
+  searchResultCount: string
+  searchNoResults: string
+  searchNoResultsHint: string
+  searchNoBanks: string
+  searchAskAI: string
+  searchAiThinking: string
+  searchCancel: string
+  searchRetry: string
+  searchShowAnalysis: string
+  searchHideAnalysis: string
+  searchSimilarity: string
+  searchNotConfigured: string
+  searchGotoConfig: string
 }
 
 export const zh: LocaleMessages = {
@@ -220,6 +255,7 @@ export const zh: LocaleMessages = {
   navGenerate: '出题',
   navPreview: '预览',
   navPractice: '刷题',
+  navSearch: '搜题',
 
   configTitle: '设置',
   configSubtitle: '连接 AI 后台，开始出题',
@@ -410,6 +446,40 @@ export const zh: LocaleMessages = {
   btnBack: '返回',
   langZh: '中',
   langEn: 'En',
+
+  // Search
+  searchTitle: '搜题',
+  searchSubtitle: '选择一种搜题方式',
+  searchModeText: '文字搜题',
+  searchModeTextDesc: '输入题目文字，从本地题库中查找，支持 AI 解答',
+  searchModePhoto: '拍照搜题',
+  searchModePhotoDesc: '拍摄或上传题目照片进行搜索',
+  searchModeScreen: '录屏搜题',
+  searchModeScreenDesc: '通过屏幕录制识别题目',
+  searchModeFloat: '悬浮窗搜题',
+  searchModeFloatDesc: '悬浮窗快捷取题搜索',
+  searchComingSoon: '即将推出',
+  searchInputPlaceholder: '输入题目内容…',
+  searchSettings: '搜索设置',
+  searchBankScope: '题库范围',
+  searchAllBanks: '全部题库',
+  searchMatchScope: '匹配范围',
+  searchMatchStem: '仅题干',
+  searchMatchStemOptions: '题干+选项',
+  searchTypeFilter: '题型筛选',
+  searchResultCount: '找到 {count} 道相关题目',
+  searchNoResults: '未找到相关题目',
+  searchNoResultsHint: '试试调整搜索设置，或使用 AI 回答',
+  searchNoBanks: '暂无本地题库，可直接使用 AI 回答',
+  searchAskAI: 'AI 回答',
+  searchAiThinking: 'AI 思考中…',
+  searchCancel: '取消',
+  searchRetry: '重试',
+  searchShowAnalysis: '查看解析',
+  searchHideAnalysis: '收起解析',
+  searchSimilarity: '相似度',
+  searchNotConfigured: '请先完成 AI 配置',
+  searchGotoConfig: '前往配置',
 }
 
 export const en: LocaleMessages = {
@@ -420,6 +490,7 @@ export const en: LocaleMessages = {
   navGenerate: 'Generate',
   navPreview: 'Preview',
   navPractice: 'Practice',
+  navSearch: 'Search',
 
   configTitle: 'Settings',
   configSubtitle: 'Connect your AI backend to get started',
@@ -610,4 +681,38 @@ export const en: LocaleMessages = {
   btnBack: 'Back',
   langZh: '中',
   langEn: 'En',
+
+  // Search
+  searchTitle: 'Question Search',
+  searchSubtitle: 'Choose a search mode',
+  searchModeText: 'Text Search',
+  searchModeTextDesc: 'Type the question to search your local banks, with AI answers',
+  searchModePhoto: 'Photo Search',
+  searchModePhotoDesc: 'Snap or upload a photo of the question',
+  searchModeScreen: 'Screen Search',
+  searchModeScreenDesc: 'Capture questions from screen recording',
+  searchModeFloat: 'Floating Window',
+  searchModeFloatDesc: 'Quick search via a floating window',
+  searchComingSoon: 'Coming soon',
+  searchInputPlaceholder: 'Type the question…',
+  searchSettings: 'Search Settings',
+  searchBankScope: 'Banks',
+  searchAllBanks: 'All banks',
+  searchMatchScope: 'Match scope',
+  searchMatchStem: 'Stem only',
+  searchMatchStemOptions: 'Stem + options',
+  searchTypeFilter: 'Question types',
+  searchResultCount: 'Found {count} related questions',
+  searchNoResults: 'No matching questions',
+  searchNoResultsHint: 'Try adjusting the settings, or ask AI',
+  searchNoBanks: 'No local banks yet — ask AI directly',
+  searchAskAI: 'Ask AI',
+  searchAiThinking: 'AI is thinking…',
+  searchCancel: 'Cancel',
+  searchRetry: 'Retry',
+  searchShowAnalysis: 'Show analysis',
+  searchHideAnalysis: 'Hide analysis',
+  searchSimilarity: 'Similarity',
+  searchNotConfigured: 'Please configure AI first',
+  searchGotoConfig: 'Go to settings',
 }
