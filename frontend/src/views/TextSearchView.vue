@@ -144,6 +144,7 @@ function isCorrectOption(hit: SearchHit, idx: number): boolean {
 
 // ---------- AI answer ----------
 const aiLoading = ref(false)
+const aiNotConfigured = ref(false)
 const aiError = ref('')
 const aiResult = ref<AnswerResult | null>(null)
 let abortController: AbortController | null = null
@@ -151,16 +152,19 @@ let abortController: AbortController | null = null
 watch(query, () => {
   aiResult.value = null
   aiError.value = ''
+  aiNotConfigured.value = false
 })
 
 async function askAI() {
   const q = query.value.trim()
   if (!q || aiLoading.value) return
   if (!configStore.configured) {
+    aiNotConfigured.value = true
     aiError.value = i18n.t('searchNotConfigured')
     return
   }
   aiLoading.value = true
+  aiNotConfigured.value = false
   aiError.value = ''
   aiResult.value = null
   abortController = new AbortController()
@@ -319,7 +323,7 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
         <div class="flex gap-2">
           <button class="btn-tonal !h-8 text-xs !px-3" @click="askAI">{{ i18n.t('searchRetry') }}</button>
           <button
-            v-if="aiError === i18n.t('searchNotConfigured')"
+            v-if="aiNotConfigured"
             class="btn-outlined !h-8 text-xs !px-3"
             @click="router.push('/config')"
           >
