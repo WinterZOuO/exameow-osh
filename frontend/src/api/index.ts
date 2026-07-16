@@ -1,8 +1,10 @@
 import type { AIConfig, ExamParams, ModelInfo } from '@exambot/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
 import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
+import { cfApi } from './cf'
 
 let _isTauri: boolean | null = null
+let _isCloudflare: boolean | null = null
 
 function isTauri(): boolean {
   if (_isTauri === null) {
@@ -11,10 +13,23 @@ function isTauri(): boolean {
   return _isTauri
 }
 
+function isCloudflare(): boolean {
+  if (_isCloudflare === null) {
+    _isCloudflare = import.meta.env.VITE_CLOUDFLARE === 'true'
+  }
+  return _isCloudflare
+}
+
 export const api = {
   async getModels(config: AIConfig): Promise<ModelInfo[]> {
     if (isTauri()) {
       return tauriApi.getModels(config.endpoint, config.api_key)
+    }
+    if (isCloudflare()) {
+      if (config.endpoint && config.api_key) {
+        return httpApi.getModels(config.endpoint, config.api_key)
+      }
+      return cfApi.getModels()
     }
     return httpApi.getModels(config.endpoint, config.api_key)
   },
@@ -23,6 +38,7 @@ export const api = {
     fileOrPath: File | string,
     params: ExamParams,
     config: AIConfig,
+    signal?: AbortSignal,
   ): Promise<{ questions: import('@exambot/shared').Question[] }> {
     if (isTauri()) {
       return tauriApi.generateExam(
@@ -31,9 +47,13 @@ export const api = {
         config.endpoint,
         config.api_key,
         config.model,
+        signal,
       )
     }
-    return httpApi.generateExam(fileOrPath as File, params, config)
+    if (isCloudflare()) {
+      return cfApi.generateExam(fileOrPath as File, params, config, signal)
+    }
+    return httpApi.generateExam(fileOrPath as File, params, config, signal)
   },
 
   async exportCsv(
@@ -43,6 +63,9 @@ export const api = {
   ): Promise<void> {
     if (isTauri()) {
       return tauriApi.exportCsv(questions, savePath!)
+    }
+    if (isCloudflare()) {
+      return cfApi.exportCsv(questions, filename)
     }
     return httpApi.exportCsv(questions, filename)
   },
@@ -54,6 +77,9 @@ export const api = {
   ): Promise<void> {
     if (isTauri()) {
       return tauriApi.exportXlsx(questions, savePath!)
+    }
+    if (isCloudflare()) {
+      return cfApi.exportXlsx(questions, filename)
     }
     return httpApi.exportXlsx(questions, filename)
   },
@@ -68,12 +94,18 @@ export const api = {
     if (isTauri()) {
       return tauriApi.saveConfig(config)
     }
+    if (isCloudflare()) {
+      return cfApi.saveConfig(config)
+    }
     return httpApi.saveConfig(config)
   },
 
   async loadConfig(): Promise<AIConfig | null> {
     if (isTauri()) {
       return tauriApi.loadConfig()
+    }
+    if (isCloudflare()) {
+      return cfApi.loadConfig()
     }
     return httpApi.loadConfig()
   },

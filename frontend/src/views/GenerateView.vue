@@ -143,6 +143,12 @@ async function handleShare() {
         <div v-if="isBatched" class="mt-2 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
           {{ examStore.questions.length }} questions generated so far
         </div>
+        <button
+          class="btn-outlined mt-3 text-sm !h-10"
+          @click="examStore.cancelGeneration()"
+        >
+          {{ i18n.t('genCancel') }}
+        </button>
       </div>
     </Transition>
 

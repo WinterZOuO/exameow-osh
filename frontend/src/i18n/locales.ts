@@ -24,10 +24,16 @@ export interface LocaleMessages {
   configSaved: string
   configReady: string
   configReadyCta: string
+  configAiProvider: string
+  configCfFree: string
+  configCustomApi: string
+  configCfFreeDesc: string
+  configCustomApiDesc: string
 
   // Generate
   genTitle: string
   genSubtitle: string
+  genCancel: string
   genSelectFile: string
   genFileHint: string
   genQuestionTypes: string
@@ -228,9 +234,15 @@ export const zh: LocaleMessages = {
   configSaved: '已保存',
   configReady: '配置完成，可以开始生成试题了',
   configReadyCta: '开始出题',
+  configAiProvider: 'AI 提供商',
+  configCfFree: 'Cloudflare 免费 AI',
+  configCustomApi: '自定义 API',
+  configCfFreeDesc: '免费套餐，无需 API Key。每日有限额。',
+  configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 存在浏览器本地不会泄露。',
 
   genTitle: '出题',
   genSubtitle: '上传文档，设置出题参数',
+  genCancel: '取消生成',
   genSelectFile: '选择文档',
   genFileHint: '支持 DOCX、PDF、PPTX、HTML、EPUB、ODT、表格（CSV/XLSX）及任意文本/代码文件',
   genQuestionTypes: '题型',
@@ -421,9 +433,15 @@ export const en: LocaleMessages = {
   configSaved: 'Saved',
   configReady: 'Everything is set up. Ready to generate exam questions.',
   configReadyCta: 'Start Generating',
+  configAiProvider: 'AI Provider',
+  configCfFree: 'Cloudflare Free AI',
+  configCustomApi: 'Custom API',
+  configCfFreeDesc: 'Free tier — no API key needed. Daily limits apply.',
+  configCustomApiDesc: 'Use your own OpenAI / DeepSeek API. Key stays in your browser.',
 
   genTitle: 'Generate',
   genSubtitle: 'Upload a document and configure exam parameters',
+  genCancel: 'Cancel generation',
   genSelectFile: 'Select Document',
   genFileHint: 'DOCX, PDF, PPTX, HTML, EPUB, ODT, spreadsheets (CSV/XLSX), and any text/code file',
   genQuestionTypes: 'Question Types',

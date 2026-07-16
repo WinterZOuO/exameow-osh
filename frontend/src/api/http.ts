@@ -18,6 +18,7 @@ export const httpApi = {
     file: File,
     params: ExamParams,
     config: AIConfig,
+    signal?: AbortSignal,
   ): Promise<GenerateResult> {
     const formData = new FormData()
     formData.append('file', file)
@@ -29,6 +30,7 @@ export const httpApi = {
     const res = await fetch(`${BASE_URL}/api/generate`, {
       method: 'POST',
       body: formData,
+      signal,
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
     return res.json()

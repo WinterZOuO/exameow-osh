@@ -4,6 +4,7 @@ import type { ExamParams, Question, QuestionType, Difficulty } from '@exambot/sh
 import { api } from '@/api'
 import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
+import { isCloudflare } from '@/utils/platform'
 
 const ALL_TYPES: QuestionType[] = [
   'single_choice' as QuestionType,
@@ -26,6 +27,7 @@ export const useExamStore = defineStore('exam', () => {
   const generating = ref(false)
   const error = ref<string | null>(null)
   const progress = ref({ current: 0, total: 0, message: '' })
+  let abortController: AbortController | null = null
   const generated = computed(() => questions.value.length > 0)
   const totalCount = computed(() =>
     Object.values(typeCounts).reduce((s, c) => s + c, 0),
@@ -309,6 +311,8 @@ export const useExamStore = defineStore('exam', () => {
     progress.value = { current: 0, total: 0, message: 'Preparing...' }
     questions.value = []
     sourceFileName.value = extractFileName(inputs)
+    abortController = new AbortController()
+    const signal = abortController.signal
 
     try {
       error.value = null
@@ -351,9 +355,10 @@ export const useExamStore = defineStore('exam', () => {
           }
         }
       } else {
+        const { parseBrowserFile } = await import('@/utils/fileParser')
         for (const input of inputs) {
           const file = input as File
-          const text = await (file as File).text()
+          const text = await parseBrowserFile(file)
           if (text) {
             fullText += (fullText ? `\n\n---\n\n## ${file.name}\n` : `## ${file.name}\n`) + text
           }
@@ -373,6 +378,8 @@ export const useExamStore = defineStore('exam', () => {
 
       progress.value = { current: 0, total: batches.length, message: 'Generating...' }
 
+      const useDirectAI = isCloudflare() && configStore.aiProvider === 'custom'
+
       const uniqueTexts = new Set(batches.map(b => b.text)).size
       const chunkSizes = [...new Set(batches.map(b => b.text || ''))].map(t => t.length)
       console.log(
@@ -380,6 +387,7 @@ export const useExamStore = defineStore('exam', () => {
       )
 
       for (let i = 0; i < batches.length; i++) {
+        if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
         progress.value = { current: i, total: batches.length, message: `Generating batch ${i + 1}/${batches.length}...` }
         const batch = batches[i]
         if (!batch) continue
@@ -391,9 +399,15 @@ export const useExamStore = defineStore('exam', () => {
           `${JSON.stringify(batch.type_counts)} | ${textLen} chars | "${textPreview}..."`,
         )
 
-        const result = await api.generateExam(fileRef, batch, config)
-        questions.value.push(...result.questions)
-        console.log(`[ExamBot] Batch ${batch.batch_index} done: ${result.questions.length} questions generated`)
+        if (useDirectAI && batch.text) {
+          const { callCustomAI } = await import('@/utils/aiClient')
+          const questions_ = await callCustomAI(batch.text, batch, config, signal)
+          questions.value.push(...questions_)
+        } else {
+          const result = await api.generateExam(fileRef, batch, config, signal)
+          questions.value.push(...result.questions)
+        }
+        console.log(`[ExamBot] Batch ${batch.batch_index} done: ${questions.value.length} questions total`)
       }
 
       progress.value = { current: batches.length, total: batches.length, message: 'Complete!' }
@@ -402,10 +416,21 @@ export const useExamStore = defineStore('exam', () => {
       const practiceStore = usePracticeStore()
       practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
     } catch (e: any) {
-      error.value = e?.message || e?.toString() || 'Unknown error'
-      throw e
+      if (e?.name === 'AbortError' || signal.aborted) {
+        progress.value = { ...progress.value, message: 'Cancelled' }
+      } else {
+        error.value = e?.message || e?.toString() || 'Unknown error'
+        throw e
+      }
     } finally {
       generating.value = false
+      abortController = null
+    }
+  }
+
+  function cancelGeneration() {
+    if (abortController) {
+      abortController.abort()
     }
   }
 
@@ -418,6 +443,6 @@ export const useExamStore = defineStore('exam', () => {
   return {
     questionTypes, typeCounts, totalCount,
     difficulty, language, topicFilter, questions, generating, generated,
-    sourceFileName, error, progress, getParams, generate, reset,
+    sourceFileName, error, progress, getParams, generate, cancelGeneration, reset,
   }
 })

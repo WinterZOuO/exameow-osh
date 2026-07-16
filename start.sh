@@ -21,10 +21,17 @@ echo -e "${NC}"
 command -v cargo >/dev/null 2>&1 || { echo -e "${RED}Error: cargo not found. Install Rust: https://rustup.rs${NC}"; exit 1; }
 command -v pnpm >/dev/null 2>&1 || { echo -e "${RED}Error: pnpm not found. Install: npm i -g pnpm${NC}"; exit 1; }
 
-# ---- proxy (only if reachable) ----
-if [ -z "$http_proxy" ] && nc -z -w 1 127.0.0.1 7892 2>/dev/null; then
-    export http_proxy="http://127.0.0.1:7892"
-    export https_proxy="http://127.0.0.1:7892"
+# ---- proxy (auto-detect SOCKS5, only if reachable) ----
+if [ -z "$http_proxy" ]; then
+    for _port in 46590 7892; do
+        if nc -z -w 1 127.0.0.1 "$_port" 2>/dev/null; then
+            export http_proxy="socks5://127.0.0.1:$_port"
+            export https_proxy="socks5://127.0.0.1:$_port"
+            export all_proxy="socks5://127.0.0.1:$_port"
+            echo -e "${CYAN}Proxy detected: socks5://127.0.0.1:$_port${NC}"
+            break
+        fi
+    done
 fi
 
 # ---- install deps if needed ----

@@ -24,7 +24,9 @@ export const tauriApi = {
     endpoint: string,
     apiKey: string,
     model: string,
+    signal?: AbortSignal,
   ): Promise<GenerateResult> {
+    if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
     const fpType = typeof filePath
     const fpVal = fpType === 'string' ? filePath : JSON.stringify(filePath)
     console.log('[bridge] generateExam filePath type:', fpType, 'val:', fpVal)

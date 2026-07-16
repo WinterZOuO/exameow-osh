@@ -1,0 +1,226 @@
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import type { Ai, Fetcher } from '@cloudflare/workers-types'
+import { generateExam } from './exam'
+import { parseFile } from './parser'
+import { generateXlsxBuffer, generateCsvContent } from './export'
+import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
+
+type Bindings = {
+  AI: Ai
+  ASSETS: Fetcher
+  CF_ACCOUNT_ID?: string
+  CF_API_TOKEN?: string
+}
+
+const app = new Hono<{ Bindings: Bindings }>()
+
+app.use('/api/*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+}))
+
+// GET /api/models - returns available CF AI models (dynamic from API, fallback to static list)
+app.get('/api/models', async (c) => {
+  // Try dynamic fetch from CF API
+  if (c.env.CF_ACCOUNT_ID && c.env.CF_API_TOKEN) {
+    try {
+      const url = `https://api.cloudflare.com/client/v4/accounts/${c.env.CF_ACCOUNT_ID}/ai/models/search?task=Text%20Generation&hide_experimental=true&per_page=100`
+      console.log('Fetching models from CF API...')
+      const apiRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${c.env.CF_API_TOKEN}` },
+      })
+      console.log('CF API response status:', apiRes.status)
+      if (apiRes.ok) {
+        const data = await apiRes.json() as any
+        console.log('CF API success:', data.success, 'models:', data.result?.length)
+        if (data.success && data.result) {
+          const textModels = data.result
+            .filter((m: any) => {
+              const name = (m.name || '').toLowerCase()
+              const desc = (m.description || '').toLowerCase()
+              return (
+                !name.includes('lora') &&
+                !name.includes('guard') &&
+                !name.includes('deprecated') &&
+                !name.includes('-awq') &&
+                !desc.includes('deprecated')
+              )
+            })
+            .map((m: any) => ({ id: m.name as string }))
+          if (textModels.length > 0) {
+            return c.json(textModels)
+          }
+        }
+      } else {
+        const errBody = await apiRes.text()
+        console.error('CF API error:', apiRes.status, errBody.substring(0, 300))
+      }
+    } catch (e) {
+      console.error('CF API fetch failed:', String(e))
+    }
+  } else {
+    console.log('CF_API_TOKEN or CF_ACCOUNT_ID not configured, using static list')
+  }
+  // Fallback to static list
+  return c.json(AVAILABLE_CF_MODELS.map((m) => ({ id: m.id })))
+})
+
+// POST /api/generate - generates exam questions from uploaded file
+app.post('/api/generate', async (c) => {
+  const contentType = c.req.header('content-type') || ''
+
+  if (!contentType.includes('multipart/form-data')) {
+    return c.json({ error: 'Expected multipart/form-data' }, 400)
+  }
+
+  let fileData: ArrayBuffer | null = null
+  let fileName = 'unknown'
+  let paramsJson = ''
+  let model = ''
+
+  try {
+    const formData = await c.req.formData()
+
+    const file = formData.get('file')
+    if (file instanceof File) {
+      fileName = file.name
+      fileData = await file.arrayBuffer()
+    }
+
+    const paramsField = formData.get('params')
+    if (typeof paramsField === 'string') {
+      paramsJson = paramsField
+    }
+
+    const modelField = formData.get('model')
+    if (typeof modelField === 'string') {
+      model = modelField
+    }
+  } catch (err) {
+    return c.json({ error: `Failed to parse form data: ${err}` }, 400)
+  }
+
+  if (!fileData) {
+    return c.json({ error: 'No file uploaded' }, 400)
+  }
+
+  if (!paramsJson) {
+    return c.json({ error: 'No params provided' }, 400)
+  }
+
+  let params: ExamParams
+  try {
+    params = JSON.parse(paramsJson)
+  } catch {
+    return c.json({ error: 'Invalid params JSON' }, 400)
+  }
+
+  let text: string
+  try {
+    text = await parseFile(fileData, fileName)
+  } catch (err) {
+    return c.json({ error: `File parse error: ${err}` }, 400)
+  }
+
+  if (!text.trim()) {
+    return c.json({ error: 'No text extracted from file' }, 400)
+  }
+
+  let questions: Question[]
+  try {
+    questions = await generateExam(c.env.AI, text, params, model || undefined)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('AI generation error:', msg)
+    return c.json({ error: `AI generation error: ${msg}` }, 502)
+  }
+
+  return c.json({ questions })
+})
+
+// GET /api/export - exports questions as CSV download
+app.get('/api/export', (c) => {
+  const questionsParam = c.req.query('questions')
+  if (!questionsParam) {
+    return c.json({ error: 'Missing questions parameter' }, 400)
+  }
+
+  let questions: Question[]
+  try {
+    questions = JSON.parse(questionsParam)
+  } catch {
+    return c.json({ error: 'Invalid questions JSON' }, 400)
+  }
+
+  const csvContent = generateCsvContent(questions)
+  return new Response(csvContent, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="exambot_questions.csv"',
+    },
+  })
+})
+
+// POST /api/export/xlsx - exports questions as XLSX download
+app.post('/api/export/xlsx', async (c) => {
+  let questions: Question[]
+  try {
+    questions = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid questions JSON body' }, 400)
+  }
+
+  if (!Array.isArray(questions)) {
+    return c.json({ error: 'Expected array of questions' }, 400)
+  }
+
+  const xlsxData = generateXlsxBuffer(questions)
+  return new Response(xlsxData, {
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="exambot_questions.xlsx"',
+    },
+  })
+})
+
+// POST /api/config/save - config save (no-op on worker, client uses localStorage)
+app.post('/api/config/save', async (c) => {
+  return c.body(null, 200)
+})
+
+// GET /api/config/load - config load (no-op on worker, client uses localStorage)
+app.get('/api/config/load', (c) => {
+  return c.json(null)
+})
+
+// GET /api/health - health check
+app.get('/api/health', (c) => {
+  return c.json({ status: 'ok', version: '2.1.1', runtime: 'cloudflare-worker' })
+})
+
+// SPA fallback: serve index.html for all non-API, non-asset routes
+app.notFound(async (c) => {
+  // Only do SPA fallback for GET requests
+  if (c.req.method !== 'GET') {
+    return c.json({ error: 'Not found' }, 404)
+  }
+
+  // Serve index.html for SPA routing
+  const indexUrl = new URL('/index.html', c.req.url)
+  try {
+    const asset = await c.env.ASSETS.fetch(new Request(indexUrl))
+    if (asset.ok) return asset
+  } catch {}
+
+  return c.json({ error: 'Not found' }, 404)
+})
+
+// Error handler
+app.onError((err, c) => {
+  console.error('Unhandled error:', err)
+  return c.json({ error: 'Internal server error' }, 500)
+})
+
+export default app

@@ -13,10 +13,16 @@ where cargo >nul 2>nul || (echo [ERROR] cargo not found. Install Rust: https://r
 where pnpm  >nul 2>nul || (echo [ERROR] pnpm not found. Install: npm i -g pnpm & exit /b 1)
 
 if not defined http_proxy (
-    powershell -NoProfile -Command "$c=New-Object Net.Sockets.TcpClient; try{ $c.Connect('127.0.0.1',7892); exit 0 }catch{ exit 1 }finally{ $c.Close() }" >nul 2>nul
-    if not errorlevel 1 (
-        set "http_proxy=http://127.0.0.1:7892"
-        set "https_proxy=http://127.0.0.1:7892"
+    for %%P in (46590 7892) do (
+        if not defined http_proxy (
+            powershell -NoProfile -Command "$c=New-Object Net.Sockets.TcpClient; try{ $c.Connect('127.0.0.1',%%P); exit 0 }catch{ exit 1 }finally{ $c.Close() }" >nul 2>nul
+            if not errorlevel 1 (
+                set "http_proxy=socks5://127.0.0.1:%%P"
+                set "https_proxy=socks5://127.0.0.1:%%P"
+                set "all_proxy=socks5://127.0.0.1:%%P"
+                echo Proxy detected: socks5://127.0.0.1:%%P
+            )
+        )
     )
 )
 

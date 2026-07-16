@@ -1,0 +1,17 @@
+name = "exambot"
+main = "src/index.ts"
+compatibility_date = "2025-07-16"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+CF_ACCOUNT_ID = "25fcdd133593b796985d219a18c94732"
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[observability]
+enabled = true

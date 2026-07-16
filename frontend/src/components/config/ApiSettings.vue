@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
-import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
+import { isCloudflare } from '@/utils/platform'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, CloudIcon } from '@heroicons/vue/24/outline'
 
 const store = useConfigStore()
 const router = useRouter()
@@ -21,7 +22,7 @@ async function handleFetchModels() {
 }
 
 async function handleSave() {
-  saveError.value = ''
+  saveError.value = false
   try {
     await store.save()
     saveSuccess.value = true
@@ -35,8 +36,37 @@ async function handleSave() {
     <h1 class="text-display-sm mb-1">{{ i18n.t('configTitle') }}</h1>
     <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSubtitle') }}</p>
 
-    <!-- Endpoint -->
-    <div class="card-filled p-5 mb-4">
+    <!-- CF: Provider toggle -->
+    <div v-if="isCloudflare()" class="card-filled p-4 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configAiProvider') }}</label>
+      <div class="flex items-center gap-3">
+        <button
+          class="btn-tonal text-sm !px-4 !py-2"
+          :class="{ 'btn-filled': store.aiProvider === 'cf-free' }"
+          @click="store.setProvider('cf-free')"
+        >
+          <CloudIcon class="w-4 h-4" />
+          {{ i18n.t('configCfFree') }}
+        </button>
+        <button
+          class="btn-tonal text-sm !px-4 !py-2"
+          :class="{ 'btn-filled': store.aiProvider === 'custom' }"
+          @click="store.setProvider('custom')"
+        >
+          <ServerIcon class="w-4 h-4" />
+          {{ i18n.t('configCustomApi') }}
+        </button>
+      </div>
+      <p v-if="store.aiProvider === 'cf-free'" class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('configCfFreeDesc') }}
+      </p>
+      <p v-else class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('configCustomApiDesc') }}
+      </p>
+    </div>
+
+    <!-- Endpoint (custom API or non-CF) -->
+    <div v-if="!isCloudflare() || store.aiProvider === 'custom'" class="card-filled p-5 mb-4">
       <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionEndpoint') }}</label>
       <div class="relative">
         <ServerIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
@@ -48,8 +78,8 @@ async function handleSave() {
       </div>
     </div>
 
-    <!-- Auth -->
-    <div class="card-filled p-5 mb-4">
+    <!-- Auth (custom API or non-CF) -->
+    <div v-if="!isCloudflare() || store.aiProvider === 'custom'" class="card-filled p-5 mb-4">
       <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionAuth') }}</label>
       <div class="relative">
         <KeyIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
@@ -73,7 +103,7 @@ async function handleSave() {
       <div class="flex flex-col sm:flex-row items-center gap-3">
         <button
           class="btn-outlined shrink-0 text-sm"
-          :disabled="!store.endpoint || !store.apiKey"
+          :disabled="(!isCloudflare() || store.aiProvider === 'custom') && (!store.endpoint || !store.apiKey)"
           @click="handleFetchModels"
         >
           <CloudArrowDownIcon class="w-4 h-4" />

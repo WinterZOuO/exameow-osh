@@ -7,6 +7,15 @@ export function isTauri(): boolean {
   return _isTauri
 }
 
+let _isCloudflare: boolean | null = null
+
+export function isCloudflare(): boolean {
+  if (_isCloudflare === null) {
+    _isCloudflare = import.meta.env.VITE_CLOUDFLARE === 'true' && !isTauri()
+  }
+  return _isCloudflare
+}
+
 let _isMacOS: boolean | null = null
 
 export function isMacOS(): boolean {
