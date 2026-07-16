@@ -425,6 +425,7 @@ async function handleAiJudge() {
   aiFeedback.value = null
   judgeAbort = new AbortController()
   const language = i18n.locale === 'zh' ? 'Chinese' : 'English'
+  const qIndex = practiceStore.session?.currentIndex
   const q = item.question
   const params = {
     stem: q.stem,
@@ -442,6 +443,7 @@ async function handleAiJudge() {
     } else {
       result = await api.judgeAnswer(params, language, config, judgeAbort.signal)
     }
+    if (practiceStore.session?.currentIndex !== qIndex) return
     aiFeedback.value = result.feedback
     applyGrade(result.correct)
   } catch (e: any) {
