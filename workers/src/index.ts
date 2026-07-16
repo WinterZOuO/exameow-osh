@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Ai, Fetcher } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
+import { answerQuestion } from './answer'
 import { parseFile } from './parser'
 import { generateXlsxBuffer, generateCsvContent } from './export'
 import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
@@ -138,6 +139,35 @@ app.post('/api/generate', async (c) => {
   }
 
   return c.json({ questions })
+})
+
+// POST /api/answer - answers a user question via AI
+app.post('/api/answer', async (c) => {
+  let body: { question?: string; language?: string; model?: string }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const question = (body.question || '').trim()
+  if (!question) {
+    return c.json({ error: 'Question is empty' }, 400)
+  }
+
+  try {
+    const result = await answerQuestion(
+      c.env.AI,
+      question,
+      body.language || 'Chinese',
+      body.model || undefined
+    )
+    return c.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('AI answer error:', msg)
+    return c.json({ error: `AI answer error: ${msg}` }, 502)
+  }
 })
 
 // GET /api/export - exports questions as CSV download

@@ -58,4 +58,9 @@ export const AVAILABLE_CF_MODELS = [
   { id: '@cf/microsoft/phi-4-mini-instruct', name: 'Phi-4 Mini' },
 ]
 
+export interface AnswerResult {
+  answer: string
+  analysis: string
+}
+
 export const DEFAULT_MODEL = '@cf/openai/gpt-oss-120b'
