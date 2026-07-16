@@ -63,4 +63,9 @@ export interface AnswerResult {
   analysis: string
 }
 
+export interface JudgeResult {
+  correct: boolean
+  feedback: string
+}
+
 export const DEFAULT_MODEL = '@cf/openai/gpt-oss-120b'

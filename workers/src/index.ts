@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import type { Ai, Fetcher } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
 import { answerQuestion } from './answer'
+import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
 import { generateXlsxBuffer, generateCsvContent } from './export'
 import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
@@ -167,6 +168,44 @@ app.post('/api/answer', async (c) => {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('AI answer error:', msg)
     return c.json({ error: `AI answer error: ${msg}` }, 502)
+  }
+})
+
+// POST /api/judge - AI-grades a user's answer against the reference answer
+app.post('/api/judge', async (c) => {
+  let body: {
+    stem?: string
+    reference_answer?: string
+    analysis?: string
+    user_answer?: string
+    language?: string
+    model?: string
+  }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const userAnswer = (body.user_answer || '').trim()
+  if (!userAnswer) {
+    return c.json({ error: 'User answer is empty' }, 400)
+  }
+
+  try {
+    const result = await judgeAnswer(c.env.AI, {
+      stem: body.stem || '',
+      referenceAnswer: body.reference_answer || '',
+      analysis: body.analysis || '',
+      userAnswer,
+      language: body.language || 'Chinese',
+      model: body.model || undefined,
+    })
+    return c.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('AI judge error:', msg)
+    return c.json({ error: `AI judge error: ${msg}` }, 502)
   }
 })
 
