@@ -1,4 +1,4 @@
-import type { AIConfig, ExamParams, ModelInfo } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, ModelInfo } from '@exambot/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
 import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
 import { cfApi } from './cf'
@@ -54,6 +54,22 @@ export const api = {
       return cfApi.generateExam(fileOrPath as File, params, config, signal)
     }
     return httpApi.generateExam(fileOrPath as File, params, config, signal)
+  },
+
+  async answerQuestion(
+    question: string,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<AnswerResult> {
+    if (isTauri()) {
+      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
+      return tauriApi.answerQuestion(question, language, config.endpoint, config.api_key, config.model)
+    }
+    if (isCloudflare()) {
+      return cfApi.answerQuestion(question, language, config, signal)
+    }
+    return httpApi.answerQuestion(question, language, config, signal)
   },
 
   async exportCsv(

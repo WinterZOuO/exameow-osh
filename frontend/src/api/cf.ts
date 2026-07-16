@@ -1,4 +1,4 @@
-import type { AIConfig, ExamParams, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, ModelInfo, Question } from '@exambot/shared'
 import { AVAILABLE_CF_MODELS } from './cf-models'
 
 export interface GenerateResult {
@@ -73,6 +73,22 @@ export const cfApi = {
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     downloadFile(url, filename)
+  },
+
+  async answerQuestion(
+    question: string,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<AnswerResult> {
+    const res = await fetch(`${getBaseUrl()}/api/answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, language, model: config.model }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    return res.json()
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

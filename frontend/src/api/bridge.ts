@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { AIConfig, ExamParams, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, ModelInfo, Question } from '@exambot/shared'
 
 export interface GenerateResult {
   questions: Question[]
@@ -61,6 +61,16 @@ export const tauriApi = {
 
   async saveToDownloads(filename: string, contentBase64: string): Promise<string> {
     return invoke<string>('save_to_downloads', { filename, contentBase64 })
+  },
+
+  async answerQuestion(
+    question: string,
+    language: string,
+    endpoint: string,
+    apiKey: string,
+    model: string,
+  ): Promise<AnswerResult> {
+    return invoke<AnswerResult>('answer_question', { question, language, endpoint, apiKey, model })
   },
 
   async saveConfig(config: AIConfig): Promise<void> {

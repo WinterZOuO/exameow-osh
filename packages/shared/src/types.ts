@@ -77,3 +77,8 @@ export interface AIConfig {
 export interface ModelInfo {
   id: string
 }
+
+export interface AnswerResult {
+  answer: string
+  analysis: string
+}

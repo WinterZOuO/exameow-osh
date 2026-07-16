@@ -1,4 +1,4 @@
-import type { AIConfig, ExamParams, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, ModelInfo, Question } from '@exambot/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -61,6 +61,28 @@ export const httpApi = {
     a.download = filename
     a.click()
     URL.revokeObjectURL(objectUrl)
+  },
+
+  async answerQuestion(
+    question: string,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<AnswerResult> {
+    const res = await fetch(`${BASE_URL}/api/answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question,
+        language,
+        endpoint: config.endpoint,
+        api_key: config.api_key,
+        model: config.model,
+      }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    return res.json()
   },
 
   async saveConfig(config: AIConfig): Promise<void> {
