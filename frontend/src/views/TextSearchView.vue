@@ -37,7 +37,7 @@ const typeLabelKeys: Record<string, 'typeSingle' | 'typeMulti' | 'typeTrueFalse'
 interface StoredSettings {
   bankIds: string[] | null
   scope: MatchScope
-  types: string[] | null
+  types: QuestionType[] | null
 }
 
 function loadSettings(): StoredSettings {
@@ -51,7 +51,7 @@ function loadSettings(): StoredSettings {
 const stored = loadSettings()
 const selectedBankIds = ref<string[] | null>(stored.bankIds)
 const scope = ref<MatchScope>(stored.scope === 'stem_options' ? 'stem_options' : 'stem')
-const selectedTypes = ref<string[] | null>(stored.types)
+const selectedTypes = ref<QuestionType[] | null>(stored.types)
 const showSettings = ref(false)
 
 watch(
@@ -81,7 +81,7 @@ function toggleBank(id: string) {
   }
 }
 
-function toggleType(t: string) {
+function toggleType(t: QuestionType) {
   if (selectedTypes.value === null) {
     selectedTypes.value = [t]
     return
@@ -105,13 +105,13 @@ function runSearch() {
   hits.value = searchQuestions(query.value, practiceStore.banks, {
     bankIds: selectedBankIds.value,
     scope: scope.value,
-    types: selectedTypes.value as QuestionType[] | null,
+    types: selectedTypes.value,
   })
   searched.value = query.value.trim().length > 0
 }
 
 watch(
-  [query, selectedBankIds, scope, selectedTypes],
+  [query, selectedBankIds, scope, selectedTypes, () => practiceStore.banks],
   () => {
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(runSearch, 200)
