@@ -12,8 +12,13 @@ echo.
 where cargo >nul 2>nul || (echo [ERROR] cargo not found. Install Rust: https://rustup.rs & exit /b 1)
 where pnpm  >nul 2>nul || (echo [ERROR] pnpm not found. Install: npm i -g pnpm & exit /b 1)
 
-if not defined http_proxy  set "http_proxy=http://127.0.0.1:7892"
-if not defined https_proxy set "https_proxy=http://127.0.0.1:7892"
+if not defined http_proxy (
+    powershell -NoProfile -Command "$c=New-Object Net.Sockets.TcpClient; try{ $c.Connect('127.0.0.1',7892); exit 0 }catch{ exit 1 }finally{ $c.Close() }" >nul 2>nul
+    if not errorlevel 1 (
+        set "http_proxy=http://127.0.0.1:7892"
+        set "https_proxy=http://127.0.0.1:7892"
+    )
+)
 
 if not exist "frontend\node_modules" (
     echo Installing dependencies...

@@ -21,9 +21,11 @@ echo -e "${NC}"
 command -v cargo >/dev/null 2>&1 || { echo -e "${RED}Error: cargo not found. Install Rust: https://rustup.rs${NC}"; exit 1; }
 command -v pnpm >/dev/null 2>&1 || { echo -e "${RED}Error: pnpm not found. Install: npm i -g pnpm${NC}"; exit 1; }
 
-# ---- proxy ----
-export http_proxy="${http_proxy:-http://127.0.0.1:7892}"
-export https_proxy="${https_proxy:-http://127.0.0.1:7892}"
+# ---- proxy (only if reachable) ----
+if [ -z "$http_proxy" ] && nc -z -w 1 127.0.0.1 7892 2>/dev/null; then
+    export http_proxy="http://127.0.0.1:7892"
+    export https_proxy="http://127.0.0.1:7892"
+fi
 
 # ---- install deps if needed ----
 if [ ! -d "frontend/node_modules" ]; then
