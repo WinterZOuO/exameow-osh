@@ -1,6 +1,9 @@
 use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
-use exambot_core::exam::{generate_exam as core_generate_exam, ExamParams, Question};
+use exambot_core::exam::{
+    answer_question as core_answer_question, generate_exam as core_generate_exam, AnswerResult,
+    ExamParams, Question,
+};
 use exambot_core::export::export_csv as core_export_csv;
 use exambot_core::export::export_xlsx as core_export_xlsx;
 use exambot_core::parser::parse_file;
@@ -58,6 +61,23 @@ async fn generate_exam(
         .map_err(|e| CommandError(format!("Exam generation error: {e}")))?;
 
     Ok(GenerateResult { questions })
+}
+
+#[tauri::command]
+async fn answer_question(
+    question: String,
+    language: String,
+    endpoint: String,
+    api_key: String,
+    model: String,
+) -> Result<AnswerResult, CommandError> {
+    if question.trim().is_empty() {
+        return Err(CommandError("Question is empty".to_string()));
+    }
+    let client = AIClient::new(&endpoint, &api_key);
+    core_answer_question(&client, &question, &language, &model)
+        .await
+        .map_err(|e| CommandError(format!("Answer error: {e}")))
 }
 
 #[tauri::command]
@@ -179,6 +199,7 @@ pub fn run() {
             greet,
             get_models,
             generate_exam,
+            answer_question,
             parse_file_text,
             parse_file_bytes,
             export_csv,
