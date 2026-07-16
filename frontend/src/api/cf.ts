@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exambot/shared'
 import { AVAILABLE_CF_MODELS } from './cf-models'
 
 export interface GenerateResult {
@@ -85,6 +85,29 @@ export const cfApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, language, model: config.model }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    return res.json()
+  },
+
+  async judgeAnswer(
+    params: JudgeParams,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<JudgeResult> {
+    const res = await fetch(`${getBaseUrl()}/api/judge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stem: params.stem,
+        reference_answer: params.reference_answer,
+        analysis: params.analysis,
+        user_answer: params.user_answer,
+        language,
+        model: config.model,
+      }),
       signal,
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)

@@ -82,3 +82,15 @@ export interface AnswerResult {
   answer: string
   analysis: string
 }
+
+export interface JudgeParams {
+  stem: string
+  reference_answer: string
+  analysis?: string
+  user_answer: string
+}
+
+export interface JudgeResult {
+  correct: boolean
+  feedback: string
+}
