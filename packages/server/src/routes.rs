@@ -6,7 +6,7 @@ use axum::{
 };
 use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore};
-use exambot_core::exam::{generate_exam, ExamParams, Question};
+use exambot_core::exam::{answer_question, generate_exam, AnswerResult, ExamParams, Question};
 use exambot_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -212,4 +212,46 @@ pub async fn load_config_handler(
         .load()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Load error: {e}")))?;
     Ok(Json(config))
+}
+
+#[derive(Deserialize)]
+pub struct AnswerRequest {
+    pub question: String,
+    pub language: Option<String>,
+    pub endpoint: Option<String>,
+    pub api_key: Option<String>,
+    pub model: Option<String>,
+}
+
+pub async fn answer_handler(
+    Json(req): Json<AnswerRequest>,
+) -> Result<Json<AnswerResult>, (StatusCode, String)> {
+    if req.question.trim().is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "Question is empty".to_string()));
+    }
+
+    let endpoint = req
+        .endpoint
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(ai_endpoint);
+    let api_key = req
+        .api_key
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(ai_api_key);
+    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
+
+    if endpoint.is_empty() || api_key.is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
+        ));
+    }
+
+    let language = req.language.filter(|s| !s.is_empty()).unwrap_or_else(|| "Chinese".to_string());
+
+    let client = AIClient::new(&endpoint, &api_key);
+    let result = answer_question(&client, &req.question, &language, &model)
+        .await
+        .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
+    Ok(Json(result))
 }
