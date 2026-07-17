@@ -53,16 +53,19 @@ function onResizeMouseDown(dir: ResizeDir) {
 
     const { PhysicalPosition, PhysicalSize } = await import('@tauri-apps/api/dpi')
 
-    const startX = e.screenX
-    const startY = e.screenY
+    const factor = await win.scaleFactor()
+    const startX = e.screenX * factor
+    const startY = e.screenY * factor
     const startPos = await win.outerPosition()
     const startSize = await win.innerSize()
     const minW = 200
     const minH = 100
 
     function onMove(ev: MouseEvent) {
-      const dx = ev.screenX - startX
-      const dy = ev.screenY - startY
+      const currentX = ev.screenX * factor
+      const currentY = ev.screenY * factor
+      const dx = currentX - startX
+      const dy = currentY - startY
 
       let newX = startPos.x
       let newY = startPos.y
