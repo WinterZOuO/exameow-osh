@@ -10,6 +10,7 @@ use exameow_core::export::export_xlsx as core_export_xlsx;
 use exameow_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
+use tauri::Manager;
 use base64::Engine;
 
 const APP_NAME: &str = "Exameow";
@@ -258,6 +259,60 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! Exameow is ready.", name)
 }
 
+#[tauri::command]
+fn create_record_windows(
+    app: tauri::AppHandle,
+    overlay_x: f64,
+    overlay_y: f64,
+    overlay_w: f64,
+    overlay_h: f64,
+    float_x: f64,
+    float_y: f64,
+    float_w: f64,
+    float_h: f64,
+) -> Result<(), CommandError> {
+    let _overlay = tauri::WebviewWindowBuilder::new(
+        &app,
+        "record-overlay",
+        tauri::WebviewUrl::App("/#/src-windows/record-overlay".parse().unwrap()),
+    )
+    .position(overlay_x, overlay_y)
+    .inner_size(overlay_w, overlay_h)
+    .decorations(false)
+    .always_on_top(true)
+    .resizable(false)
+    .visible(true)
+    .build()
+    .map_err(|e| CommandError(format!("Failed to create record-overlay: {e}")))?;
+
+    let _float = tauri::WebviewWindowBuilder::new(
+        &app,
+        "answer-float",
+        tauri::WebviewUrl::App("/#/src-windows/answer-float".parse().unwrap()),
+    )
+    .position(float_x, float_y)
+    .inner_size(float_w, float_h)
+    .decorations(false)
+    .always_on_top(true)
+    .resizable(true)
+    .visible(true)
+    .build()
+    .map_err(|e| CommandError(format!("Failed to create answer-float: {e}")))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn close_record_windows(app: tauri::AppHandle) -> Result<(), CommandError> {
+    if let Some(w) = app.get_webview_window("record-overlay") {
+        w.close().ok();
+    }
+    if let Some(w) = app.get_webview_window("answer-float") {
+        w.close().ok();
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -306,6 +361,8 @@ pub fn run() {
             save_vision_config,
             load_vision_config,
             capture_screen,
+            create_record_windows,
+            close_record_windows,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -128,4 +128,18 @@ export const tauriApi = {
   async captureScreen(x: number, y: number, w: number, h: number): Promise<string> {
     return invoke<string>('capture_screen', { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) })
   },
+
+  async createRecordWindows(
+    overlayX: number, overlayY: number, overlayW: number, overlayH: number,
+    floatX: number, floatY: number, floatW: number, floatH: number,
+  ): Promise<void> {
+    return invoke<void>('create_record_windows', {
+      overlayX, overlayY, overlayW, overlayH,
+      floatX, floatY, floatW, floatH,
+    })
+  },
+
+  async closeRecordWindows(): Promise<void> {
+    return invoke<void>('close_record_windows')
+  },
 }

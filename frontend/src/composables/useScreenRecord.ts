@@ -107,24 +107,24 @@ export function useScreenRecord() {
   }
 
   async function setupWindows() {
-    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
     const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
     const screenWidth = window.screen.width
     const screenHeight = window.screen.height
 
-    // Plain test window — no decorations false, no transparent, no alwaysOnTop
-    const testWin = new WebviewWindow('record-overlay', {
-      url: '/',
-      title: 'TEST WINDOW',
-      width: 400,
-      height: 300,
-      x: 100,
-      y: 100,
-      visible: true,
-    })
+    const rw = Math.round(screenWidth * 0.6)
+    const rh = Math.round(screenHeight * 0.4)
+    const rx = Math.round((screenWidth - rw) / 2)
+    const ry = Math.round(screenHeight * 0.08)
 
-    await testWin
+    store.setRegion({ x: rx, y: ry, w: rw, h: rh })
+
+    const floatW = 320
+    const floatH = 280
+    const floatX = screenWidth - floatW - 20
+    const floatY = screenHeight - floatH - 40
+
+    await api.createRecordWindows(rx, ry, rw, rh, floatX, floatY, floatW, floatH)
 
     const mainWin = getCurrentWindow()
     await mainWin.minimize()
@@ -133,17 +133,10 @@ export function useScreenRecord() {
   async function stop() {
     stopTimer()
     store.stopRecording()
-    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
     const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
     try {
-      const recordWin = await WebviewWindow.getByLabel('record-overlay')
-      if (recordWin) await recordWin.close()
-    } catch { /* ignore */ }
-
-    try {
-      const floatWin = await WebviewWindow.getByLabel('answer-float')
-      if (floatWin) await floatWin.close()
+      await api.closeRecordWindows()
     } catch { /* ignore */ }
 
     const mainWin = getCurrentWindow()
