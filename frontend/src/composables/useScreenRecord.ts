@@ -115,7 +115,6 @@ export function useScreenRecord() {
   async function setupWindows() {
     console.log('[ScreenRecord] setupWindows start')
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-    const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
     const screenWidth = window.screen.width
     const screenHeight = window.screen.height
@@ -131,13 +130,11 @@ export function useScreenRecord() {
 
     const recordWin = new WebviewWindow('record-overlay', {
       url: '/',
-      x: 100,
-      y: 100,
       width: 400,
       height: 300,
-      decorations: false,
-      alwaysOnTop: true,
-      resizable: false,
+      center: true,
+      decorations: true,
+      resizable: true,
       visible: true,
       focus: true,
     })
@@ -151,12 +148,10 @@ export function useScreenRecord() {
 
     const floatWin = new WebviewWindow('answer-float', {
       url: '/',
-      x: 800,
-      y: 100,
       width: 400,
       height: 300,
-      decorations: false,
-      alwaysOnTop: true,
+      center: true,
+      decorations: true,
       resizable: true,
       visible: true,
       focus: true,
@@ -165,10 +160,6 @@ export function useScreenRecord() {
 
     await Promise.all([recordWin, floatWin])
     console.log('[ScreenRecord] both windows ready')
-
-    const mainWin = getCurrentWindow()
-    await mainWin.minimize()
-    console.log('[ScreenRecord] main window minimized')
   }
 
   async function stop() {
