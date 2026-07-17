@@ -48,6 +48,10 @@ const router = createRouter({
       component: () => import('@/components/search/RecordOverlay.vue'),
     },
     {
+      path: '/src-windows/answer-float',
+      component: () => import('@/components/search/AnswerFloat.vue'),
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
