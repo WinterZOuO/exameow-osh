@@ -113,44 +113,18 @@ export function useScreenRecord() {
     const screenWidth = window.screen.width
     const screenHeight = window.screen.height
 
-    const rw = Math.round(screenWidth * 0.6)
-    const rh = Math.round(screenHeight * 0.4)
-    const rx = Math.round((screenWidth - rw) / 2)
-    const ry = Math.round(screenHeight * 0.08)
-
-    store.setRegion({ x: rx, y: ry, w: rw, h: rh })
-
-    const recordWin = new WebviewWindow('record-overlay', {
-      url: '/#/src-windows/record-overlay',
-      x: rx,
-      y: ry,
-      width: rw,
-      height: rh,
-      decorations: false,
-      transparent: true,
-      alwaysOnTop: true,
-      resizable: false,
+    // Plain test window — no decorations false, no transparent, no alwaysOnTop
+    const testWin = new WebviewWindow('record-overlay', {
+      url: '/',
+      title: 'TEST WINDOW',
+      width: 400,
+      height: 300,
+      x: 100,
+      y: 100,
       visible: true,
     })
 
-    const floatW = 320
-    const floatH = 280
-    const floatX = screenWidth - floatW - 20
-    const floatY = screenHeight - floatH - 40
-
-    const floatWin = new WebviewWindow('answer-float', {
-      url: '/#/src-windows/answer-float',
-      x: floatX,
-      y: floatY,
-      width: floatW,
-      height: floatH,
-      decorations: false,
-      alwaysOnTop: true,
-      resizable: true,
-      visible: true,
-    })
-
-    await Promise.all([recordWin, floatWin])
+    await testWin
 
     const mainWin = getCurrentWindow()
     await mainWin.minimize()
