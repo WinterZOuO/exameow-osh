@@ -25,6 +25,7 @@ function computeThumbHash(base64: string): Promise<string> {
       }
       resolve(hash)
     }
+    img.onerror = () => resolve('')
     img.src = base64
   })
 }

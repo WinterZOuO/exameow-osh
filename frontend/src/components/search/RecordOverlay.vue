@@ -1,26 +1,28 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useScreenRecordStore } from '@/stores/screenRecord'
 
 const store = useScreenRecordStore()
 const visible = ref(true)
 
+const unlistenFns: Array<() => void> = []
+
 onMounted(async () => {
   const { listen } = await import('@tauri-apps/api/event')
-  const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
-  await listen('screen-record:overlay-toggle', () => {
+  const unlisten1 = await listen('screen-record:overlay-toggle', () => {
     store.toggleOverlay()
   })
+  unlistenFns.push(unlisten1)
 
-  const unlisten = await listen('screen-record:overlay-visibility', (event: any) => {
+  const unlisten2 = await listen('screen-record:overlay-visibility', (event: any) => {
     visible.value = event.payload.visible
   })
+  unlistenFns.push(unlisten2)
+})
 
-  const win = getCurrentWindow()
-  win.onResized(() => {
-    // No-op: keep transparent size
-  })
+onUnmounted(() => {
+  for (const fn of unlistenFns) fn()
 })
 </script>
 

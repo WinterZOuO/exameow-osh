@@ -14,7 +14,6 @@ const i18n = useI18nStore()
 let refreshFn: (() => void) | null = null
 
 onMounted(async () => {
-  const { listen } = await import('@tauri-apps/api/event')
   const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
   const win = getCurrentWindow()
@@ -68,7 +67,7 @@ async function handleDoubleTap() {
       @click="handleCollapse"
     >
       <ChevronUpDownIcon class="w-5 h-5" style="color: rgb(var(--md-on-surface-variant))" />
-      <span class="text-[10px]" style="color: rgb(var(--md-on-surface-variant))">搜题</span>
+      <span class="text-[10px]" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchModeScreenRecord') }}</span>
     </div>
 
     <template v-else>
