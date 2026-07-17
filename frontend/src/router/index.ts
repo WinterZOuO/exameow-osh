@@ -5,7 +5,13 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/practice',
+      redirect: () => {
+        const params = new URLSearchParams(window.location.search)
+        const win = params.get('win')
+        if (win === 'record-overlay') return '/src-windows/record-overlay'
+        if (win === 'answer-float') return '/src-windows/answer-float'
+        return '/practice'
+      },
     },
     {
       path: '/practice',
