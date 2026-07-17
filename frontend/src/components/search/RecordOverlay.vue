@@ -3,13 +3,12 @@ import { onMounted, onUnmounted } from 'vue'
 import { useScreenRecordStore } from '@/stores/screenRecord'
 
 const store = useScreenRecordStore()
-
 const unlistenFns: Array<() => void> = []
 
 let win: any = null
 
 onMounted(async () => {
-  const { getCurrentWindow } = await import('@tauri-apps/api/window')
+  const { getCurrentWindow, LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window')
   const { listen } = await import('@tauri-apps/api/event')
   win = getCurrentWindow()
 
@@ -19,28 +18,12 @@ onMounted(async () => {
   unlistenFns.push(unlistenToggle)
 
   const unlistenResize = await win.onResized(async () => {
-    const factor = await win.scaleFactor()
-    const size = await win.innerSize()
-    const pos = await win.outerPosition()
-    store.setRegion({
-      x: Math.round(pos.x * factor),
-      y: Math.round(pos.y * factor),
-      w: Math.round(size.width * factor),
-      h: Math.round(size.height * factor),
-    })
+    syncRegion()
   })
   unlistenFns.push(unlistenResize)
 
   const unlistenMove = await win.onMoved(async () => {
-    const factor = await win.scaleFactor()
-    const pos = await win.outerPosition()
-    const size = await win.innerSize()
-    store.setRegion({
-      x: Math.round(pos.x * factor),
-      y: Math.round(pos.y * factor),
-      w: Math.round(size.width * factor),
-      h: Math.round(size.height * factor),
-    })
+    syncRegion()
   })
   unlistenFns.push(unlistenMove)
 })
@@ -49,11 +32,61 @@ onUnmounted(() => {
   for (const fn of unlistenFns) fn()
 })
 
-function onResizeMouseDown(dir: string) {
-  return (e: MouseEvent) => {
+async function syncRegion() {
+  const factor = await win.scaleFactor()
+  const size = await win.innerSize()
+  const pos = await win.outerPosition()
+  store.setRegion({
+    x: Math.round(pos.x * factor),
+    y: Math.round(pos.y * factor),
+    w: Math.round(size.width * factor),
+    h: Math.round(size.height * factor),
+  })
+}
+
+type ResizeDir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+
+function onResizeMouseDown(dir: ResizeDir) {
+  return async (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (win) win.startResizeDragging(dir)
+
+    const { LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window')
+
+    const startX = e.screenX
+    const startY = e.screenY
+    const startPos = await win.outerPosition()
+    const startSize = await win.innerSize()
+    const minW = 200
+    const minH = 100
+
+    function onMove(ev: MouseEvent) {
+      const dx = ev.screenX - startX
+      const dy = ev.screenY - startY
+
+      let newX = startPos.x
+      let newY = startPos.y
+      let newW = startSize.width
+      let newH = startSize.height
+
+      if (dir.includes('e')) { newW = Math.max(minW, startSize.width + dx) }
+      if (dir.includes('w')) { newW = Math.max(minW, startSize.width - dx); newX = startPos.x + startSize.width - newW }
+      if (dir.includes('s')) { newH = Math.max(minH, startSize.height + dy) }
+      if (dir.includes('n')) { newH = Math.max(minH, startSize.height - dy); newY = startPos.y + startSize.height - newH }
+
+      win.setSize(new LogicalSize(newW, newH))
+      win.setPosition(new LogicalPosition(newX, newY))
+    }
+
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      document.removeEventListener('mouseleave', onUp)
+    }
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    document.addEventListener('mouseleave', onUp)
   }
 }
 </script>
@@ -62,24 +95,24 @@ function onResizeMouseDown(dir: string) {
   <div
     v-if="store.overlayVisible"
     class="w-full h-full flex flex-col select-none"
-    style="background: transparent; border: 2px solid rgb(103, 80, 164); box-sizing: border-box; box-shadow: inset 0 0 0 1px rgba(103, 80, 164, 0.3);"
+    style="background: transparent; border: 2px solid rgb(103, 80, 164); box-sizing: border-box; box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.15);"
   >
-    <div class="flex h-4 shrink-0">
-      <div class="w-4 cursor-nwse-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('NorthWest')($event)" />
-      <div data-tauri-drag-region class="flex-1 cursor-ns-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('North')($event)" />
-      <div class="w-4 cursor-nesw-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('NorthEast')($event)" />
+    <div class="flex h-3 shrink-0">
+      <div class="w-3 cursor-nwse-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('nw')($event)" />
+      <div data-tauri-drag-region class="flex-1 cursor-ns-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('n')($event)" />
+      <div class="w-3 cursor-nesw-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('ne')($event)" />
     </div>
 
     <div class="flex flex-1">
-      <div class="w-4 cursor-ew-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('West')($event)" />
-      <div data-tauri-drag-region class="flex-1 pointer-events-none" />
-      <div class="w-4 cursor-ew-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('East')($event)" />
+      <div class="w-3 cursor-ew-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('w')($event)" />
+      <div data-tauri-drag-region class="flex-1" style="pointer-events: none;" />
+      <div class="w-3 cursor-ew-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('e')($event)" />
     </div>
 
-    <div class="flex h-4 shrink-0">
-      <div class="w-4 cursor-nesw-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('SouthWest')($event)" />
-      <div data-tauri-drag-region class="flex-1 cursor-ns-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('South')($event)" />
-      <div class="w-4 cursor-nwse-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('SouthEast')($event)" />
+    <div class="flex h-3 shrink-0">
+      <div class="w-3 cursor-nesw-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('sw')($event)" />
+      <div data-tauri-drag-region class="flex-1 cursor-ns-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('s')($event)" />
+      <div class="w-3 cursor-nwse-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('se')($event)" />
     </div>
   </div>
 
