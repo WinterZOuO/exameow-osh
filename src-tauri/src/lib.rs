@@ -10,6 +10,20 @@ use exameow_core::export::export_xlsx as core_export_xlsx;
 use exameow_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
+#[cfg(target_os = "macos")]
+fn make_webview_transparent(win: &tauri::WebviewWindow) {
+    use objc::runtime::{Class, Object, NO};
+    use objc::{msg_send, sel, sel_impl};
+    if let Ok(ptr) = win.ns_window() {
+        unsafe {
+            let ns_window = ptr as *mut Object;
+            let clear: *mut Object = msg_send![Class::get("NSColor").unwrap(), clearColor];
+            let _: () = msg_send![ns_window, setOpaque: NO];
+            let _: () = msg_send![ns_window, setBackgroundColor: clear];
+        }
+    }
+}
+
 use tauri::Manager;
 use base64::Engine;
 
@@ -290,6 +304,9 @@ fn create_record_windows(
     .visible(true)
     .build()
     .map_err(|e| CommandError(format!("Failed to create record-overlay: {e}")))?;
+
+    #[cfg(target_os = "macos")]
+    make_webview_transparent(&_overlay);
 
     #[cfg(debug_assertions)]
     let float_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/answer-float".parse().unwrap());

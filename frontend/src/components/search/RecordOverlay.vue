@@ -35,3 +35,9 @@ onUnmounted(() => {
   </div>
   <div v-else class="w-full h-full" />
 </template>
+
+<style>
+html, body, #app {
+  background: transparent !important;
+}
+</style>
