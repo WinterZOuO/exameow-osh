@@ -271,10 +271,15 @@ fn create_record_windows(
     float_w: f64,
     float_h: f64,
 ) -> Result<(), CommandError> {
-    let overlay = tauri::WebviewWindowBuilder::new(
+    #[cfg(debug_assertions)]
+    let overlay_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/record-overlay".parse().unwrap());
+    #[cfg(not(debug_assertions))]
+    let overlay_url = tauri::WebviewUrl::App("/index.html#/src-windows/record-overlay".into());
+
+    let _overlay = tauri::WebviewWindowBuilder::new(
         &app,
         "record-overlay",
-        tauri::WebviewUrl::App("/".into()),
+        overlay_url,
     )
     .position(overlay_x, overlay_y)
     .inner_size(overlay_w, overlay_h)
@@ -285,12 +290,15 @@ fn create_record_windows(
     .build()
     .map_err(|e| CommandError(format!("Failed to create record-overlay: {e}")))?;
 
-    let _ = overlay.eval("window.location.hash = '#/src-windows/record-overlay'");
+    #[cfg(debug_assertions)]
+    let float_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/answer-float".parse().unwrap());
+    #[cfg(not(debug_assertions))]
+    let float_url = tauri::WebviewUrl::App("/index.html#/src-windows/answer-float".into());
 
-    let float = tauri::WebviewWindowBuilder::new(
+    let _float = tauri::WebviewWindowBuilder::new(
         &app,
         "answer-float",
-        tauri::WebviewUrl::App("/".into()),
+        float_url,
     )
     .position(float_x, float_y)
     .inner_size(float_w, float_h)
@@ -300,8 +308,6 @@ fn create_record_windows(
     .visible(true)
     .build()
     .map_err(|e| CommandError(format!("Failed to create answer-float: {e}")))?;
-
-    let _ = float.eval("window.location.hash = '#/src-windows/answer-float'");
 
     Ok(())
 }
