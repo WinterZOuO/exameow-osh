@@ -248,6 +248,10 @@ export interface LocaleMessages {
   searchGotoConfig: string
   searchExactMatches: string
   searchFuzzyMatches: string
+  searchPhotoLoadingModel: string
+  searchPhotoRecognizing: string
+  searchPhotoEmpty: string
+  searchPhotoLlmFallback: string
 
   // Practice grading
   practiceSubmitAuto: string
@@ -497,6 +501,10 @@ export const zh: LocaleMessages = {
   searchGotoConfig: '前往配置',
   searchExactMatches: '精确匹配',
   searchFuzzyMatches: '模糊匹配',
+  searchPhotoLoadingModel: '正在加载识别模型…',
+  searchPhotoRecognizing: '识别中…',
+  searchPhotoEmpty: '未识别到文字，请换更清晰的图片或手动输入',
+  searchPhotoLlmFallback: '大模型配置不完整，已改用本地 OCR 识别',
 
   // Practice grading
   practiceSubmitAuto: '提交',
@@ -746,6 +754,10 @@ export const en: LocaleMessages = {
   searchGotoConfig: 'Go to settings',
   searchExactMatches: 'Exact matches',
   searchFuzzyMatches: 'Fuzzy matches',
+  searchPhotoLoadingModel: 'Loading OCR model…',
+  searchPhotoRecognizing: 'Recognizing…',
+  searchPhotoEmpty: 'No text recognized — try a clearer photo or type it manually',
+  searchPhotoLlmFallback: 'AI vision config incomplete — used local OCR instead',
 
   // Practice grading
   practiceSubmitAuto: 'Submit',
