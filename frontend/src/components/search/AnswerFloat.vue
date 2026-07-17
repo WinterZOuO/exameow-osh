@@ -23,8 +23,10 @@ onMounted(async () => {
   refreshFn = refresh
 })
 
-function handleAdjust() {
+async function handleAdjust() {
   store.toggleOverlay()
+  const { emit } = await import('@tauri-apps/api/event')
+  await emit('screen-record:overlay-toggle')
 }
 
 async function handleExit() {

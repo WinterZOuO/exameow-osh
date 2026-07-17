@@ -285,6 +285,9 @@ fn create_record_windows(
     float_w: f64,
     float_h: f64,
 ) -> Result<(), CommandError> {
+    if let Some(w) = app.get_webview_window("record-overlay") { w.close().ok(); }
+    if let Some(w) = app.get_webview_window("answer-float") { w.close().ok(); }
+
     #[cfg(debug_assertions)]
     let overlay_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/record-overlay".parse().unwrap());
     #[cfg(not(debug_assertions))]

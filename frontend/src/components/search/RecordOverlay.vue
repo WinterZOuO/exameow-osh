@@ -10,7 +10,13 @@ let win: any = null
 
 onMounted(async () => {
   const { getCurrentWindow } = await import('@tauri-apps/api/window')
+  const { listen } = await import('@tauri-apps/api/event')
   win = getCurrentWindow()
+
+  const unlistenToggle = await listen('screen-record:overlay-toggle', () => {
+    store.toggleOverlay()
+  })
+  unlistenFns.push(unlistenToggle)
 
   const unlistenResize = await win.onResized(async () => {
     const factor = await win.scaleFactor()
