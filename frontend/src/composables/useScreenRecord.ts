@@ -90,8 +90,14 @@ export function useScreenRecord() {
   const store = useScreenRecordStore()
 
   async function start() {
-    await setupWindows()
-    startTimer()
+    try {
+      await setupWindows()
+      startTimer()
+    } catch (e) {
+      console.error('[ScreenRecord] start failed:', e)
+      store.stopRecording()
+      throw e
+    }
   }
 
   function startTimer() {
@@ -107,11 +113,13 @@ export function useScreenRecord() {
   }
 
   async function setupWindows() {
+    console.log('[ScreenRecord] setupWindows start')
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
     const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
     const screenWidth = window.screen.width
     const screenHeight = window.screen.height
+    console.log('[ScreenRecord] screen:', screenWidth, 'x', screenHeight)
 
     const rw = Math.round(screenWidth * 0.6)
     const rh = Math.round(screenHeight * 0.4)
@@ -119,6 +127,7 @@ export function useScreenRecord() {
     const ry = Math.round(screenHeight * 0.08)
 
     store.setRegion({ x: rx, y: ry, w: rw, h: rh })
+    console.log('[ScreenRecord] creating record-overlay at', rx, ry, rw, rh)
 
     const recordWin = new WebviewWindow('record-overlay', {
       url: '/index.html#/src-windows/record-overlay',
@@ -133,11 +142,13 @@ export function useScreenRecord() {
       visible: true,
       focus: true,
     })
+    console.log('[ScreenRecord] record-overlay window object created')
 
     const floatW = 320
     const floatH = 280
     const floatX = screenWidth - floatW - 20
     const floatY = screenHeight - floatH - 40
+    console.log('[ScreenRecord] creating answer-float at', floatX, floatY, floatW, floatH)
 
     const floatWin = new WebviewWindow('answer-float', {
       url: '/index.html#/src-windows/answer-float',
@@ -151,11 +162,14 @@ export function useScreenRecord() {
       visible: true,
       focus: true,
     })
+    console.log('[ScreenRecord] answer-float window object created')
 
     await Promise.all([recordWin, floatWin])
+    console.log('[ScreenRecord] both windows ready')
 
     const mainWin = getCurrentWindow()
     await mainWin.minimize()
+    console.log('[ScreenRecord] main window minimized')
   }
 
   async function stop() {
