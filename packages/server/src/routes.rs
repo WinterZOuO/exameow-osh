@@ -5,7 +5,7 @@ use axum::{
     Json,
 };
 use exambot_core::ai::{AIClient, ModelInfo};
-use exambot_core::config::{AIConfigData, ConfigStore};
+use exambot_core::config::{AIConfigData, ConfigStore, VisionConfigData};
 use exambot_core::exam::{
     answer_question, generate_exam, judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
@@ -254,8 +254,29 @@ pub async fn answer_handler(
     let client = AIClient::new(&endpoint, &api_key);
     let result = answer_question(&client, &req.question, &language, &model)
         .await
-        .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
+    .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
     Ok(Json(result))
+}
+
+pub async fn save_vision_config_handler(
+    State(state): State<Arc<AppState>>,
+    Json(config): Json<VisionConfigData>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    state
+        .config_store
+        .save_vision(&config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Save error: {e}")))?;
+    Ok(StatusCode::OK)
+}
+
+pub async fn load_vision_config_handler(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Option<VisionConfigData>>, (StatusCode, String)> {
+    let config = state
+        .config_store
+        .load_vision()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Load error: {e}")))?;
+    Ok(Json(config))
 }
 
 #[derive(Deserialize)]

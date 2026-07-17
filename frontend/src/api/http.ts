@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exambot/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -130,6 +130,30 @@ export const httpApi = {
       }
     } catch {}
     const stored = localStorage.getItem('exambot_config')
+    return stored ? JSON.parse(stored) : null
+  },
+
+  async saveVisionConfig(config: VisionConfig): Promise<void> {
+    try {
+      const res = await fetch(`${BASE_URL}/api/config/vision/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      })
+      if (res.ok) return
+    } catch {}
+    localStorage.setItem('exambot_vision_config', JSON.stringify(config))
+  },
+
+  async loadVisionConfig(): Promise<VisionConfig | null> {
+    try {
+      const res = await fetch(`${BASE_URL}/api/config/vision/load`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data) return data
+      }
+    } catch {}
+    const stored = localStorage.getItem('exambot_vision_config')
     return stored ? JSON.parse(stored) : null
   },
 }

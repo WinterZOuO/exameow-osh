@@ -94,3 +94,12 @@ export interface JudgeResult {
   correct: boolean
   feedback: string
 }
+
+export type VisionMode = 'ocr' | 'llm'
+
+export interface VisionConfig {
+  mode: VisionMode
+  endpoint: string
+  api_key: string
+  model: string
+}

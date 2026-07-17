@@ -1,5 +1,5 @@
 use exambot_core::ai::{AIClient, ModelInfo};
-use exambot_core::config::{AIConfigData, ConfigStore};
+use exambot_core::config::{AIConfigData, ConfigStore, VisionConfigData};
 use exambot_core::exam::{
     answer_question as core_answer_question, generate_exam as core_generate_exam,
     judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
@@ -189,6 +189,29 @@ fn load_config() -> Result<Option<AIConfigData>, CommandError> {
 }
 
 #[tauri::command]
+fn save_vision_config(
+    mode: String,
+    endpoint: String,
+    api_key: String,
+    model: String,
+) -> Result<(), CommandError> {
+    let store = ConfigStore::new(APP_NAME)
+        .map_err(|e| CommandError(format!("Config init error: {e}")))?;
+    store
+        .save_vision(&VisionConfigData { mode, endpoint, api_key, model })
+        .map_err(|e| CommandError(format!("Vision config save error: {e}")))
+}
+
+#[tauri::command]
+fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
+    let store = ConfigStore::new(APP_NAME)
+        .map_err(|e| CommandError(format!("Config init error: {e}")))?;
+    store
+        .load_vision()
+        .map_err(|e| CommandError(format!("Vision config load error: {e}")))
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! ExamBot is ready.", name)
 }
@@ -237,6 +260,8 @@ pub fn run() {
             save_to_downloads,
             save_config,
             load_config,
+            save_vision_config,
+            load_vision_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

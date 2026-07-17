@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, VisionConfig } from '@exambot/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
 import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
 import { cfApi } from './cf'
@@ -140,5 +140,25 @@ export const api = {
       return cfApi.loadConfig()
     }
     return httpApi.loadConfig()
+  },
+
+  async saveVisionConfig(config: VisionConfig): Promise<void> {
+    if (isTauri()) {
+      return tauriApi.saveVisionConfig(config)
+    }
+    if (isCloudflare()) {
+      return cfApi.saveVisionConfig(config)
+    }
+    return httpApi.saveVisionConfig(config)
+  },
+
+  async loadVisionConfig(): Promise<VisionConfig | null> {
+    if (isTauri()) {
+      return tauriApi.loadVisionConfig()
+    }
+    if (isCloudflare()) {
+      return cfApi.loadVisionConfig()
+    }
+    return httpApi.loadVisionConfig()
   },
 }

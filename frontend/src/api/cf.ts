@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exambot/shared'
 import { AVAILABLE_CF_MODELS } from './cf-models'
 
 export interface GenerateResult {
@@ -126,6 +126,15 @@ export const cfApi = {
       api_key: '',
       model: AVAILABLE_CF_MODELS[0]?.id || '@cf/meta/llama-4-scout-17b-16e-instruct',
     }
+  },
+
+  async saveVisionConfig(config: VisionConfig): Promise<void> {
+    localStorage.setItem('exambot_cf_vision', JSON.stringify(config))
+  },
+
+  async loadVisionConfig(): Promise<VisionConfig | null> {
+    const stored = localStorage.getItem('exambot_cf_vision')
+    return stored ? JSON.parse(stored) : null
   },
 }
 

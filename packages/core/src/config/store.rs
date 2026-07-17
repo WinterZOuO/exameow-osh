@@ -12,9 +12,58 @@ pub struct AIConfigData {
     pub model: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VisionConfigData {
+    pub mode: String,
+    pub endpoint: String,
+    pub api_key: String,
+    pub model: String,
+}
+
 pub struct ConfigStore {
     config_path: PathBuf,
+    vision_path: PathBuf,
     key: [u8; 32],
+}
+
+fn seal(key: &[u8; 32], plaintext: &[u8]) -> Result<String, CoreError> {
+    let rng = SystemRandom::new();
+    let mut nonce_bytes = [0u8; 12];
+    rng.fill(&mut nonce_bytes)
+        .map_err(|_| CoreError::Config("nonce generation failed".to_string()))?;
+
+    let unbound_key = UnboundKey::new(&AES_256_GCM, key)
+        .map_err(|_| CoreError::Config("invalid key".to_string()))?;
+    let sealing_key = LessSafeKey::new(unbound_key);
+
+    let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+    let mut in_out = plaintext.to_vec();
+    sealing_key
+        .seal_in_place_append_tag(nonce, Aad::empty(), &mut in_out)
+        .map_err(|_| CoreError::Config("encryption failed".to_string()))?;
+
+    let mut combined = nonce_bytes.to_vec();
+    combined.extend_from_slice(&in_out);
+    Ok(BASE64.encode(&combined))
+}
+
+fn open_sealed(key: &[u8; 32], encoded: &str) -> Result<Vec<u8>, CoreError> {
+    let combined = BASE64
+        .decode(encoded)
+        .map_err(|e| CoreError::Config(format!("decode error: {e}")))?;
+    if combined.len() < 12 + 16 {
+        return Err(CoreError::Config("config file corrupted".to_string()));
+    }
+    let nonce_bytes: [u8; 12] = combined[..12].try_into().unwrap();
+    let unbound_key = UnboundKey::new(&AES_256_GCM, key)
+        .map_err(|_| CoreError::Config("invalid key".to_string()))?;
+    let opening_key = LessSafeKey::new(unbound_key);
+    let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+    let mut in_out = combined[12..].to_vec();
+    let plaintext = opening_key
+        .open_in_place(nonce, Aad::empty(), &mut in_out)
+        .map_err(|_| CoreError::Config("decryption failed — config may be corrupted".to_string()))?;
+    Ok(plaintext.to_vec())
 }
 
 impl ConfigStore {
@@ -27,6 +76,7 @@ impl ConfigStore {
             .map_err(|e| CoreError::Config(format!("cannot create config dir: {e}")))?;
 
         let config_path = app_dir.join("config.enc");
+        let vision_path = app_dir.join("vision.enc");
         let key_path = app_dir.join("key.bin");
 
         let key = if key_path.exists() {
@@ -57,7 +107,7 @@ impl ConfigStore {
             key
         };
 
-        Ok(Self { config_path, key })
+        Ok(Self { config_path, vision_path, key })
     }
 
     pub fn save(&self, endpoint: &str, api_key: &str, model: &str) -> Result<(), CoreError> {
@@ -69,30 +119,9 @@ impl ConfigStore {
 
         let plaintext = serde_json::to_vec(&config)
             .map_err(|e| CoreError::Config(format!("serialize error: {e}")))?;
-
-        let rng = SystemRandom::new();
-        let mut nonce_bytes = [0u8; 12];
-        rng.fill(&mut nonce_bytes)
-            .map_err(|_| CoreError::Config("nonce generation failed".to_string()))?;
-
-        let unbound_key = UnboundKey::new(&AES_256_GCM, &self.key)
-            .map_err(|_| CoreError::Config("invalid key".to_string()))?;
-        let key = LessSafeKey::new(unbound_key);
-
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
-        let aad = Aad::empty();
-
-        let mut in_out = plaintext.clone();
-        key.seal_in_place_append_tag(nonce, aad, &mut in_out)
-            .map_err(|_| CoreError::Config("encryption failed".to_string()))?;
-
-        let mut combined = nonce_bytes.to_vec();
-        combined.extend_from_slice(&in_out);
-
-        let encoded = BASE64.encode(&combined);
+        let encoded = seal(&self.key, &plaintext)?;
         std::fs::write(&self.config_path, encoded)
             .map_err(|e| CoreError::Config(format!("write error: {e}")))?;
-
         Ok(())
     }
 
@@ -103,32 +132,50 @@ impl ConfigStore {
 
         let encoded = std::fs::read_to_string(&self.config_path)
             .map_err(|e| CoreError::Config(format!("read error: {e}")))?;
-
-        let combined = BASE64.decode(&encoded)
-            .map_err(|e| CoreError::Config(format!("decode error: {e}")))?;
-
-        if combined.len() < 12 + 16 {
-            return Err(CoreError::Config("config file corrupted".to_string()));
-        }
-
-        let nonce_bytes: [u8; 12] = combined[..12].try_into().unwrap();
-        let ciphertag = &combined[12..];
-
-        let unbound_key = UnboundKey::new(&AES_256_GCM, &self.key)
-            .map_err(|_| CoreError::Config("invalid key".to_string()))?;
-        let key = LessSafeKey::new(unbound_key);
-
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
-        let aad = Aad::empty();
-
-        let mut in_out = ciphertag.to_vec();
-        let plaintext = key.open_in_place(nonce, aad, &mut in_out)
-            .map_err(|_| CoreError::Config("decryption failed — config may be corrupted".to_string()))?;
-
-        let config: AIConfigData = serde_json::from_slice(plaintext)
+        let plaintext = open_sealed(&self.key, &encoded)?;
+        let config: AIConfigData = serde_json::from_slice(&plaintext)
             .map_err(|e| CoreError::Config(format!("deserialize error: {e}")))?;
-
         Ok(Some(config))
+    }
+
+    pub fn save_vision(&self, config: &VisionConfigData) -> Result<(), CoreError> {
+        let plaintext = serde_json::to_vec(config)
+            .map_err(|e| CoreError::Config(format!("serialize error: {e}")))?;
+        let encoded = seal(&self.key, &plaintext)?;
+        std::fs::write(&self.vision_path, encoded)
+            .map_err(|e| CoreError::Config(format!("write error: {e}")))?;
+        Ok(())
+    }
+
+    pub fn load_vision(&self) -> Result<Option<VisionConfigData>, CoreError> {
+        if !self.vision_path.exists() {
+            return Ok(None);
+        }
+        let encoded = std::fs::read_to_string(&self.vision_path)
+            .map_err(|e| CoreError::Config(format!("read error: {e}")))?;
+        let plaintext = open_sealed(&self.key, &encoded)?;
+        let config: VisionConfigData = serde_json::from_slice(&plaintext)
+            .map_err(|e| CoreError::Config(format!("deserialize error: {e}")))?;
+        Ok(Some(config))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn seal_open_roundtrip() {
+        let key = [7u8; 32];
+        let sealed = seal(&key, b"hello vision").unwrap();
+        let opened = open_sealed(&key, &sealed).unwrap();
+        assert_eq!(opened, b"hello vision");
+    }
+
+    #[test]
+    fn open_rejects_wrong_key() {
+        let sealed = seal(&[7u8; 32], b"secret").unwrap();
+        assert!(open_sealed(&[8u8; 32], &sealed).is_err());
     }
 }
 

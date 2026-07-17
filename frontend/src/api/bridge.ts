@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exambot/shared'
 
 export interface GenerateResult {
   questions: Question[]
@@ -98,5 +98,18 @@ export const tauriApi = {
 
   async loadConfig(): Promise<AIConfig | null> {
     return invoke<AIConfig | null>('load_config')
+  },
+
+  async saveVisionConfig(config: VisionConfig): Promise<void> {
+    return invoke<void>('save_vision_config', {
+      mode: config.mode,
+      endpoint: config.endpoint,
+      apiKey: config.api_key,
+      model: config.model,
+    })
+  },
+
+  async loadVisionConfig(): Promise<VisionConfig | null> {
+    return invoke<VisionConfig | null>('load_vision_config')
   },
 }

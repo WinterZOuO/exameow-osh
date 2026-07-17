@@ -28,6 +28,8 @@ async fn main() {
         .route("/api/export/xlsx", post(routes::export_xlsx_handler))
         .route("/api/config/save", post(routes::save_config_handler))
         .route("/api/config/load", get(routes::load_config_handler))
+        .route("/api/config/vision/save", post(routes::save_vision_config_handler))
+        .route("/api/config/vision/load", get(routes::load_vision_config_handler))
         .fallback_service(ServeDir::new(&static_dir))
         .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
         .with_state(state);
