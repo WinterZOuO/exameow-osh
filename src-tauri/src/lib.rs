@@ -300,7 +300,7 @@ fn create_record_windows(
     .decorations(false)
     .transparent(true)
     .always_on_top(true)
-    .resizable(false)
+    .resizable(true)
     .visible(true)
     .build()
     .map_err(|e| CommandError(format!("Failed to create record-overlay: {e}")))?;

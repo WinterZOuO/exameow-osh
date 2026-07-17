@@ -59,7 +59,7 @@
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "resizable": false,
+        "resizable": true,
         "visible": false,
         "url": "/src-windows/record-overlay",
         "create": false
