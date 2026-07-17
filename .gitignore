@@ -12,7 +12,6 @@ gen/
 
 # OCR model assets (downloaded by scripts/fetch-ocr-models.mjs)
 frontend/public/ocr/
-frontend/public/ort/
 
 # Internal tooling (not part of the open-source release)
 docs/

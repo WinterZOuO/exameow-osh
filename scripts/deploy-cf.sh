@@ -21,7 +21,8 @@ cd "$PROJECT_DIR/workers"
 rm -rf public
 mkdir -p public
 cp -R "$PROJECT_DIR/frontend/dist/"* public/
-rm -rf public/ocr public/ort
+rm -rf public/ocr
+rm -f public/assets/ort-wasm-simd-threaded*
 echo "  Removed local OCR assets (CF uses CDN)."
 echo "  Files copied to workers/public/"
 

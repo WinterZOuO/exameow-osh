@@ -1,12 +1,11 @@
-import { createRequire } from 'node:module'
-import { mkdirSync, existsSync, copyFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, existsSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const frontendDir = resolve(__dirname, '../frontend')
 const ocrDir = join(frontendDir, 'public/ocr')
-const ortDir = join(frontendDir, 'public/ort')
 
 const require = createRequire(join(frontendDir, 'package.json'))
 const { V6_TINY_MODEL } = await import(require.resolve('ppu-paddle-ocr/web'))
@@ -36,13 +35,4 @@ for (const { url, file } of targets) {
   console.log(`[ocr] downloaded ${file} (${buf.byteLength} bytes)`)
 }
 
-mkdirSync(ortDir, { recursive: true })
-const ortDist = dirname(require.resolve('onnxruntime-web'))
-for (const f of readdirSync(ortDist)) {
-  if (!f.startsWith('ort-wasm-simd-threaded')) continue
-  const dest = join(ortDir, f)
-  if (existsSync(dest)) continue
-  copyFileSync(join(ortDist, f), dest)
-  console.log(`[ort] copied ${f}`)
-}
 console.log('OCR assets ready.')

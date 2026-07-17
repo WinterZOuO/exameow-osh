@@ -1,4 +1,6 @@
 import { isCloudflare } from './platform'
+import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
+import ortMjsUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.mjs?url'
 
 type OcrService = {
   recognize: (input: HTMLCanvasElement, options?: Record<string, unknown>) => Promise<{ text: string }>
@@ -14,7 +16,9 @@ async function createService(): Promise<OcrService> {
     import('ppu-paddle-ocr/web'),
     import('onnxruntime-web'),
   ])
-  ort.env.wasm.wasmPaths = isCloudflare() ? ORT_CDN : '/ort/'
+  ort.env.wasm.wasmPaths = isCloudflare()
+    ? ORT_CDN
+    : { wasm: new URL(ortWasmUrl, location.href).href, mjs: new URL(ortMjsUrl, location.href).href }
   const model = isCloudflare()
     ? ppu.V6_TINY_MODEL
     : { detection: '/ocr/detection.onnx', recognition: '/ocr/recognition.onnx', charactersDictionary: '/ocr/dict.txt' }
