@@ -121,7 +121,7 @@ export function useScreenRecord() {
     store.setRegion({ x: rx, y: ry, w: rw, h: rh })
 
     const recordWin = new WebviewWindow('record-overlay', {
-      url: '/#/src-windows/record-overlay',
+      url: '/index.html#/src-windows/record-overlay',
       x: rx,
       y: ry,
       width: rw,
@@ -131,6 +131,7 @@ export function useScreenRecord() {
       alwaysOnTop: true,
       resizable: false,
       visible: true,
+      focus: true,
     })
 
     const floatW = 320
@@ -139,7 +140,7 @@ export function useScreenRecord() {
     const floatY = screenHeight - floatH - 40
 
     const floatWin = new WebviewWindow('answer-float', {
-      url: '/#/src-windows/answer-float',
+      url: '/index.html#/src-windows/answer-float',
       x: floatX,
       y: floatY,
       width: floatW,
@@ -148,6 +149,7 @@ export function useScreenRecord() {
       alwaysOnTop: true,
       resizable: true,
       visible: true,
+      focus: true,
     })
 
     await Promise.all([recordWin, floatWin])
