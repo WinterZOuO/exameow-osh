@@ -8,11 +8,15 @@ import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 import { searchQuestions, type MatchScope, type SearchHit } from '@/utils/questionSearch'
 import type { AnswerResult, QuestionType } from '@exambot/shared'
+import { useImageSearch } from '@/composables/useImageSearch'
+import { isMobileDevice } from '@/utils/platform'
 import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
   SparklesIcon,
+  CameraIcon,
+  PhotoIcon,
 } from '@heroicons/vue/24/outline'
 import SearchHitCard from '@/components/search/SearchHitCard.vue'
 
@@ -122,6 +126,21 @@ watch(
 const exactHits = computed(() => hits.value.filter((h) => h.tier === 'exact'))
 const fuzzyHits = computed(() => hits.value.filter((h) => h.tier === 'fuzzy'))
 
+// ---------- image input ----------
+const { phase: imgPhase, error: imgError, busy: imgBusy, usedFallback: imgFallback, recognize: recognizeImg, cancel: cancelImg } = useImageSearch()
+const cameraInput = ref<HTMLInputElement | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
+const showCameraBtn = isMobileDevice()
+
+async function onImagePicked(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  const text = await recognizeImg(file)
+  if (text) query.value = text
+}
+
 // ---------- AI answer ----------
 const aiLoading = ref(false)
 const aiNotConfigured = ref(false)
@@ -172,11 +191,17 @@ function cancelAI() {
 
 onMounted(() => {
   if (!configStore.configured) configStore.loadSaved()
+  const photoQuery = sessionStorage.getItem('exambot-photo-query')
+  if (photoQuery) {
+    sessionStorage.removeItem('exambot-photo-query')
+    query.value = photoQuery
+  }
 })
 
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
   abortController?.abort()
+  cancelImg()
 })
 
 const hasBanks = computed(() => practiceStore.banks.length > 0)
@@ -204,6 +229,27 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
           :placeholder="i18n.t('searchInputPlaceholder')"
           style="color: rgb(var(--md-on-surface))"
         />
+        <input ref="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
+        <input ref="imageInput" type="file" accept="image/*" class="hidden" @change="onImagePicked" />
+        <button
+          v-if="showCameraBtn"
+          class="btn-icon shrink-0"
+          style="color: rgb(var(--md-on-surface-variant))"
+          :disabled="imgBusy"
+          :title="i18n.t('searchPhotoTake')"
+          @click="cameraInput?.click()"
+        >
+          <CameraIcon class="w-5 h-5" />
+        </button>
+        <button
+          class="btn-icon shrink-0"
+          style="color: rgb(var(--md-on-surface-variant))"
+          :disabled="imgBusy"
+          :title="i18n.t('searchPhotoUpload')"
+          @click="imageInput?.click()"
+        >
+          <PhotoIcon class="w-5 h-5" />
+        </button>
         <button
           class="btn-icon shrink-0"
           :style="{ color: showSettings ? 'rgb(var(--md-primary))' : 'rgb(var(--md-on-surface-variant))' }"
@@ -213,6 +259,17 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
           <AdjustmentsHorizontalIcon class="w-5 h-5" />
         </button>
       </div>
+
+      <div v-if="imgBusy" class="mt-2 flex items-center justify-between">
+        <span class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
+          {{ imgPhase === 'loading-model' ? i18n.t('searchPhotoLoadingModel') : i18n.t('searchPhotoRecognizing') }}
+        </span>
+        <button class="btn-outlined !h-7 text-xs !px-2" @click="cancelImg">{{ i18n.t('searchCancel') }}</button>
+      </div>
+      <p v-else-if="imgError" class="mt-2 text-body-sm" :style="{ color: 'rgb(var(--md-error))' }">{{ imgError }}</p>
+      <p v-else-if="imgFallback" class="mt-2 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('searchPhotoLlmFallback') }}
+      </p>
 
       <!-- Settings panel -->
       <div v-if="showSettings" class="mt-4 pt-4 space-y-4" style="border-top: 1px solid rgb(var(--md-outline-variant) / 0.4)">
