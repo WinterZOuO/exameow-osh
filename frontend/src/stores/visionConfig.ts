@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { VisionConfig, VisionMode } from '@exambot/shared'
+import type { ModelInfo, VisionConfig, VisionMode } from '@exambot/shared'
 import { api } from '@/api'
+import { isCloudflare } from '@/utils/platform'
+import { fetchModelsFromEndpoint } from '@/utils/modelList'
 
 export const useVisionConfigStore = defineStore('visionConfig', () => {
   const mode = ref<VisionMode>('ocr')
   const endpoint = ref('')
   const apiKey = ref('')
   const model = ref('')
+  const models = ref<ModelInfo[]>([])
+  const loading = ref(false)
   const loaded = ref(false)
 
   const llmConfigured = computed(() => !!endpoint.value && !!apiKey.value && !!model.value)
@@ -26,6 +30,22 @@ export const useVisionConfigStore = defineStore('visionConfig', () => {
     loaded.value = true
   }
 
+  async function fetchModels() {
+    if (!endpoint.value || !apiKey.value) return
+    loading.value = true
+    try {
+      if (isCloudflare()) {
+        models.value = await fetchModelsFromEndpoint(endpoint.value, apiKey.value)
+      } else {
+        models.value = await api.getModels({ endpoint: endpoint.value, api_key: apiKey.value, model: '' })
+      }
+    } catch (e: any) {
+      throw new Error(e.message || String(e))
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function save() {
     await api.saveVisionConfig(getConfig())
   }
@@ -34,5 +54,5 @@ export const useVisionConfigStore = defineStore('visionConfig', () => {
     return { mode: mode.value, endpoint: endpoint.value, api_key: apiKey.value, model: model.value }
   }
 
-  return { mode, endpoint, apiKey, model, llmConfigured, loadSaved, save, getConfig }
+  return { mode, endpoint, apiKey, model, models, loading, llmConfigured, loadSaved, fetchModels, save, getConfig }
 })

@@ -5,6 +5,7 @@ import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 
 import { DEFAULT_CF_MODEL } from '@/api/cf-models'
+import { fetchModelsFromEndpoint } from '@/utils/modelList'
 
 export type AIProvider = 'cf-free' | 'custom'
 
@@ -51,7 +52,7 @@ export const useConfigStore = defineStore('config', () => {
       if (isCloudflare() && aiProvider.value === 'cf-free') {
         models.value = await api.getModels({ endpoint: '', api_key: '', model: '' })
       } else if (isCloudflare() && aiProvider.value === 'custom') {
-        models.value = await fetchCustomModels(endpoint.value, apiKey.value)
+        models.value = await fetchModelsFromEndpoint(endpoint.value, apiKey.value)
       } else {
         if (!endpoint.value || !apiKey.value) return
         models.value = await api.getModels({ endpoint: endpoint.value, api_key: apiKey.value, model: '' })
@@ -61,17 +62,6 @@ export const useConfigStore = defineStore('config', () => {
     } finally {
       loading.value = false
     }
-  }
-
-  async function fetchCustomModels(ep: string, key: string): Promise<ModelInfo[]> {
-    const url = `${ep.replace(/\/+$/, '')}/models`
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${key}` },
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text().catch(() => '')}`)
-    const data = await res.json()
-    const list = data.data || data || []
-    return list.map((m: any) => ({ id: m.id || m.name || m.model }))
   }
 
   async function save() {

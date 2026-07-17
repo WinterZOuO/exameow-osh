@@ -2,17 +2,31 @@
 import { ref, onMounted } from 'vue'
 import { useVisionConfigStore } from '@/stores/visionConfig'
 import { useI18nStore } from '@/stores/i18n'
-import { ServerIcon, KeyIcon, CpuChipIcon, CheckIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CameraIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { ServerIcon, KeyIcon, CpuChipIcon, CheckIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CameraIcon, SparklesIcon, CloudArrowDownIcon } from '@heroicons/vue/24/outline'
 
 const store = useVisionConfigStore()
 const i18n = useI18nStore()
 const showKey = ref(false)
 const saveSuccess = ref(false)
 const saveError = ref('')
+const fetchError = ref('')
+const fetchingModels = ref(false)
 
 onMounted(() => {
   store.loadSaved()
 })
+
+async function handleFetchModels() {
+  fetchError.value = ''
+  fetchingModels.value = true
+  try {
+    await store.fetchModels()
+  } catch (e: any) {
+    fetchError.value = e.message || String(e)
+  } finally {
+    fetchingModels.value = false
+  }
+}
 
 async function handleSave() {
   saveError.value = ''
@@ -83,12 +97,45 @@ async function handleSave() {
 
       <div class="card-filled p-5 mb-4">
         <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionModel') }}</label>
-        <div class="relative">
-          <CpuChipIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
-          <input v-model="store.model" :placeholder="i18n.t('configEnterModel')" class="input-outlined !pl-10" />
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <button
+            class="btn-outlined shrink-0 text-sm"
+            :disabled="!store.endpoint || !store.apiKey"
+            @click="handleFetchModels"
+          >
+            <CloudArrowDownIcon class="w-4 h-4" />
+            {{ fetchingModels ? '...' : i18n.t('configFetchModels') }}
+          </button>
+          <div class="flex-1 relative">
+            <CpuChipIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
+            <select
+              v-if="store.models.length > 0"
+              v-model="store.model"
+              class="input-outlined !pl-10 appearance-none cursor-pointer"
+            >
+              <option value="" disabled>{{ i18n.t('configSelectModel') }}</option>
+              <option v-for="m in store.models" :key="m.id" :value="m.id">{{ m.id }}</option>
+            </select>
+            <input
+              v-else
+              v-model="store.model"
+              :placeholder="i18n.t('configEnterModel')"
+              class="input-outlined !pl-10"
+            />
+          </div>
         </div>
         <p class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configVisionLlmHint') }}</p>
       </div>
+
+      <Transition name="scale">
+        <div
+          v-if="fetchError"
+          class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
+          style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+        >
+          <span>{{ fetchError }}</span>
+        </div>
+      </Transition>
     </template>
 
     <div class="flex items-center justify-center gap-3">
