@@ -90,14 +90,8 @@ export function useScreenRecord() {
   const store = useScreenRecordStore()
 
   async function start() {
-    try {
-      await setupWindows()
-      startTimer()
-    } catch (e) {
-      console.error('[ScreenRecord] start failed:', e)
-      store.stopRecording()
-      throw e
-    }
+    await setupWindows()
+    startTimer()
   }
 
   function startTimer() {
@@ -113,12 +107,11 @@ export function useScreenRecord() {
   }
 
   async function setupWindows() {
-    console.log('[ScreenRecord] setupWindows start')
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+    const { getCurrentWindow } = await import('@tauri-apps/api/window')
 
     const screenWidth = window.screen.width
     const screenHeight = window.screen.height
-    console.log('[ScreenRecord] screen:', screenWidth, 'x', screenHeight)
 
     const rw = Math.round(screenWidth * 0.6)
     const rh = Math.round(screenHeight * 0.4)
@@ -126,48 +119,41 @@ export function useScreenRecord() {
     const ry = Math.round(screenHeight * 0.08)
 
     store.setRegion({ x: rx, y: ry, w: rw, h: rh })
-    console.log('[ScreenRecord] creating record-overlay at', rx, ry, rw, rh)
 
     const recordWin = new WebviewWindow('record-overlay', {
-      url: '/',
-      width: 500,
-      height: 400,
-      x: 50,
-      y: 50,
-      decorations: true,
-      resizable: true,
-      visible: false,
+      url: '/#/src-windows/record-overlay',
+      x: rx,
+      y: ry,
+      width: rw,
+      height: rh,
+      decorations: false,
+      transparent: true,
+      alwaysOnTop: true,
+      resizable: false,
+      visible: true,
     })
-    console.log('[ScreenRecord] record-overlay window object created')
 
     const floatW = 320
     const floatH = 280
     const floatX = screenWidth - floatW - 20
     const floatY = screenHeight - floatH - 40
-    console.log('[ScreenRecord] creating answer-float at', floatX, floatY, floatW, floatH)
 
     const floatWin = new WebviewWindow('answer-float', {
-      url: '/',
-      width: 500,
-      height: 400,
-      x: 500,
-      y: 50,
-      decorations: true,
+      url: '/#/src-windows/answer-float',
+      x: floatX,
+      y: floatY,
+      width: floatW,
+      height: floatH,
+      decorations: false,
+      alwaysOnTop: true,
       resizable: true,
-      visible: false,
+      visible: true,
     })
 
-    console.log('[ScreenRecord] awaiting windows...')
-    await recordWin
-    await floatWin
-    console.log('[ScreenRecord] both windows awaited, calling show()')
+    await Promise.all([recordWin, floatWin])
 
-    await recordWin.show()
-    await floatWin.show()
-    console.log('[ScreenRecord] show() called')
-
-    await recordWin.setFocus()
-    console.log('[ScreenRecord] focused')
+    const mainWin = getCurrentWindow()
+    await mainWin.minimize()
   }
 
   async function stop() {

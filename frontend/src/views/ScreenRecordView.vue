@@ -13,17 +13,10 @@ const isTauriMobile = isTauri() && isMobileDevice()
 const supported = isDesktopTauri() || isTauriMobile
 
 async function startRecording() {
-  console.log('[ScreenRecordView] startRecording called')
   store.startRecording()
-  try {
-    const { useScreenRecord } = await import('@/composables/useScreenRecord')
-    const { start } = useScreenRecord()
-    await start()
-    console.log('[ScreenRecordView] start succeeded')
-  } catch (e) {
-    console.error('[ScreenRecordView] start failed:', e)
-    alert('启动录屏失败: ' + (e instanceof Error ? e.message : String(e)))
-  }
+  const { useScreenRecord } = await import('@/composables/useScreenRecord')
+  const { start } = useScreenRecord()
+  await start()
 }
 
 function goBack() {
