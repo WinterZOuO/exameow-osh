@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "windows": ["main"],
+  "windows": ["main", "record-overlay", "answer-float"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
