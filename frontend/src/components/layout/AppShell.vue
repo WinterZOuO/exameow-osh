@@ -19,12 +19,12 @@ const route = useRoute()
 const i18n = useI18nStore()
 
 type Theme = 'system' | 'light' | 'dark'
-const THEME_KEY = 'exambot-theme'
+const THEME_KEY = 'exameow-theme'
 
 function loadTheme(): Theme {
   const saved = localStorage.getItem(THEME_KEY)
   if (saved === 'system' || saved === 'light' || saved === 'dark') return saved
-  const legacy = localStorage.getItem('exambot-dark')
+  const legacy = localStorage.getItem('exameow-dark')
   if (legacy === '1') return 'dark'
   if (legacy === '0') return 'light'
   return 'system'
@@ -89,7 +89,7 @@ const headerStyle = {
           to="/practice"
           class="flex items-center gap-3 shrink-0 no-underline"
         >
-          <img src="/logo.png" alt="ExamBot" class="w-[38px] h-[38px] rounded-xl shrink-0" />
+          <img src="/logo.png" alt="Exameow" class="w-[38px] h-[38px] rounded-xl shrink-0" />
           <div class="hidden sm:block">
             <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
             <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('appSubtitle') }}</div>

@@ -1,7 +1,7 @@
 services:
-  exambot:
+  exameow:
     build: .
-    container_name: exambot-server
+    container_name: exameow-server
     ports:
       - "3000:3000"
     environment:

@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 echo.
 echo   ==================================
-echo           ExamBot v2.1.1
+echo           Exameow v2.1.1
 echo     AI Exam Question Generator
 echo   ==================================
 echo.
@@ -56,8 +56,8 @@ goto :eof
 :webdev
 echo.
 echo Starting Web dev mode...
-start "exambot-server" cmd /k cargo run -p exambot-server
-start "exambot-vite" cmd /k "cd /d %~dp0frontend && pnpm dev"
+start "exameow-server" cmd /k cargo run -p exameow-server
+start "exameow-vite" cmd /k "cd /d %~dp0frontend && pnpm dev"
 echo   Frontend:   http://localhost:5273
 echo   API server: http://localhost:3000
 echo   Close the two spawned windows to stop.
@@ -70,5 +70,5 @@ pushd frontend
 call pnpm build || (popd & exit /b 1)
 popd
 echo Starting production server at http://localhost:3000 ... (Ctrl+C to stop)
-cargo run -p exambot-server
+cargo run -p exameow-server
 goto :eof

@@ -7,7 +7,7 @@ import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 import { searchQuestions, type MatchScope, type SearchHit } from '@/utils/questionSearch'
-import type { AnswerResult, QuestionType } from '@exambot/shared'
+import type { AnswerResult, QuestionType } from '@exameow/shared'
 import { useImageSearch } from '@/composables/useImageSearch'
 import { isMobileDevice } from '@/utils/platform'
 import {
@@ -25,7 +25,7 @@ const i18n = useI18nStore()
 const practiceStore = usePracticeStore()
 const configStore = useConfigStore()
 
-const SETTINGS_KEY = 'exambot-search-settings'
+const SETTINGS_KEY = 'exameow-search-settings'
 
 const ALL_TYPES = ['single_choice', 'multi_choice', 'true_false', 'fill_blank', 'short_answer'] as QuestionType[]
 
@@ -203,9 +203,9 @@ function cancelAI() {
 
 onMounted(() => {
   if (!configStore.configured) configStore.loadSaved()
-  const photoQuery = sessionStorage.getItem('exambot-photo-query')
+  const photoQuery = sessionStorage.getItem('exameow-photo-query')
   if (photoQuery) {
-    sessionStorage.removeItem('exambot-photo-query')
+    sessionStorage.removeItem('exameow-photo-query')
     query.value = photoQuery
   }
 })

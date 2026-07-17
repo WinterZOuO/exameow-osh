@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
-import type { QuestionBank } from '@exambot/shared'
+import type { QuestionBank } from '@exameow/shared'
 import {
   ClockIcon,
   DocumentTextIcon,

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { AIConfig, ModelInfo } from '@exambot/shared'
+import type { AIConfig, ModelInfo } from '@exameow/shared'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 
@@ -35,7 +35,7 @@ export const useConfigStore = defineStore('config', () => {
       model.value = saved.model
     }
     if (isCloudflare()) {
-      const provider = localStorage.getItem('exambot_ai_provider')
+      const provider = localStorage.getItem('exameow_ai_provider')
       if (provider === 'custom' || provider === 'cf-free') {
         aiProvider.value = provider
       }
@@ -65,7 +65,7 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   async function save() {
-    localStorage.setItem('exambot_ai_provider', aiProvider.value)
+    localStorage.setItem('exameow_ai_provider', aiProvider.value)
     await api.saveConfig({ endpoint: endpoint.value, api_key: apiKey.value, model: model.value })
   }
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/nickzyl/tauri/refs/heads/master/crates/tauri-config-schema/schema.json",
-  "productName": "ExamBot",
+  "productName": "Exameow",
   "version": "2.1.1",
-  "identifier": "com.exambot.app",
+  "identifier": "com.exameow.app",
   "build": {
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5273",
@@ -34,7 +34,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "ExamBot",
+        "title": "Exameow",
         "width": 1024,
         "height": 768,
         "minWidth": 320,

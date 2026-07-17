@@ -111,7 +111,7 @@ async function handleDownloadTemplate() {
     return m[t] ?? t
   }
   const sample = {
-    '题干（必填）': 'ExamBot 的 AI 接口协议是什么类型？',
+    '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
     '题型 （必填）': typeLabel('single_choice'),
     '选项 A': 'OpenAI 兼容 API',
     '选项 B': 'WebSocket',
@@ -122,7 +122,7 @@ async function handleDownloadTemplate() {
     '选项 G': '',
     '选项 H': '',
     '正确答案': 'A',
-    '解析': 'ExamBot 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
+    '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
     '章节': '',
     '难度': '',
   }
@@ -134,7 +134,7 @@ async function handleDownloadTemplate() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'exambot_template.xlsx'
+  a.download = 'exameow_template.xlsx'
   a.click()
   URL.revokeObjectURL(url)
 }

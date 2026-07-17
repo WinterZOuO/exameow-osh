@@ -23,7 +23,7 @@ const exportFilePath = ref('')
 const exporting = ref(false)
 const exportingXlsx = ref(false)
 
-const baseFileName = computed(() => examStore.sourceFileName || 'exambot_questions')
+const baseFileName = computed(() => examStore.sourceFileName || 'exameow_questions')
 
 const canGenerate = computed(() =>
   fileInputsRef.value.length > 0 && examStore.questionTypes.length > 0 && examStore.totalCount > 0 && configStore.configured && !examStore.generating,

@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exameow/shared'
 import { AVAILABLE_CF_MODELS } from './cf-models'
 
 export interface GenerateResult {
@@ -41,14 +41,14 @@ export const cfApi = {
     return res.json()
   },
 
-  async exportCsv(questions: Question[], filename: string = 'exambot_questions.csv'): Promise<void> {
+  async exportCsv(questions: Question[], filename: string = 'exameow_questions.csv'): Promise<void> {
     const csvContent = generateCsvContent(questions)
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     downloadFile(url, filename)
   },
 
-  async exportXlsx(questions: Question[], filename: string = 'exambot_questions.xlsx'): Promise<void> {
+  async exportXlsx(questions: Question[], filename: string = 'exameow_questions.xlsx'): Promise<void> {
     const XLSX = await import('xlsx')
     const data = questions.map((q) => ({
       '题干（必填）': q.stem,
@@ -115,11 +115,11 @@ export const cfApi = {
   },
 
   async saveConfig(config: AIConfig): Promise<void> {
-    localStorage.setItem('exambot_cf_config', JSON.stringify(config))
+    localStorage.setItem('exameow_cf_config', JSON.stringify(config))
   },
 
   async loadConfig(): Promise<AIConfig | null> {
-    const stored = localStorage.getItem('exambot_cf_config')
+    const stored = localStorage.getItem('exameow_cf_config')
     if (stored) return JSON.parse(stored)
     return {
       endpoint: '',
@@ -129,11 +129,11 @@ export const cfApi = {
   },
 
   async saveVisionConfig(config: VisionConfig): Promise<void> {
-    localStorage.setItem('exambot_cf_vision', JSON.stringify(config))
+    localStorage.setItem('exameow_cf_vision', JSON.stringify(config))
   },
 
   async loadVisionConfig(): Promise<VisionConfig | null> {
-    const stored = localStorage.getItem('exambot_cf_vision')
+    const stored = localStorage.getItem('exameow_cf_vision')
     return stored ? JSON.parse(stored) : null
   },
 }

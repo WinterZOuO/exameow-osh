@@ -282,7 +282,7 @@ export interface LocaleMessages {
 }
 
 export const zh: LocaleMessages = {
-  appName: 'ExamBot',
+  appName: '学习喵',
   appSubtitle: 'AI 智能出题',
 
   navConfig: '配置',
@@ -550,7 +550,7 @@ export const zh: LocaleMessages = {
 }
 
 export const en: LocaleMessages = {
-  appName: 'ExamBot',
+  appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
 
   navConfig: 'Config',

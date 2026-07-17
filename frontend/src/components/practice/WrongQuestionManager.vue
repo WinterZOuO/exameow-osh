@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
-import type { WrongSort, WrongQuestionEntry } from '@exambot/shared'
+import type { WrongSort, WrongQuestionEntry } from '@exameow/shared'
 import {
   ArrowDownIcon,
   ArrowUpIcon,

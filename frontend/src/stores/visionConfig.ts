@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ModelInfo, VisionConfig, VisionMode } from '@exambot/shared'
+import type { ModelInfo, VisionConfig, VisionMode } from '@exameow/shared'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 import { fetchModelsFromEndpoint } from '@/utils/modelList'

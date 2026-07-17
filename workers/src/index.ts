@@ -227,7 +227,7 @@ app.get('/api/export', (c) => {
   return new Response(csvContent, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="exambot_questions.csv"',
+      'Content-Disposition': 'attachment; filename="exameow_questions.csv"',
     },
   })
 })
@@ -249,7 +249,7 @@ app.post('/api/export/xlsx', async (c) => {
   return new Response(xlsxData, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="exambot_questions.xlsx"',
+      'Content-Disposition': 'attachment; filename="exameow_questions.xlsx"',
     },
   })
 })

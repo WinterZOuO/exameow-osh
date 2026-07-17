@@ -4,12 +4,12 @@ use axum::{
     response::Response,
     Json,
 };
-use exambot_core::ai::{AIClient, ModelInfo};
-use exambot_core::config::{AIConfigData, ConfigStore, VisionConfigData};
-use exambot_core::exam::{
+use exameow_core::ai::{AIClient, ModelInfo};
+use exameow_core::config::{AIConfigData, ConfigStore, VisionConfigData};
+use exameow_core::exam::{
     answer_question, extract_question_text, generate_exam, judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
-use exambot_core::parser::parse_file;
+use exameow_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::sync::Arc;
@@ -163,7 +163,7 @@ pub async fn export_handler(
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid questions JSON: {e}")))?;
 
     let mut buf = vec![];
-    exambot_core::export::export_csv_to_writer(&questions, &mut buf)
+    exameow_core::export::export_csv_to_writer(&questions, &mut buf)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Response::builder()
@@ -179,7 +179,7 @@ pub async fn export_handler(
 pub async fn export_xlsx_handler(
     Json(questions): Json<Vec<Question>>,
 ) -> Result<Response, (StatusCode, String)> {
-    let data = exambot_core::export::export_xlsx_to_writer(&questions)
+    let data = exameow_core::export::export_xlsx_to_writer(&questions)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Response::builder()
@@ -189,7 +189,7 @@ pub async fn export_xlsx_handler(
         )
         .header(
             header::CONTENT_DISPOSITION,
-            "attachment; filename=\"exambot_questions.xlsx\"",
+            "attachment; filename=\"exameow_questions.xlsx\"",
         )
         .body(axum::body::Body::from(data))
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))

@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { QuestionBank, PracticeSession, PracticeMode, MockExamConfig, Question } from '@exambot/shared'
+import type { QuestionBank, PracticeSession, PracticeMode, MockExamConfig, Question } from '@exameow/shared'
 import { parseCSV, parseExcel } from '@/utils/importParser'
 
-const STORAGE_KEY = 'exambot-banks'
-const SESSION_KEY = 'exambot-practice-session'
+const STORAGE_KEY = 'exameow-banks'
+const SESSION_KEY = 'exameow-practice-session'
 
 function loadBanks(): QuestionBank[] {
   try {

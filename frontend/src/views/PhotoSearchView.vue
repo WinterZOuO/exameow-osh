@@ -64,7 +64,7 @@ function retryOcr() {
 function goSearch() {
   const text = resultText.value.trim()
   if (!text) return
-  sessionStorage.setItem('exambot-photo-query', text)
+  sessionStorage.setItem('exameow-photo-query', text)
   router.push('/search/text')
 }
 

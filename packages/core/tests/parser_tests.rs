@@ -1,4 +1,4 @@
-use exambot_core::parser::{extract_csv, extract_epub, extract_excel, extract_html, extract_odt, extract_pptx, extract_txt, FileFormat, ParserError};
+use exameow_core::parser::{extract_csv, extract_epub, extract_excel, extract_html, extract_odt, extract_pptx, extract_txt, FileFormat, ParserError};
 
 #[test]
 fn test_extract_txt() {
@@ -27,7 +27,7 @@ fn test_file_format_from_extension() {
 
 #[test]
 fn test_read_gb18030_txt() {
-    let path = std::env::temp_dir().join("exambot_test_gb18030.txt");
+    let path = std::env::temp_dir().join("exameow_test_gb18030.txt");
     let bytes: Vec<u8> = vec![0xD6, 0xD0, 0xCE, 0xC4, 0xB2, 0xE2, 0xCA, 0xD4, b' ', b'o', b'k'];
     std::fs::write(&path, &bytes).unwrap();
     let text = extract_txt(path.to_str().unwrap()).unwrap();
@@ -38,7 +38,7 @@ fn test_read_gb18030_txt() {
 
 #[test]
 fn test_read_binary_rejected() {
-    let path = std::env::temp_dir().join("exambot_test_binary.bin");
+    let path = std::env::temp_dir().join("exameow_test_binary.bin");
     std::fs::write(&path, [0u8, 159, 146, 150, 0, 0, 12, 255]).unwrap();
     let result = extract_txt(path.to_str().unwrap());
     assert!(matches!(result, Err(ParserError::Unsupported(_))));
@@ -47,7 +47,7 @@ fn test_read_binary_rejected() {
 
 #[test]
 fn test_read_utf8_bom_stripped() {
-    let path = std::env::temp_dir().join("exambot_test_bom.txt");
+    let path = std::env::temp_dir().join("exameow_test_bom.txt");
     let mut bytes = vec![0xEF, 0xBB, 0xBF];
     bytes.extend_from_slice("hello bom".as_bytes());
     std::fs::write(&path, &bytes).unwrap();
@@ -58,7 +58,7 @@ fn test_read_utf8_bom_stripped() {
 
 #[test]
 fn test_extract_csv_markdown_table() {
-    let path = std::env::temp_dir().join("exambot_test.csv");
+    let path = std::env::temp_dir().join("exameow_test.csv");
     std::fs::write(&path, "name,score\nAlice,95\nBob,87\n").unwrap();
     let text = extract_csv(path.to_str().unwrap()).unwrap();
     let lines: Vec<&str> = text.lines().collect();
@@ -71,7 +71,7 @@ fn test_extract_csv_markdown_table() {
 
 #[test]
 fn test_extract_csv_escapes_pipes_and_newlines() {
-    let path = std::env::temp_dir().join("exambot_test_esc.csv");
+    let path = std::env::temp_dir().join("exameow_test_esc.csv");
     std::fs::write(&path, "a,b\n\"x|y\",\"line1\nline2\"\n").unwrap();
     let text = extract_csv(path.to_str().unwrap()).unwrap();
     assert!(text.contains("x\\|y"));
@@ -81,7 +81,7 @@ fn test_extract_csv_escapes_pipes_and_newlines() {
 
 #[test]
 fn test_extract_csv_empty_rejected() {
-    let path = std::env::temp_dir().join("exambot_test_empty.csv");
+    let path = std::env::temp_dir().join("exameow_test_empty.csv");
     std::fs::write(&path, "\n\n").unwrap();
     assert!(extract_csv(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
@@ -108,7 +108,7 @@ fn write_min_xlsx(path: &std::path::Path) {
 
 #[test]
 fn test_extract_excel_markdown_table() {
-    let path = std::env::temp_dir().join("exambot_test.xlsx");
+    let path = std::env::temp_dir().join("exameow_test.xlsx");
     write_min_xlsx(&path);
     let text = extract_excel(path.to_str().unwrap()).unwrap();
     assert!(text.contains("| Name | Score |"));
@@ -119,7 +119,7 @@ fn test_extract_excel_markdown_table() {
 
 #[test]
 fn test_extract_excel_invalid_rejected() {
-    let path = std::env::temp_dir().join("exambot_test_bad.xlsx");
+    let path = std::env::temp_dir().join("exameow_test_bad.xlsx");
     std::fs::write(&path, "not a zip").unwrap();
     assert!(extract_excel(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
@@ -127,7 +127,7 @@ fn test_extract_excel_invalid_rejected() {
 
 #[test]
 fn test_extract_html_strips_tags() {
-    let path = std::env::temp_dir().join("exambot_test.html");
+    let path = std::env::temp_dir().join("exameow_test.html");
     std::fs::write(&path, "<html><head><title>T</title><style>body{color:red}</style></head><body><script>var x=1;</script><h1>Chapter &amp; Intro</h1><p>Hello <b>world</b>&nbsp;&#20013;</p><!-- comment --></body></html>").unwrap();
     let text = extract_html(path.to_str().unwrap()).unwrap();
     assert!(text.contains("Chapter & Intro"));
@@ -141,7 +141,7 @@ fn test_extract_html_strips_tags() {
 
 #[test]
 fn test_extract_html_empty_rejected() {
-    let path = std::env::temp_dir().join("exambot_test_empty.html");
+    let path = std::env::temp_dir().join("exameow_test_empty.html");
     std::fs::write(&path, "<html><body><script>only()</script></body></html>").unwrap();
     assert!(extract_html(path.to_str().unwrap()).is_err());
     let _ = std::fs::remove_file(&path);
@@ -164,7 +164,7 @@ fn write_min_pptx(path: &std::path::Path) {
 
 #[test]
 fn test_extract_pptx_slides_in_order() {
-    let path = std::env::temp_dir().join("exambot_test.pptx");
+    let path = std::env::temp_dir().join("exameow_test.pptx");
     write_min_pptx(&path);
     let text = extract_pptx(path.to_str().unwrap()).unwrap();
     let first = text.find("First slide").unwrap();
@@ -205,7 +205,7 @@ fn write_min_epub(path: &std::path::Path) {
 
 #[test]
 fn test_extract_epub_spine_order() {
-    let path = std::env::temp_dir().join("exambot_test.epub");
+    let path = std::env::temp_dir().join("exameow_test.epub");
     write_min_epub(&path);
     let text = extract_epub(path.to_str().unwrap()).unwrap();
     let beta = text.find("Beta chapter").unwrap();
@@ -216,7 +216,7 @@ fn test_extract_epub_spine_order() {
 
 #[test]
 fn test_extract_odt_paragraphs() {
-    let path = std::env::temp_dir().join("exambot_test.odt");
+    let path = std::env::temp_dir().join("exameow_test.odt");
     write_min_odt(&path);
     let text = extract_odt(path.to_str().unwrap()).unwrap();
     assert!(text.contains("Title Here"));

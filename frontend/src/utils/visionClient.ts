@@ -1,4 +1,4 @@
-import type { VisionConfig } from '@exambot/shared'
+import type { VisionConfig } from '@exameow/shared'
 
 const EXTRACT_SYSTEM_PROMPT = `You are an OCR assistant for exam questions. The user sends a photo containing one exam question (it may include options).
 

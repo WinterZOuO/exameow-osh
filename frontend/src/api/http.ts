@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exambot/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exameow/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -36,7 +36,7 @@ export const httpApi = {
     return res.json()
   },
 
-  async exportCsv(questions: Question[], filename: string = 'exambot_questions.csv'): Promise<void> {
+  async exportCsv(questions: Question[], filename: string = 'exameow_questions.csv'): Promise<void> {
     const csvContent = generateCsvContent(questions)
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -47,7 +47,7 @@ export const httpApi = {
     URL.revokeObjectURL(url)
   },
 
-  async exportXlsx(questions: Question[], filename: string = 'exambot_questions.xlsx'): Promise<void> {
+  async exportXlsx(questions: Question[], filename: string = 'exameow_questions.xlsx'): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/export/xlsx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,7 +117,7 @@ export const httpApi = {
       body: JSON.stringify(config),
     })
     if (!res.ok) {
-      localStorage.setItem('exambot_config', JSON.stringify(config))
+      localStorage.setItem('exameow_config', JSON.stringify(config))
     }
   },
 
@@ -129,7 +129,7 @@ export const httpApi = {
         return data
       }
     } catch {}
-    const stored = localStorage.getItem('exambot_config')
+    const stored = localStorage.getItem('exameow_config')
     return stored ? JSON.parse(stored) : null
   },
 
@@ -142,7 +142,7 @@ export const httpApi = {
       })
       if (res.ok) return
     } catch {}
-    localStorage.setItem('exambot_vision_config', JSON.stringify(config))
+    localStorage.setItem('exameow_vision_config', JSON.stringify(config))
   },
 
   async loadVisionConfig(): Promise<VisionConfig | null> {
@@ -153,7 +153,7 @@ export const httpApi = {
         if (data) return data
       }
     } catch {}
-    const stored = localStorage.getItem('exambot_vision_config')
+    const stored = localStorage.getItem('exameow_vision_config')
     return stored ? JSON.parse(stored) : null
   },
 

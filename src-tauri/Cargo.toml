@@ -1,10 +1,10 @@
 [package]
-name = "exambot"
+name = "exameow"
 version = "2.1.1"
 edition = "2021"
 
 [lib]
-name = "exambot_lib"
+name = "exameow_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -16,7 +16,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-sharekit = "0.3"
-exambot-core = { path = "../packages/core" }
+exameow-core = { path = "../packages/core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"

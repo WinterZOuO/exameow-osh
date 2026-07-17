@@ -3,15 +3,15 @@ mod routes;
 use axum::{routing::{get, post}, Router};
 use std::sync::Arc;
 use routes::AppState;
-use exambot_core::config::ConfigStore;
+use exameow_core::config::ConfigStore;
 use tower_http::cors::{CorsLayer, Any};
 use tower_http::services::ServeDir;
 
 #[tokio::main]
 async fn main() {
-    let config_store = ConfigStore::new("ExamBotServer").unwrap_or_else(|_| {
+    let config_store = ConfigStore::new("ExameowServer").unwrap_or_else(|_| {
         eprintln!("Warning: could not init config store, using transient store");
-        ConfigStore::new("ExamBotServerTransient").unwrap()
+        ConfigStore::new("ExameowServerTransient").unwrap()
     });
 
     let state = Arc::new(AppState { config_store });
@@ -43,6 +43,6 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();
-    println!("ExamBot server running on http://localhost:{port}");
+    println!("Exameow server running on http://localhost:{port}");
     axum::serve(listener, app).await.unwrap();
 }

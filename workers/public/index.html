@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ExamBot</title>
+    <title>Exameow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -11,9 +11,9 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem('exambot-theme');
+          var t = localStorage.getItem('exameow-theme');
           if (t !== 'system' && t !== 'light' && t !== 'dark') {
-            var legacy = localStorage.getItem('exambot-dark');
+            var legacy = localStorage.getItem('exameow-dark');
             t = legacy === '1' ? 'dark' : legacy === '0' ? 'light' : 'system';
           }
           var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -21,11 +21,12 @@
         } catch (e) {}
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-D_ID0wRs.js"></script>
+    <script type="module" crossorigin src="/assets/index-Y5_LOuHO.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/i18n-CnAeQ6DP.js">
     <link rel="modulepreload" crossorigin href="/assets/core-w4ZWUd33.js">
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DAXXjFlN.js">
-    <link rel="modulepreload" crossorigin href="/assets/bridge-kI28yGdP.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Daxw0F5b.css">
+    <link rel="modulepreload" crossorigin href="/assets/bridge-CTyPmL2R.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-GE5c1fww.css">
   </head>
   <body>
     <div id="app"></div>

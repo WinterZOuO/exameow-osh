@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== ExamBot Cloudflare Deploy ==="
+echo "=== Exameow Cloudflare Deploy ==="
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

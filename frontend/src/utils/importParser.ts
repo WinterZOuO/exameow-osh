@@ -1,5 +1,5 @@
-import type { Question } from '@exambot/shared'
-import { QuestionType as QT } from '@exambot/shared'
+import type { Question } from '@exameow/shared'
+import { QuestionType as QT } from '@exameow/shared'
 import * as XLSX from 'xlsx'
 
 type QuestionType = typeof QT[keyof typeof QT]

@@ -1,4 +1,4 @@
-import type { Question, QuestionBank, QuestionType } from '@exambot/shared'
+import type { Question, QuestionBank, QuestionType } from '@exameow/shared'
 
 export type MatchScope = 'stem' | 'stem_options'
 export type MatchTier = 'exact' | 'fuzzy'

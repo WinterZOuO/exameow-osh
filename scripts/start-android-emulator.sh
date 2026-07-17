@@ -24,11 +24,11 @@ done
 echo "Device booted."
 
 # 3. Install latest APK if available
-APK=$(ls -t test/ExamBot-*-arm64.apk 2>/dev/null | head -1)
+APK=$(ls -t test/Exameow-*-arm64.apk 2>/dev/null | head -1)
 if [ -n "$APK" ]; then
   echo "[3/3] Installing $APK..."
   "$SDK/platform-tools/adb" install -r "$APK"
-  echo "Done. ExamBot is ready."
+  echo "Done. Exameow is ready."
 else
   echo "[3/3] No APK found in test/, skip install."
 fi

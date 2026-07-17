@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
-import { QuestionType, Difficulty } from '@exambot/shared'
+import { QuestionType, Difficulty } from '@exameow/shared'
 
 const store = useExamStore()
 const i18n = useI18nStore()

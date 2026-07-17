@@ -6,9 +6,9 @@ import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
 import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
-import type { JudgeResult } from '@exambot/shared'
+import type { JudgeResult } from '@exameow/shared'
 import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
-import type { PracticeMode, MockExamConfig, WrongSort } from '@exambot/shared'
+import type { PracticeMode, MockExamConfig, WrongSort } from '@exameow/shared'
 import BankListCard from '@/components/practice/BankListCard.vue'
 import ImportDialog from '@/components/practice/ImportDialog.vue'
 import ModeSelector from '@/components/practice/ModeSelector.vue'
@@ -483,7 +483,7 @@ function handleHome() {
   practiceStore.clearSession()
   if (savedMainSession.value) {
     practiceStore.session = savedMainSession.value
-    localStorage.setItem('exambot-practice-session', JSON.stringify(savedMainSession.value))
+    localStorage.setItem('exameow-practice-session', JSON.stringify(savedMainSession.value))
     savedMainSession.value = null
   }
   selectedBankId.value = null
@@ -521,7 +521,7 @@ function handleBack() {
       practiceStore.session = null
       if (savedMainSession.value) {
         practiceStore.session = savedMainSession.value
-        localStorage.setItem('exambot-practice-session', JSON.stringify(savedMainSession.value))
+        localStorage.setItem('exameow-practice-session', JSON.stringify(savedMainSession.value))
         savedMainSession.value = null
       }
     }

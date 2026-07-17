@@ -1,18 +1,18 @@
-use exambot_core::ai::{AIClient, ModelInfo};
-use exambot_core::config::{AIConfigData, ConfigStore, VisionConfigData};
-use exambot_core::exam::{
+use exameow_core::ai::{AIClient, ModelInfo};
+use exameow_core::config::{AIConfigData, ConfigStore, VisionConfigData};
+use exameow_core::exam::{
     answer_question as core_answer_question, extract_question_text as core_extract_question_text,
     generate_exam as core_generate_exam,
     judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
-use exambot_core::export::export_csv as core_export_csv;
-use exambot_core::export::export_xlsx as core_export_xlsx;
-use exambot_core::parser::parse_file;
+use exameow_core::export::export_csv as core_export_csv;
+use exameow_core::export::export_xlsx as core_export_xlsx;
+use exameow_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
 use base64::Engine;
 
-const APP_NAME: &str = "ExamBot";
+const APP_NAME: &str = "Exameow";
 
 #[derive(Debug, Serialize)]
 pub struct CommandError(String);
@@ -137,7 +137,7 @@ fn parse_file_bytes(base64_data: String, file_ext: String) -> Result<String, Com
         .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
 
     let dir = std::env::temp_dir();
-    let file_name = format!("exambot_upload.{}", file_ext);
+    let file_name = format!("exameow_upload.{}", file_ext);
     let file_path = dir.join(&file_name);
 
     std::fs::write(&file_path, &bytes)
@@ -168,7 +168,7 @@ fn export_xlsx(questions_json: String, save_path: String) -> Result<(), CommandE
 fn export_xlsx_data(questions_json: String) -> Result<String, CommandError> {
     let questions: Vec<Question> = serde_json::from_str(&questions_json)
         .map_err(|e| CommandError(format!("Invalid questions JSON: {e}")))?;
-    let data = exambot_core::export::export_xlsx_to_writer(&questions)
+    let data = exameow_core::export::export_xlsx_to_writer(&questions)
         .map_err(|e| CommandError(format!("Export XLSX error: {e}")))?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
 }
@@ -178,7 +178,7 @@ fn save_to_downloads(filename: String, content_base64: String) -> Result<String,
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&content_base64)
         .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
-    let dir = std::path::Path::new("/storage/emulated/0/Download/ExamBot");
+    let dir = std::path::Path::new("/storage/emulated/0/Download/Exameow");
     std::fs::create_dir_all(dir)
         .map_err(|e| CommandError(format!("Create dir error: {e}")))?;
     let path = dir.join(&filename);
@@ -230,7 +230,7 @@ fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
 
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! ExamBot is ready.", name)
+    format!("Hello, {}! Exameow is ready.", name)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
