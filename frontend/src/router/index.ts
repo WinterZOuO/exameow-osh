@@ -38,6 +38,12 @@ const router = createRouter({
       meta: { title: 'Photo Search' },
     },
     {
+      path: '/search/screen-record',
+      name: 'search-screen-record',
+      component: () => import('@/views/ScreenRecordView.vue'),
+      meta: { title: 'Screen Record Search' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),

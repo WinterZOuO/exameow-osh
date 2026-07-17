@@ -17,7 +17,7 @@ const isTauriMobile = isTauri() && isMobileDevice()
 const modes = [
   { key: 'text', titleKey: 'searchModeText', descKey: 'searchModeTextDesc', icon: DocumentTextIcon, available: true, supported: true, path: '/search/text' },
   { key: 'photo', titleKey: 'searchModePhoto', descKey: 'searchModePhotoDesc', icon: CameraIcon, available: true, supported: true, path: '/search/photo' },
-  { key: 'screenRecord', titleKey: 'searchModeScreenRecord', descKey: 'searchModeScreenRecordDesc', icon: ComputerDesktopIcon, available: false, supported: isDesktopTauri() || isTauriMobile, path: '' },
+  { key: 'screenRecord', titleKey: 'searchModeScreenRecord', descKey: 'searchModeScreenRecordDesc', icon: ComputerDesktopIcon, available: true, supported: isDesktopTauri() || isTauriMobile, path: '/search/screen-record' },
   { key: 'cameraLive', titleKey: 'searchModeCameraLive', descKey: 'searchModeCameraLiveDesc', icon: VideoCameraIcon, available: false, supported: isTauriMobile, path: '' },
 ] as const
 
