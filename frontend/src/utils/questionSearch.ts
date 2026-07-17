@@ -1,6 +1,7 @@
 import type { Question, QuestionBank, QuestionType } from '@exambot/shared'
 
 export type MatchScope = 'stem' | 'stem_options'
+export type MatchTier = 'exact' | 'fuzzy'
 
 export interface SearchSettings {
   bankIds: string[] | null
@@ -13,9 +14,11 @@ export interface SearchHit {
   bankId: string
   bankName: string
   score: number
+  tier: MatchTier
 }
 
-const MIN_SCORE = 0.05
+const FUZZY_MIN_SCORE = 0.25
+const EXACT_CONTAIN_MIN_LEN = 6
 const MAX_HITS = 50
 
 export function normalizeText(s: string): string {
@@ -63,6 +66,14 @@ export function similarity(query: string, target: string): number {
   return dice
 }
 
+export function isExactMatch(query: string, target: string): boolean {
+  if (!query || !target) return false
+  if (query === target) return true
+  if (query.length >= EXACT_CONTAIN_MIN_LEN && target.includes(query)) return true
+  if (target.length >= EXACT_CONTAIN_MIN_LEN && query.includes(target)) return true
+  return false
+}
+
 export function searchQuestions(
   query: string,
   banks: QuestionBank[],
@@ -77,20 +88,28 @@ export function searchQuestions(
     for (const question of bank.questions) {
       if (settings.types && !settings.types.includes(question.type)) continue
 
-      let score = similarity(q, normalizeText(question.stem))
+      const targets = [normalizeText(question.stem)]
       if (settings.scope === 'stem_options') {
-        for (const opt of question.options) {
-          const s = similarity(q, normalizeText(opt))
-          if (s > score) score = s
-        }
+        for (const opt of question.options) targets.push(normalizeText(opt))
       }
 
-      if (score >= MIN_SCORE) {
-        hits.push({ question, bankId: bank.id, bankName: bank.name, score })
+      let score = 0
+      let tier: MatchTier = 'fuzzy'
+      for (const t of targets) {
+        const s = similarity(q, t)
+        if (s > score) score = s
+        if (isExactMatch(q, t)) tier = 'exact'
+      }
+
+      if (tier === 'exact' || score >= FUZZY_MIN_SCORE) {
+        hits.push({ question, bankId: bank.id, bankName: bank.name, score, tier })
       }
     }
   }
 
-  hits.sort((a, b) => b.score - a.score)
+  hits.sort((a, b) => {
+    if (a.tier !== b.tier) return a.tier === 'exact' ? -1 : 1
+    return b.score - a.score
+  })
   return hits.slice(0, MAX_HITS)
 }
