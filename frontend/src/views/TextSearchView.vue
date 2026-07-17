@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
@@ -104,6 +104,18 @@ const query = ref('')
 const hits = ref<SearchHit[]>([])
 const searched = ref(false)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const queryInput = ref<HTMLTextAreaElement | null>(null)
+const QUERY_MAX_HEIGHT = 280
+
+function autoGrow() {
+  const el = queryInput.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, QUERY_MAX_HEIGHT)}px`
+}
+
+watch(query, () => nextTick(autoGrow))
 
 function runSearch() {
   hits.value = searchQuestions(query.value, practiceStore.banks, {
@@ -223,11 +235,12 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
       <div class="flex items-start gap-2">
         <MagnifyingGlassIcon class="w-5 h-5 mt-2 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
         <textarea
+          ref="queryInput"
           v-model="query"
           rows="2"
           class="flex-1 bg-transparent resize-none outline-none text-body-lg"
           :placeholder="i18n.t('searchInputPlaceholder')"
-          style="color: rgb(var(--md-on-surface))"
+          style="color: rgb(var(--md-on-surface)); overflow-y: auto"
         />
         <input ref="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
         <input ref="imageInput" type="file" accept="image/*" class="hidden" @change="onImagePicked" />
