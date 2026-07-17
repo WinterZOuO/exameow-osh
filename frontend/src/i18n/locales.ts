@@ -245,6 +245,8 @@ export interface LocaleMessages {
   searchSimilarity: string
   searchNotConfigured: string
   searchGotoConfig: string
+  searchExactMatches: string
+  searchFuzzyMatches: string
 
   // Practice grading
   practiceSubmitAuto: string
@@ -491,6 +493,8 @@ export const zh: LocaleMessages = {
   searchSimilarity: '相似度',
   searchNotConfigured: '请先完成 AI 配置',
   searchGotoConfig: '前往配置',
+  searchExactMatches: '精确匹配',
+  searchFuzzyMatches: '模糊匹配',
 
   // Practice grading
   practiceSubmitAuto: '提交',
@@ -737,6 +741,8 @@ export const en: LocaleMessages = {
   searchSimilarity: 'Similarity',
   searchNotConfigured: 'Please configure AI first',
   searchGotoConfig: 'Go to settings',
+  searchExactMatches: 'Exact matches',
+  searchFuzzyMatches: 'Fuzzy matches',
 
   // Practice grading
   practiceSubmitAuto: 'Submit',
