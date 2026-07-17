@@ -219,11 +219,12 @@ export interface LocaleMessages {
   searchModeTextDesc: string
   searchModePhoto: string
   searchModePhotoDesc: string
-  searchModeScreen: string
-  searchModeScreenDesc: string
-  searchModeFloat: string
-  searchModeFloatDesc: string
+  searchModeCameraLive: string
+  searchModeCameraLiveDesc: string
+  searchModeScreenRecord: string
+  searchModeScreenRecordDesc: string
   searchComingSoon: string
+  searchNotSupported: string
   searchInputPlaceholder: string
   searchSettings: string
   searchBankScope: string
@@ -467,11 +468,12 @@ export const zh: LocaleMessages = {
   searchModeTextDesc: '输入题目文字，从本地题库中查找，支持 AI 解答',
   searchModePhoto: '拍照搜题',
   searchModePhotoDesc: '拍摄或上传题目照片进行搜索',
-  searchModeScreen: '录屏搜题',
-  searchModeScreenDesc: '通过屏幕录制识别题目',
-  searchModeFloat: '悬浮窗搜题',
-  searchModeFloatDesc: '悬浮窗快捷取题搜索',
+  searchModeCameraLive: '拍屏搜题',
+  searchModeCameraLiveDesc: 'AI 实时监听摄像头中的题目',
+  searchModeScreenRecord: '录屏搜题',
+  searchModeScreenRecordDesc: 'AI 实时监听桌面上的题目',
   searchComingSoon: '即将推出',
+  searchNotSupported: '该平台不支持',
   searchInputPlaceholder: '输入题目内容…',
   searchSettings: '搜索设置',
   searchBankScope: '题库范围',
@@ -715,11 +717,12 @@ export const en: LocaleMessages = {
   searchModeTextDesc: 'Type the question to search your local banks, with AI answers',
   searchModePhoto: 'Photo Search',
   searchModePhotoDesc: 'Snap or upload a photo of the question',
-  searchModeScreen: 'Screen Search',
-  searchModeScreenDesc: 'Capture questions from screen recording',
-  searchModeFloat: 'Floating Window',
-  searchModeFloatDesc: 'Quick search via a floating window',
+  searchModeCameraLive: 'Live Camera Search',
+  searchModeCameraLiveDesc: 'AI watches questions through your camera in real time',
+  searchModeScreenRecord: 'Live Screen Search',
+  searchModeScreenRecordDesc: 'AI watches your desktop screen in real time',
   searchComingSoon: 'Coming soon',
+  searchNotSupported: 'Not available on this platform',
   searchInputPlaceholder: 'Type the question…',
   searchSettings: 'Search Settings',
   searchBankScope: 'Banks',

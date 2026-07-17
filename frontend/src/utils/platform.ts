@@ -36,3 +36,15 @@ export function isLinux(): boolean {
 export function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent)
 }
+
+export function isIOS(): boolean {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
+export function isMobileDevice(): boolean {
+  return isAndroid() || isIOS()
+}
+
+export function isDesktopTauri(): boolean {
+  return isTauri() && !isMobileDevice()
+}
