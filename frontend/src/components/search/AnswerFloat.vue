@@ -72,6 +72,7 @@ async function handleDoubleTap() {
 
     <template v-else>
       <div
+        data-tauri-drag-region
         class="flex items-center justify-between px-4 py-2 shrink-0 cursor-grab active:cursor-grabbing"
         style="background: rgb(var(--md-surface-container-low)); border-bottom: 1px solid rgb(var(--md-outline-variant));"
         @dblclick="handleDoubleTap"

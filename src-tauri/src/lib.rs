@@ -284,6 +284,7 @@ fn create_record_windows(
     .position(overlay_x, overlay_y)
     .inner_size(overlay_w, overlay_h)
     .decorations(false)
+    .transparent(true)
     .always_on_top(true)
     .resizable(false)
     .visible(true)
