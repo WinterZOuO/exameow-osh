@@ -130,13 +130,13 @@ export function useScreenRecord() {
 
     const recordWin = new WebviewWindow('record-overlay', {
       url: '/',
-      width: 400,
-      height: 300,
-      center: true,
+      width: 500,
+      height: 400,
+      x: 50,
+      y: 50,
       decorations: true,
       resizable: true,
-      visible: true,
-      focus: true,
+      visible: false,
     })
     console.log('[ScreenRecord] record-overlay window object created')
 
@@ -148,18 +148,26 @@ export function useScreenRecord() {
 
     const floatWin = new WebviewWindow('answer-float', {
       url: '/',
-      width: 400,
-      height: 300,
-      center: true,
+      width: 500,
+      height: 400,
+      x: 500,
+      y: 50,
       decorations: true,
       resizable: true,
-      visible: true,
-      focus: true,
+      visible: false,
     })
-    console.log('[ScreenRecord] answer-float window object created')
 
-    await Promise.all([recordWin, floatWin])
-    console.log('[ScreenRecord] both windows ready')
+    console.log('[ScreenRecord] awaiting windows...')
+    await recordWin
+    await floatWin
+    console.log('[ScreenRecord] both windows awaited, calling show()')
+
+    await recordWin.show()
+    await floatWin.show()
+    console.log('[ScreenRecord] show() called')
+
+    await recordWin.setFocus()
+    console.log('[ScreenRecord] focused')
   }
 
   async function stop() {
