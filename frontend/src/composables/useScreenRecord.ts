@@ -130,13 +130,12 @@ export function useScreenRecord() {
     console.log('[ScreenRecord] creating record-overlay at', rx, ry, rw, rh)
 
     const recordWin = new WebviewWindow('record-overlay', {
-      url: '/index.html#/src-windows/record-overlay',
-      x: rx,
-      y: ry,
-      width: rw,
-      height: rh,
+      url: '/',
+      x: 100,
+      y: 100,
+      width: 400,
+      height: 300,
       decorations: false,
-      transparent: true,
       alwaysOnTop: true,
       resizable: false,
       visible: true,
@@ -151,11 +150,11 @@ export function useScreenRecord() {
     console.log('[ScreenRecord] creating answer-float at', floatX, floatY, floatW, floatH)
 
     const floatWin = new WebviewWindow('answer-float', {
-      url: '/index.html#/src-windows/answer-float',
-      x: floatX,
-      y: floatY,
-      width: floatW,
-      height: floatH,
+      url: '/',
+      x: 800,
+      y: 100,
+      width: 400,
+      height: 300,
       decorations: false,
       alwaysOnTop: true,
       resizable: true,
