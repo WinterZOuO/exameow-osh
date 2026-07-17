@@ -261,7 +261,6 @@ export interface LocaleMessages {
   searchPhotoDropHint: string
 
   // Vision config
-  configVisionTitle: string
   configVisionDesc: string
   configVisionModeOcr: string
   configVisionModeOcrDesc: string
@@ -529,7 +528,6 @@ export const zh: LocaleMessages = {
   searchPhotoOcrRetry: '用本地 OCR 重试',
   searchPhotoDropHint: '拖拽图片到此处，或选择下方按钮',
 
-  configVisionTitle: '图片识别',
   configVisionDesc: '拍照/上传图片搜题时的文字识别方式',
   configVisionModeOcr: '本地 OCR',
   configVisionModeOcrDesc: '快速、离线，无需额外配置',
@@ -797,7 +795,6 @@ export const en: LocaleMessages = {
   searchPhotoOcrRetry: 'Retry with local OCR',
   searchPhotoDropHint: 'Drop an image here, or use the buttons below',
 
-  configVisionTitle: 'Image Recognition',
   configVisionDesc: 'How question photos are converted to text',
   configVisionModeOcr: 'Local OCR',
   configVisionModeOcrDesc: 'Fast, offline, no extra setup',

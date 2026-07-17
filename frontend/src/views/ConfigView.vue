@@ -160,7 +160,6 @@ async function handleSave() {
     <hr class="my-8" style="border-color: rgb(var(--md-outline-variant))" />
 
     <!-- ========= Vision / OCR ========= -->
-    <h2 class="text-title-lg mb-1">{{ i18n.t('configVisionTitle') }}</h2>
     <p class="text-body-md mb-4" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configVisionDesc') }}</p>
 
     <div class="card-filled p-4 mb-4">
