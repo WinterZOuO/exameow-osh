@@ -196,4 +196,9 @@ export const api = {
     if (!isTauri()) throw new Error('Not available on this platform')
     return tauriApi.closeRecordWindows()
   },
+
+  async resizeRecordOverlay(w: number, h: number): Promise<void> {
+    if (!isTauri()) throw new Error('Not available on this platform')
+    return tauriApi.resizeRecordOverlay(w, h)
+  },
 }

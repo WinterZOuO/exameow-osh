@@ -344,6 +344,16 @@ fn close_record_windows(app: tauri::AppHandle) -> Result<(), CommandError> {
     Ok(())
 }
 
+#[tauri::command]
+fn resize_record_overlay(app: tauri::AppHandle, w: f64, h: f64) -> Result<(), CommandError> {
+    if let Some(win) = app.get_webview_window("record-overlay") {
+        use tauri::Size;
+        win.set_size(Size::Logical((w, h).into()))
+            .map_err(|e| CommandError(format!("Failed to resize: {e}")))?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -394,6 +404,7 @@ pub fn run() {
             capture_screen,
             create_record_windows,
             close_record_windows,
+            resize_record_overlay,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -142,4 +142,8 @@ export const tauriApi = {
   async closeRecordWindows(): Promise<void> {
     return invoke<void>('close_record_windows')
   },
+
+  async resizeRecordOverlay(w: number, h: number): Promise<void> {
+    return invoke<void>('resize_record_overlay', { w, h })
+  },
 }

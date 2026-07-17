@@ -68,7 +68,7 @@
         "label": "answer-float",
         "title": "Answer",
         "width": 320,
-        "height": 280,
+        "height": 340,
         "decorations": false,
         "alwaysOnTop": true,
         "resizable": true,

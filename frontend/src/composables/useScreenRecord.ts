@@ -120,7 +120,7 @@ export function useScreenRecord() {
     store.setRegion({ x: rx, y: ry, w: rw, h: rh })
 
     const floatW = 320
-    const floatH = 280
+    const floatH = 340
     const floatX = screenWidth - floatW - 20
     const floatY = screenHeight - floatH - 40
 
