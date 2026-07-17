@@ -24,6 +24,7 @@ async fn main() {
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))
         .route("/api/judge", post(routes::judge_handler))
+        .route("/api/extract-question", post(routes::extract_question_handler))
         .route("/api/export", get(routes::export_handler))
         .route("/api/export/xlsx", post(routes::export_xlsx_handler))
         .route("/api/config/save", post(routes::save_config_handler))

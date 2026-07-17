@@ -1,7 +1,8 @@
 use exambot_core::ai::{AIClient, ModelInfo};
 use exambot_core::config::{AIConfigData, ConfigStore, VisionConfigData};
 use exambot_core::exam::{
-    answer_question as core_answer_question, generate_exam as core_generate_exam,
+    answer_question as core_answer_question, extract_question_text as core_extract_question_text,
+    generate_exam as core_generate_exam,
     judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
 use exambot_core::export::export_csv as core_export_csv;
@@ -106,6 +107,22 @@ async fn judge_answer(
     )
     .await
     .map_err(|e| CommandError(format!("Judge error: {e}")))
+}
+
+#[tauri::command]
+async fn extract_question_text(
+    image_data_url: String,
+    endpoint: String,
+    api_key: String,
+    model: String,
+) -> Result<String, CommandError> {
+    if image_data_url.trim().is_empty() {
+        return Err(CommandError("Image is empty".to_string()));
+    }
+    let client = AIClient::new(&endpoint, &api_key);
+    core_extract_question_text(&client, &image_data_url, &model)
+        .await
+        .map_err(|e| CommandError(format!("Extract error: {e}")))
 }
 
 #[tauri::command]
@@ -252,6 +269,7 @@ pub fn run() {
             generate_exam,
             answer_question,
             judge_answer,
+            extract_question_text,
             parse_file_text,
             parse_file_bytes,
             export_csv,

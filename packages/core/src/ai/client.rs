@@ -48,8 +48,6 @@ impl AIClient {
         user_prompt: &str,
         model: &str,
     ) -> Result<String, CoreError> {
-        let url = format!("{}/chat/completions", self.endpoint);
-
         let body = serde_json::json!({
             "model": model,
             "messages": [
@@ -59,7 +57,33 @@ impl AIClient {
             "temperature": 0.7,
             "max_tokens": 16384,
         });
+        self.post_chat(body).await
+    }
 
+    pub async fn chat_with_image(
+        &self,
+        system_prompt: &str,
+        user_text: &str,
+        image_data_url: &str,
+        model: &str,
+    ) -> Result<String, CoreError> {
+        let body = serde_json::json!({
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": [
+                    {"type": "text", "text": user_text},
+                    {"type": "image_url", "image_url": {"url": image_data_url}}
+                ]}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 16384,
+        });
+        self.post_chat(body).await
+    }
+
+    async fn post_chat(&self, body: serde_json::Value) -> Result<String, CoreError> {
+        let url = format!("{}/chat/completions", self.endpoint);
         let response = self
             .client
             .post(&url)
@@ -85,7 +109,6 @@ impl AIClient {
         if content.is_empty() {
             return Err(CoreError::AI("empty response from AI".to_string()));
         }
-
         Ok(content)
     }
 }

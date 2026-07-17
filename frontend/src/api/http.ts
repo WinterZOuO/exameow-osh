@@ -156,6 +156,27 @@ export const httpApi = {
     const stored = localStorage.getItem('exambot_vision_config')
     return stored ? JSON.parse(stored) : null
   },
+
+  async extractQuestionText(
+    imageDataUrl: string,
+    config: VisionConfig,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    const res = await fetch(`${BASE_URL}/api/extract-question`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_data_url: imageDataUrl,
+        endpoint: config.endpoint,
+        api_key: config.api_key,
+        model: config.model,
+      }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    const data = await res.json()
+    return data.text
+  },
 }
 
 export function generateCsvContent(questions: Question[]): string {

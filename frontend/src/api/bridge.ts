@@ -112,4 +112,16 @@ export const tauriApi = {
   async loadVisionConfig(): Promise<VisionConfig | null> {
     return invoke<VisionConfig | null>('load_vision_config')
   },
+
+  async extractQuestionText(
+    imageDataUrl: string,
+    config: VisionConfig,
+  ): Promise<string> {
+    return invoke<string>('extract_question_text', {
+      imageDataUrl,
+      endpoint: config.endpoint,
+      apiKey: config.api_key,
+      model: config.model,
+    })
+  },
 }

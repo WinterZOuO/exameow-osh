@@ -161,4 +161,19 @@ export const api = {
     }
     return httpApi.loadVisionConfig()
   },
+
+  async extractQuestionText(
+    imageDataUrl: string,
+    config: VisionConfig,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    if (isTauri()) {
+      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
+      return tauriApi.extractQuestionText(imageDataUrl, config)
+    }
+    if (isCloudflare()) {
+      throw new Error('Use extractQuestionViaLLM on Cloudflare')
+    }
+    return httpApi.extractQuestionText(imageDataUrl, config, signal)
+  },
 }
