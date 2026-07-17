@@ -44,6 +44,10 @@ const router = createRouter({
       meta: { title: 'Screen Record Search' },
     },
     {
+      path: '/src-windows/record-overlay',
+      component: () => import('@/components/search/RecordOverlay.vue'),
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
