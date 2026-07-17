@@ -255,8 +255,6 @@ export interface LocaleMessages {
   searchPhotoTake: string
   searchPhotoUpload: string
   searchPhotoReselect: string
-  searchPhotoResultLabel: string
-  searchPhotoGoSearch: string
   searchPhotoOcrRetry: string
   searchPhotoDropHint: string
 
@@ -523,8 +521,6 @@ export const zh: LocaleMessages = {
   searchPhotoTake: '拍照',
   searchPhotoUpload: '上传图片',
   searchPhotoReselect: '重新选择',
-  searchPhotoResultLabel: '识别结果（可编辑）',
-  searchPhotoGoSearch: '去搜索',
   searchPhotoOcrRetry: '用本地 OCR 重试',
   searchPhotoDropHint: '拖拽图片到此处，或选择下方按钮',
 
@@ -790,8 +786,6 @@ export const en: LocaleMessages = {
   searchPhotoTake: 'Take photo',
   searchPhotoUpload: 'Upload image',
   searchPhotoReselect: 'Choose another',
-  searchPhotoResultLabel: 'Recognized text (editable)',
-  searchPhotoGoSearch: 'Search',
   searchPhotoOcrRetry: 'Retry with local OCR',
   searchPhotoDropHint: 'Drop an image here, or use the buttons below',
 

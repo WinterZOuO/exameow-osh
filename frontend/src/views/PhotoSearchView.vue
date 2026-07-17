@@ -10,8 +10,8 @@ import {
   CameraIcon,
   PhotoIcon,
   ArrowPathIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/vue/24/outline'
+import SearchPanel from '@/components/search/SearchPanel.vue'
 
 const router = useRouter()
 const i18n = useI18nStore()
@@ -21,7 +21,8 @@ const { phase, error, busy, usedFallback, recognize, cancel } = useImageSearch()
 const cameraInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const previewUrl = ref('')
-const resultText = ref('')
+const query = ref('')
+const recognizedEmpty = ref(false)
 const dragging = ref(false)
 let currentFile: File | null = null
 
@@ -52,20 +53,17 @@ async function handleFile(file: File, opts: { forceOcr?: boolean } = {}) {
   currentFile = file
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   previewUrl.value = URL.createObjectURL(file)
-  resultText.value = ''
+  query.value = ''
+  recognizedEmpty.value = false
   const text = await recognize(file, opts)
-  if (text !== null) resultText.value = text
+  if (text !== null) {
+    query.value = text
+    recognizedEmpty.value = !text.trim()
+  }
 }
 
 function retryOcr() {
   if (currentFile) handleFile(currentFile, { forceOcr: true })
-}
-
-function goSearch() {
-  const text = resultText.value.trim()
-  if (!text) return
-  sessionStorage.setItem('exameow-photo-query', text)
-  router.push('/search/text')
 }
 
 onBeforeUnmount(() => {
@@ -148,26 +146,10 @@ onBeforeUnmount(() => {
       {{ i18n.t('searchPhotoLlmFallback') }}
     </p>
 
-    <div v-if="!busy && previewUrl && !error" class="card-filled p-4">
-      <div class="text-label-lg mb-2" style="color: rgb(var(--md-on-surface-variant))">
-        {{ i18n.t('searchPhotoResultLabel') }}
-      </div>
-      <textarea
-        v-model="resultText"
-        rows="5"
-        class="w-full bg-transparent resize-y outline-none text-body-lg mb-1"
-        :placeholder="i18n.t('searchPhotoEmpty')"
-        style="color: rgb(var(--md-on-surface))"
-      />
-      <p v-if="!resultText.trim()" class="text-body-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">
-        {{ i18n.t('searchPhotoEmpty') }}
-      </p>
-      <div class="flex justify-end">
-        <button class="btn-filled" :disabled="!resultText.trim()" @click="goSearch">
-          <MagnifyingGlassIcon class="w-5 h-5" />
-          {{ i18n.t('searchPhotoGoSearch') }}
-        </button>
-      </div>
-    </div>
+    <p v-if="recognizedEmpty && !busy && !error" class="text-body-sm mb-4" style="color: rgb(var(--md-on-surface-variant))">
+      {{ i18n.t('searchPhotoEmpty') }}
+    </p>
+
+    <SearchPanel v-if="previewUrl && !busy" v-model:query="query" />
   </div>
 </template>
