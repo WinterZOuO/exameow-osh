@@ -56,7 +56,7 @@ function onResizeMouseDown(dir: string) {
   <div
     v-if="store.overlayVisible"
     class="w-full h-full flex flex-col select-none"
-    style="background: transparent;"
+    style="background: transparent; border: 2px solid rgb(103, 80, 164); box-sizing: border-box; box-shadow: inset 0 0 0 1px rgba(103, 80, 164, 0.3);"
   >
     <div class="flex h-4 shrink-0">
       <div class="w-4 cursor-nwse-resize" style="pointer-events: auto;" @mousedown="onResizeMouseDown('NorthWest')($event)" />
@@ -84,13 +84,9 @@ function onResizeMouseDown(dir: string) {
 html, body, #app {
   background: transparent !important;
 }
-
 body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 2px solid rgb(103, 80, 164) !important;
-  box-sizing: border-box;
-  box-shadow: inset 0 0 0 1px rgba(103, 80, 164, 0.3);
 }
 </style>
