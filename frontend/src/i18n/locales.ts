@@ -260,6 +260,15 @@ export interface LocaleMessages {
   searchPhotoOcrRetry: string
   searchPhotoDropHint: string
 
+  // Vision config
+  configVisionTitle: string
+  configVisionDesc: string
+  configVisionModeOcr: string
+  configVisionModeOcrDesc: string
+  configVisionModeLlm: string
+  configVisionModeLlmDesc: string
+  configVisionLlmHint: string
+
   // Practice grading
   practiceSubmitAuto: string
   practiceSubmitAutoHint: string
@@ -520,6 +529,14 @@ export const zh: LocaleMessages = {
   searchPhotoOcrRetry: '用本地 OCR 重试',
   searchPhotoDropHint: '拖拽图片到此处，或选择下方按钮',
 
+  configVisionTitle: '图片识别',
+  configVisionDesc: '拍照/上传图片搜题时的文字识别方式',
+  configVisionModeOcr: '本地 OCR',
+  configVisionModeOcrDesc: '快速、离线，无需额外配置',
+  configVisionModeLlm: '大模型识别',
+  configVisionModeLlmDesc: '更准确但较慢，需配置支持图片输入的模型',
+  configVisionLlmHint: '需要支持图片输入的视觉模型（如 gpt-4o、qwen-vl 等），可与出题模型不同',
+
   // Practice grading
   practiceSubmitAuto: '提交',
   practiceSubmitAutoHint: '提交＝自动判断，需与答案完全一致（忽略大小写）',
@@ -779,6 +796,14 @@ export const en: LocaleMessages = {
   searchPhotoGoSearch: 'Search',
   searchPhotoOcrRetry: 'Retry with local OCR',
   searchPhotoDropHint: 'Drop an image here, or use the buttons below',
+
+  configVisionTitle: 'Image Recognition',
+  configVisionDesc: 'How question photos are converted to text',
+  configVisionModeOcr: 'Local OCR',
+  configVisionModeOcrDesc: 'Fast, offline, no extra setup',
+  configVisionModeLlm: 'AI vision model',
+  configVisionModeLlmDesc: 'More accurate but slower; needs a vision-capable model',
+  configVisionLlmHint: 'Requires a vision-capable model (e.g. gpt-4o, qwen-vl); can differ from the exam model',
 
   // Practice grading
   practiceSubmitAuto: 'Submit',
