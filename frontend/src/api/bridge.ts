@@ -124,4 +124,8 @@ export const tauriApi = {
       model: config.model,
     })
   },
+
+  async captureScreen(x: number, y: number, w: number, h: number): Promise<string> {
+    return invoke<string>('capture_screen', { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) })
+  },
 }

@@ -176,4 +176,11 @@ export const api = {
     }
     return httpApi.extractQuestionText(imageDataUrl, config, signal)
   },
+
+  async captureScreen(x: number, y: number, w: number, h: number): Promise<string> {
+    if (!isTauri()) {
+      throw new Error('Screen capture is only available in the desktop/mobile app')
+    }
+    return tauriApi.captureScreen(x, y, w, h)
+  },
 }
