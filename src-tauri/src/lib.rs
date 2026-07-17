@@ -229,6 +229,31 @@ fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
 }
 
 #[tauri::command]
+fn capture_screen(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError> {
+    let monitors = xcap::Monitor::all()
+        .map_err(|e| CommandError(format!("Failed to enumerate monitors: {e}")))?;
+    let primary = monitors
+        .into_iter()
+        .next()
+        .ok_or_else(|| CommandError("No monitor found".to_string()))?;
+    let captured = primary
+        .capture_image()
+        .map_err(|e| CommandError(format!("Failed to capture screen: {e}")))?;
+    let mut dyn_img = image::DynamicImage::ImageRgba8(captured);
+    let cropped = dyn_img.crop(
+        x.max(0) as u32,
+        y.max(0) as u32,
+        w.max(1) as u32,
+        h.max(1) as u32,
+    );
+    let mut buf = std::io::Cursor::new(Vec::new());
+    cropped
+        .write_to(&mut buf, image::ImageFormat::Jpeg)
+        .map_err(|e| CommandError(format!("Failed to encode JPEG: {e}")))?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(buf.into_inner()))
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! Exameow is ready.", name)
 }
@@ -280,6 +305,7 @@ pub fn run() {
             load_config,
             save_vision_config,
             load_vision_config,
+            capture_screen,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
