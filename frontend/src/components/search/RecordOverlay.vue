@@ -8,7 +8,7 @@ const unlistenFns: Array<() => void> = []
 let win: any = null
 
 onMounted(async () => {
-  const { getCurrentWindow, LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window')
+  const { getCurrentWindow } = await import('@tauri-apps/api/window')
   const { listen } = await import('@tauri-apps/api/event')
   win = getCurrentWindow()
 
@@ -51,7 +51,7 @@ function onResizeMouseDown(dir: ResizeDir) {
     e.preventDefault()
     e.stopPropagation()
 
-    const { LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window')
+    const { PhysicalPosition, PhysicalSize } = await import('@tauri-apps/api/dpi')
 
     const startX = e.screenX
     const startY = e.screenY
@@ -74,8 +74,8 @@ function onResizeMouseDown(dir: ResizeDir) {
       if (dir.includes('s')) { newH = Math.max(minH, startSize.height + dy) }
       if (dir.includes('n')) { newH = Math.max(minH, startSize.height - dy); newY = startPos.y + startSize.height - newH }
 
-      win.setSize(new LogicalSize(newW, newH))
-      win.setPosition(new LogicalPosition(newX, newY))
+      win.setSize(new PhysicalSize(newW, newH))
+      win.setPosition(new PhysicalPosition(newX, newY))
     }
 
     function onUp() {
