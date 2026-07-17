@@ -223,6 +223,17 @@ export interface LocaleMessages {
   searchModeCameraLiveDesc: string
   searchModeScreenRecord: string
   searchModeScreenRecordDesc: string
+  searchScreenRecordStart: string
+  searchScreenRecordStop: string
+  searchScreenRecordNotSupported: string
+  searchScreenRecordDesc: string
+  searchScreenRecordAnswer: string
+  searchScreenRecordNoMatch: string
+  searchScreenRecordLoading: string
+  searchScreenRecordCollapse: string
+  searchScreenRecordAdjust: string
+  searchScreenRecordExit: string
+  searchScreenRecordRefresh: string
   searchComingSoon: string
   searchNotSupported: string
   searchInputPlaceholder: string
@@ -489,6 +500,17 @@ export const zh: LocaleMessages = {
   searchModeCameraLiveDesc: 'AI 实时监听摄像头中的题目',
   searchModeScreenRecord: '录屏搜题',
   searchModeScreenRecordDesc: 'AI 实时监听桌面上的题目',
+  searchScreenRecordStart: '开始录制',
+  searchScreenRecordStop: '停止录制',
+  searchScreenRecordNotSupported: '录屏搜题仅支持桌面端和移动端应用',
+  searchScreenRecordDesc: '启动后，调整录制框覆盖题目区域，AI 将实时识别并搜索本地题库',
+  searchScreenRecordAnswer: '答案',
+  searchScreenRecordNoMatch: '未匹配到题目',
+  searchScreenRecordLoading: '模型加载中…',
+  searchScreenRecordCollapse: '收起',
+  searchScreenRecordAdjust: '调整录制区域',
+  searchScreenRecordExit: '退出录屏',
+  searchScreenRecordRefresh: '下拉或双击刷新',
   searchComingSoon: '即将推出',
   searchNotSupported: '该平台不支持',
   searchInputPlaceholder: '输入题目内容…',
@@ -754,6 +776,17 @@ export const en: LocaleMessages = {
   searchModeCameraLiveDesc: 'AI watches questions through your camera in real time',
   searchModeScreenRecord: 'Live Screen Search',
   searchModeScreenRecordDesc: 'AI watches your desktop screen in real time',
+  searchScreenRecordStart: 'Start Recording',
+  searchScreenRecordStop: 'Stop Recording',
+  searchScreenRecordNotSupported: 'Screen recording search is only available in the desktop and mobile app',
+  searchScreenRecordDesc: 'After starting, adjust the recording frame over the question area for real-time AI recognition',
+  searchScreenRecordAnswer: 'Answer',
+  searchScreenRecordNoMatch: 'No matching question found',
+  searchScreenRecordLoading: 'Loading model…',
+  searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordAdjust: 'Adjust area',
+  searchScreenRecordExit: 'Exit recording',
+  searchScreenRecordRefresh: 'Pull down or double-tap to refresh',
   searchComingSoon: 'Coming soon',
   searchNotSupported: 'Not available on this platform',
   searchInputPlaceholder: 'Type the question…',
