@@ -5,7 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "=== 1/3: Building frontend ==="
-(cd "$PROJECT_DIR/frontend" && pnpm install && pnpm build)
+(cd "$PROJECT_DIR/frontend" && pnpm install)
+node "$PROJECT_DIR/scripts/fetch-ocr-models.mjs"
+(cd "$PROJECT_DIR/frontend" && pnpm build)
 
 echo ""
 echo "=== 2/3: Building Docker image (linux/amd64) ==="
