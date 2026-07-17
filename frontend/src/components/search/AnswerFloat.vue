@@ -38,16 +38,6 @@ async function handleExit() {
 async function handleDoubleTap() {
   if (refreshFn) await refreshFn()
 }
-
-async function onResizeInput(dim: 'w' | 'h', val: string) {
-  const num = parseInt(val, 10)
-  if (!num || num < 100) return
-  const { api } = await import('@/api')
-  const w = dim === 'w' ? num : store.region.w
-  const h = dim === 'h' ? num : store.region.h
-  store.setRegion({ w, h })
-  await api.resizeRecordOverlay(w, h)
-}
 </script>
 
 <template>
@@ -83,28 +73,6 @@ async function onResizeInput(dim: 'w' | 'h', val: string) {
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
-    </div>
-
-    <div
-      class="flex items-center gap-1.5 px-3 py-1.5 shrink-0 text-body-xs"
-      style="background: rgb(var(--md-surface-container-lowest)); border-bottom: 1px solid rgb(var(--md-outline-variant));"
-    >
-      <span style="color: rgb(var(--md-on-surface-variant)); white-space: nowrap;">W</span>
-      <input
-        type="number"
-        :value="store.region.w"
-        class="w-full bg-transparent text-center rounded px-1"
-        style="border: 1px solid rgb(var(--md-outline-variant)); color: rgb(var(--md-on-surface)); min-width: 0;"
-        @change="onResizeInput('w', ($event.target as HTMLInputElement).value)"
-      />
-      <span style="color: rgb(var(--md-on-surface-variant)); white-space: nowrap;">H</span>
-      <input
-        type="number"
-        :value="store.region.h"
-        class="w-full bg-transparent text-center rounded px-1"
-        style="border: 1px solid rgb(var(--md-outline-variant)); color: rgb(var(--md-on-surface)); min-width: 0;"
-        @change="onResizeInput('h', ($event.target as HTMLInputElement).value)"
-      />
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-2.5" @dblclick="handleDoubleTap">
