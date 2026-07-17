@@ -252,6 +252,13 @@ export interface LocaleMessages {
   searchPhotoRecognizing: string
   searchPhotoEmpty: string
   searchPhotoLlmFallback: string
+  searchPhotoTake: string
+  searchPhotoUpload: string
+  searchPhotoReselect: string
+  searchPhotoResultLabel: string
+  searchPhotoGoSearch: string
+  searchPhotoOcrRetry: string
+  searchPhotoDropHint: string
 
   // Practice grading
   practiceSubmitAuto: string
@@ -505,6 +512,13 @@ export const zh: LocaleMessages = {
   searchPhotoRecognizing: '识别中…',
   searchPhotoEmpty: '未识别到文字，请换更清晰的图片或手动输入',
   searchPhotoLlmFallback: '大模型配置不完整，已改用本地 OCR 识别',
+  searchPhotoTake: '拍照',
+  searchPhotoUpload: '上传图片',
+  searchPhotoReselect: '重新选择',
+  searchPhotoResultLabel: '识别结果（可编辑）',
+  searchPhotoGoSearch: '去搜索',
+  searchPhotoOcrRetry: '用本地 OCR 重试',
+  searchPhotoDropHint: '拖拽图片到此处，或选择下方按钮',
 
   // Practice grading
   practiceSubmitAuto: '提交',
@@ -758,6 +772,13 @@ export const en: LocaleMessages = {
   searchPhotoRecognizing: 'Recognizing…',
   searchPhotoEmpty: 'No text recognized — try a clearer photo or type it manually',
   searchPhotoLlmFallback: 'AI vision config incomplete — used local OCR instead',
+  searchPhotoTake: 'Take photo',
+  searchPhotoUpload: 'Upload image',
+  searchPhotoReselect: 'Choose another',
+  searchPhotoResultLabel: 'Recognized text (editable)',
+  searchPhotoGoSearch: 'Search',
+  searchPhotoOcrRetry: 'Retry with local OCR',
+  searchPhotoDropHint: 'Drop an image here, or use the buttons below',
 
   // Practice grading
   practiceSubmitAuto: 'Submit',

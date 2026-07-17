@@ -32,6 +32,12 @@ const router = createRouter({
       meta: { title: 'Text Search' },
     },
     {
+      path: '/search/photo',
+      name: 'search-photo',
+      component: () => import('@/views/PhotoSearchView.vue'),
+      meta: { title: 'Photo Search' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
