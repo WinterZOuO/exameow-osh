@@ -16,7 +16,7 @@ export interface MatchResult {
 }
 
 export const useScreenRecordStore = defineStore('screenRecord', () => {
-  const status = ref<'idle' | 'recording' | 'paused'>('idle')
+  const status = ref<'idle' | 'adjusting' | 'recording' | 'paused'>('idle')
   const region = ref<ScreenRegion>({
     x: 100,
     y: 100,
@@ -36,9 +36,17 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
   })
 
   function startRecording() {
-    status.value = 'recording'
+    status.value = 'adjusting'
     currentResult.value = null
     ocrText.value = ''
+  }
+
+  function beginRecording() {
+    status.value = 'recording'
+  }
+
+  function pauseToAdjust() {
+    if (status.value === 'recording') status.value = 'adjusting'
   }
 
   function stopRecording() {
@@ -80,6 +88,8 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     isRecording,
     answerText,
     startRecording,
+    beginRecording,
+    pauseToAdjust,
     stopRecording,
     setRegion,
     setResult,

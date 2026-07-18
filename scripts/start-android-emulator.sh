@@ -15,7 +15,7 @@ EMULATOR_PID=$!
 echo "[2/3] Waiting for device to boot..."
 "$SDK/platform-tools/adb" wait-for-device
 while true; do
-  BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+  BOOT=$("$SDK/platform-tools/adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
   if [ "$BOOT" = "1" ]; then
     break
   fi

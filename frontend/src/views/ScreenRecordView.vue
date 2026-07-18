@@ -2,21 +2,31 @@
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useScreenRecordStore } from '@/stores/screenRecord'
-import { isDesktopTauri, isMobileDevice, isTauri } from '@/utils/platform'
+import { isAndroid, isDesktopTauri } from '@/utils/platform'
 import { VideoCameraIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const i18n = useI18nStore()
 const store = useScreenRecordStore()
 
-const isTauriMobile = isTauri() && isMobileDevice()
-const supported = isDesktopTauri() || isTauriMobile
+const supported = isDesktopTauri() || isAndroid()
 
 async function startRecording() {
   store.startRecording()
   const { useScreenRecord } = await import('@/composables/useScreenRecord')
   const { start } = useScreenRecord()
-  await start()
+  try {
+    await start()
+  } catch (e) {
+    store.stopRecording()
+    console.warn('[录屏搜题] start failed:', e)
+    const msg = String(e)
+    if (msg.includes('overlay_permission')) {
+      alert(i18n.t('searchScreenRecordOverlayPerm'))
+    } else if (msg.includes('projection_denied')) {
+      alert(i18n.t('searchScreenRecordProjectionDenied'))
+    }
+  }
 }
 
 function goBack() {

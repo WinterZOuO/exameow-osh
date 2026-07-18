@@ -27,6 +27,13 @@ const childComponent = computed(() => {
 })
 
 onMounted(async () => {
+  if (childWindow.value) {
+    const theme = localStorage.getItem('exameow-theme') || 'system'
+    const dark = theme === 'dark'
+      || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.classList.toggle('dark', dark)
+    return
+  }
   await configStore.loadSaved()
 })
 </script>

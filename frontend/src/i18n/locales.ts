@@ -234,6 +234,11 @@ export interface LocaleMessages {
   searchScreenRecordAdjust: string
   searchScreenRecordExit: string
   searchScreenRecordRefresh: string
+  searchScreenRecordAdjustHint: string
+  searchScreenRecordResume: string
+  searchScreenRecordPaused: string
+  searchScreenRecordOverlayPerm: string
+  searchScreenRecordProjectionDenied: string
   searchComingSoon: string
   searchNotSupported: string
   searchInputPlaceholder: string
@@ -502,7 +507,7 @@ export const zh: LocaleMessages = {
   searchModeScreenRecordDesc: 'AI 实时监听桌面上的题目',
   searchScreenRecordStart: '开始录制',
   searchScreenRecordStop: '停止录制',
-  searchScreenRecordNotSupported: '录屏搜题仅支持桌面端和移动端应用',
+  searchScreenRecordNotSupported: '录屏搜题支持桌面端（Windows / macOS / Linux）和 Android；iOS 因系统限制暂不支持',
   searchScreenRecordDesc: '启动后，调整录制框覆盖题目区域，AI 将实时识别并搜索本地题库',
   searchScreenRecordAnswer: '答案',
   searchScreenRecordNoMatch: '未匹配到题目',
@@ -511,6 +516,11 @@ export const zh: LocaleMessages = {
   searchScreenRecordAdjust: '调整录制区域',
   searchScreenRecordExit: '退出录屏',
   searchScreenRecordRefresh: '下拉或双击刷新',
+  searchScreenRecordAdjustHint: '拖拽移动录制框，框住题目区域',
+  searchScreenRecordResume: '完成调整，继续录制',
+  searchScreenRecordPaused: '调整录制框中，识别已暂停',
+  searchScreenRecordOverlayPerm: '请在系统设置中授予「在其他应用上显示」权限后重试',
+  searchScreenRecordProjectionDenied: '屏幕录制权限被拒绝，无法启动录屏搜题',
   searchComingSoon: '即将推出',
   searchNotSupported: '该平台不支持',
   searchInputPlaceholder: '输入题目内容…',
@@ -778,7 +788,7 @@ export const en: LocaleMessages = {
   searchModeScreenRecordDesc: 'AI watches your desktop screen in real time',
   searchScreenRecordStart: 'Start Recording',
   searchScreenRecordStop: 'Stop Recording',
-  searchScreenRecordNotSupported: 'Screen recording search is only available in the desktop and mobile app',
+  searchScreenRecordNotSupported: 'Screen recording search is available on desktop (Windows / macOS / Linux) and Android; not supported on iOS due to system restrictions',
   searchScreenRecordDesc: 'After starting, adjust the recording frame over the question area for real-time AI recognition',
   searchScreenRecordAnswer: 'Answer',
   searchScreenRecordNoMatch: 'No matching question found',
@@ -787,6 +797,11 @@ export const en: LocaleMessages = {
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordRefresh: 'Pull down or double-tap to refresh',
+  searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
+  searchScreenRecordResume: 'Done, resume recording',
+  searchScreenRecordPaused: 'Adjusting frame, recognition paused',
+  searchScreenRecordOverlayPerm: 'Please grant "Display over other apps" permission in Settings and try again',
+  searchScreenRecordProjectionDenied: 'Screen capture permission was denied',
   searchComingSoon: 'Coming soon',
   searchNotSupported: 'Not available on this platform',
   searchInputPlaceholder: 'Type the question…',

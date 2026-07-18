@@ -243,8 +243,24 @@ fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
         .map_err(|e| CommandError(format!("Vision config load error: {e}")))
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 fn capture_screen(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError> {
+    std::panic::catch_unwind(|| capture_screen_inner(x, y, w, h))
+        .map_err(|_| CommandError("Screen capture panicked".to_string()))?
+}
+
+#[cfg(not(desktop))]
+#[tauri::command]
+fn capture_screen(_x: i32, _y: i32, _w: i32, _h: i32) -> Result<String, CommandError> {
+    Err(CommandError(
+        "Screen capture is only supported on desktop".to_string(),
+    ))
+}
+
+#[cfg(desktop)]
+fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError> {
+    let t0 = std::time::Instant::now();
     let monitors = xcap::Monitor::all()
         .map_err(|e| CommandError(format!("Failed to enumerate monitors: {e}")))?;
     let primary = monitors
@@ -255,12 +271,14 @@ fn capture_screen(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError
         .capture_image()
         .map_err(|e| CommandError(format!("Failed to capture screen: {e}")))?;
     let mut dyn_img = image::DynamicImage::ImageRgba8(captured);
-    let cropped = dyn_img.crop(
-        x.max(0) as u32,
-        y.max(0) as u32,
-        w.max(1) as u32,
-        h.max(1) as u32,
-    );
+    let img_w = dyn_img.width();
+    let img_h = dyn_img.height();
+    let cx = (x.max(0) as u32).min(img_w.saturating_sub(1));
+    let cy = (y.max(0) as u32).min(img_h.saturating_sub(1));
+    let cw = (w.max(1) as u32).min(img_w - cx);
+    let ch = (h.max(1) as u32).min(img_h - cy);
+    let cropped = dyn_img.crop(cx, cy, cw, ch);
+    eprintln!("[capture_screen] crop=({cx},{cy},{cw}x{ch}) of {img_w}x{img_h}, elapsed={:?}", t0.elapsed());
     let mut buf = std::io::Cursor::new(Vec::new());
     cropped
         .write_to(&mut buf, image::ImageFormat::Jpeg)
@@ -273,6 +291,7 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! Exameow is ready.", name)
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 fn create_record_windows(
     app: tauri::AppHandle,
@@ -300,6 +319,7 @@ fn create_record_windows(
     )
     .position(overlay_x, overlay_y)
     .inner_size(overlay_w, overlay_h)
+    .min_inner_size(240.0, 120.0)
     .decorations(false)
     .transparent(true)
     .always_on_top(true)
@@ -323,16 +343,40 @@ fn create_record_windows(
     )
     .position(float_x, float_y)
     .inner_size(float_w, float_h)
+    .min_inner_size(280.0, 200.0)
     .decorations(false)
+    .transparent(true)
     .always_on_top(true)
     .resizable(true)
     .visible(true)
     .build()
     .map_err(|e| CommandError(format!("Failed to create answer-float: {e}")))?;
 
+    #[cfg(target_os = "macos")]
+    make_webview_transparent(&_float);
+
     Ok(())
 }
 
+#[cfg(not(desktop))]
+#[tauri::command]
+fn create_record_windows(
+    _app: tauri::AppHandle,
+    _overlay_x: f64,
+    _overlay_y: f64,
+    _overlay_w: f64,
+    _overlay_h: f64,
+    _float_x: f64,
+    _float_y: f64,
+    _float_w: f64,
+    _float_h: f64,
+) -> Result<(), CommandError> {
+    Err(CommandError(
+        "Recording windows are only supported on desktop".to_string(),
+    ))
+}
+
+#[cfg(desktop)]
 #[tauri::command]
 fn close_record_windows(app: tauri::AppHandle) -> Result<(), CommandError> {
     if let Some(w) = app.get_webview_window("record-overlay") {
@@ -344,6 +388,13 @@ fn close_record_windows(app: tauri::AppHandle) -> Result<(), CommandError> {
     Ok(())
 }
 
+#[cfg(not(desktop))]
+#[tauri::command]
+fn close_record_windows(_app: tauri::AppHandle) -> Result<(), CommandError> {
+    Ok(())
+}
+
+#[cfg(desktop)]
 #[tauri::command]
 fn resize_record_overlay(app: tauri::AppHandle, w: f64, h: f64) -> Result<(), CommandError> {
     if let Some(win) = app.get_webview_window("record-overlay") {
@@ -354,6 +405,12 @@ fn resize_record_overlay(app: tauri::AppHandle, w: f64, h: f64) -> Result<(), Co
     Ok(())
 }
 
+#[cfg(not(desktop))]
+#[tauri::command]
+fn resize_record_overlay(_app: tauri::AppHandle, _w: f64, _h: f64) -> Result<(), CommandError> {
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -361,6 +418,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sharekit::init())
+        .plugin(tauri_plugin_screenrecord::init())
         .setup(|app| {
             let config = &app.config().app.windows[0];
             let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), config)?;

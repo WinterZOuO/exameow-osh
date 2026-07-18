@@ -15,6 +15,9 @@
     "core:window:allow-set-size",
     "core:window:allow-unminimize",
     "core:window:allow-set-focus",
+    "core:window:allow-outer-position",
+    "core:window:allow-inner-size",
+    "core:window:allow-scale-factor",
     "core:event:allow-emit",
     "core:event:allow-listen",
     "dialog:default",
@@ -26,6 +29,11 @@
     "fs:allow-write-text-file",
     "opener:default",
     "opener:allow-open-path",
-    "sharekit:default"
+    "sharekit:default",
+    "screenrecord:allow-start-session",
+    "screenrecord:allow-begin",
+    "screenrecord:allow-adjust",
+    "screenrecord:allow-stop",
+    "screenrecord:allow-show-answer"
   ]
 }
