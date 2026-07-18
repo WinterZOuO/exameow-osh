@@ -36,14 +36,13 @@ function goBack() {
 
 <template>
   <div>
-    <button
-      class="card-filled w-fit px-4 py-2 flex items-center gap-2 mb-5 transition-all duration-200 cursor-pointer hover:shadow-md"
-      style="color: rgb(var(--md-on-surface-variant))"
-      @click="goBack"
-    >
-      <ArrowLeftIcon class="w-5 h-5" />
-      <span class="text-body-md">{{ i18n.t('btnBack') }}</span>
-    </button>
+    <div class="flex items-center gap-2 mb-1">
+      <button class="btn-icon" @click="goBack">
+        <ArrowLeftIcon class="w-5 h-5" />
+      </button>
+      <h1 class="text-display-sm">{{ i18n.t('searchModeScreenRecord') }}</h1>
+    </div>
+    <p class="text-body-lg mb-4" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchScreenRecordDesc') }}</p>
 
     <div v-if="!supported" class="card-filled p-6 text-center">
       <VideoCameraIcon class="w-12 h-12 mx-auto mb-3" style="color: rgb(var(--md-on-surface-variant))" />
@@ -54,11 +53,6 @@ function goBack() {
     </div>
 
     <template v-else>
-      <h1 class="text-display-sm mb-1">{{ i18n.t('searchModeScreenRecord') }}</h1>
-      <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">
-        {{ i18n.t('searchScreenRecordDesc') }}
-      </p>
-
       <div class="card-filled p-6 flex flex-col items-center gap-4">
         <VideoCameraIcon class="w-16 h-16" style="color: rgb(var(--md-primary))" />
         <button
