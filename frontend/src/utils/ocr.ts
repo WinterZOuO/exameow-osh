@@ -18,6 +18,12 @@ function tlog(msg: string) {
     .catch(() => {})
 }
 
+async function tryCreateService(ppu: any, model: { detection: string; recognition: string; charactersDictionary: string }): Promise<OcrService> {
+  const service = new ppu.PaddleOcrService({ model })
+  await service.initialize()
+  return service as unknown as OcrService
+}
+
 async function createService(): Promise<OcrService> {
   tlog('初始化 OCR 服务…')
   const [ppu, ort] = await Promise.all([
@@ -28,13 +34,24 @@ async function createService(): Promise<OcrService> {
   ort.env.wasm.wasmPaths = isCloudflare()
     ? ORT_CDN
     : { wasm: new URL(ortWasmUrl, location.href).href, mjs: new URL(ortMjsUrl, location.href).href }
-  const model = isCloudflare()
-    ? ppu.V6_TINY_MODEL
-    : { detection: '/ocr/detection.onnx', recognition: '/ocr/recognition.onnx', charactersDictionary: '/ocr/dict.txt' }
-  const service = new ppu.PaddleOcrService({ model })
-  await service.initialize()
-  tlog('OCR 服务初始化完成')
-  return service as unknown as OcrService
+
+  if (isCloudflare()) {
+    const service = await tryCreateService(ppu, ppu.V6_TINY_MODEL)
+    tlog('OCR 服务初始化完成 (CDN)')
+    return service
+  }
+
+  const localModel = { detection: '/ocr/detection.onnx', recognition: '/ocr/recognition.onnx', charactersDictionary: '/ocr/dict.txt' }
+  try {
+    const service = await tryCreateService(ppu, localModel)
+    tlog('OCR 服务初始化完成 (local)')
+    return service
+  } catch (e) {
+    tlog(`本地模型加载失败，尝试 CDN: ${e instanceof Error ? e.message : String(e)}`)
+    const service = await tryCreateService(ppu, ppu.V6_TINY_MODEL)
+    tlog('OCR 服务初始化完成 (CDN fallback)')
+    return service
+  }
 }
 
 export function preloadOcr(): Promise<void> {

@@ -25,6 +25,7 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
   })
   const currentResult = ref<MatchResult | null>(null)
   const ocrText = ref('')
+  const ocrError = ref('')
   const overlayVisible = ref(true)
   const collapsed = ref(false)
 
@@ -52,6 +53,7 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     status.value = 'idle'
     currentResult.value = null
     ocrText.value = ''
+    ocrError.value = ''
   }
 
   function setRegion(r: Partial<ScreenRegion>) {
@@ -76,6 +78,7 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     region,
     currentResult,
     ocrText,
+    ocrError,
     overlayVisible,
     collapsed,
     isRecording,

@@ -1,6 +1,6 @@
 import { mkdirSync, existsSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -8,7 +8,8 @@ const frontendDir = resolve(__dirname, '../frontend')
 const ocrDir = join(frontendDir, 'public/ocr')
 
 const require = createRequire(join(frontendDir, 'package.json'))
-const { V6_TINY_MODEL } = await import(require.resolve('ppu-paddle-ocr/web'))
+const ppuEntry = pathToFileURL(require.resolve('ppu-paddle-ocr/web')).href
+const { V6_TINY_MODEL } = await import(ppuEntry)
 
 const targets = [
   { url: V6_TINY_MODEL.detection, file: 'detection.onnx' },

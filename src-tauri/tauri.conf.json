@@ -35,6 +35,11 @@
         "Resources/zh-Hant.lproj/InfoPlist.strings": "locales/zh-Hans.lproj/InfoPlist.strings",
         "Resources/en.lproj/InfoPlist.strings": "locales/en.lproj/InfoPlist.strings"
       }
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
     }
   },
   "app": {

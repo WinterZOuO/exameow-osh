@@ -5,6 +5,7 @@ target/
 *.jks
 test/
 gen/
+.gradle/
 .superpowers/
 .opencode/
 .env
