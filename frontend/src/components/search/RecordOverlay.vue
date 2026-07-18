@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
-import { PlayIcon } from '@heroicons/vue/24/solid'
 
 const i18n = useI18nStore()
 const unlistenFns: Array<() => void> = []
 
 let win: any = null
-const begun = ref(false)
+
 
 type Dir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
@@ -96,7 +95,6 @@ async function handleBegin() {
     const [pos, size] = await Promise.all([win.outerPosition(), win.innerSize()])
     const { emit } = await import('@tauri-apps/api/event')
     await emit('screen-record:begin', { x: pos.x, y: pos.y, w: size.width, h: size.height })
-    begun.value = true
     await win.hide()
   } catch { /* ignore */ }
 }
@@ -105,6 +103,10 @@ onMounted(async () => {
   const { getCurrentWindow } = await import('@tauri-apps/api/window')
   const { listen } = await import('@tauri-apps/api/event')
   win = getCurrentWindow()
+
+  unlistenFns.push(await listen('screen-record:request-begin', async () => {
+    await handleBegin()
+  }))
 
   unlistenFns.push(await listen('screen-record:adjust', async () => {
     try {
@@ -136,17 +138,6 @@ onUnmounted(() => {
 
     <div class="absolute inset-x-0 top-0 flex justify-center pt-5 pointer-events-none">
       <span class="overlay-tip">{{ i18n.t('searchScreenRecordAdjustHint') }}</span>
-    </div>
-
-    <div class="absolute inset-x-0 bottom-0 flex justify-center pb-5 pointer-events-none">
-      <button
-        class="overlay-begin pointer-events-auto"
-        @mousedown.stop
-        @click="handleBegin"
-      >
-        <PlayIcon class="w-4 h-4" />
-        {{ begun ? i18n.t('searchScreenRecordResume') : i18n.t('searchScreenRecordStart') }}
-      </button>
     </div>
 
     <div class="absolute top-0 left-8 right-8 h-4 cursor-ns-resize" @mousedown.stop="beginResize('n', $event)" />
@@ -207,29 +198,5 @@ html, body, #app {
   color: rgb(255 255 255);
   background: rgba(0 0 0 / 0.62);
   white-space: nowrap;
-}
-
-.overlay-begin {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgb(255 255 255);
-  background: rgb(var(--md-primary));
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0 0 0 / 0.35);
-  transition: transform 0.15s ease, filter 0.15s ease;
-}
-.overlay-begin:hover {
-  filter: brightness(1.08);
-  transform: scale(1.04);
-}
-.overlay-begin:active {
-  transform: scale(0.96);
 }
 </style>

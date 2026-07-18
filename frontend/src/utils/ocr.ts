@@ -41,6 +41,8 @@ export async function recognizeImage(canvas: HTMLCanvasElement): Promise<string>
     servicePromise = null
     throw e
   }
-  const result = await service.recognize(canvas)
+  // noCache: 库的全局缓存只用图像前 1024 字节做 key，
+  // 同一应用/相同尺寸的画面会撞键返回陈旧结果
+  const result = await service.recognize(canvas, { noCache: true })
   return (result.text || '').trim()
 }

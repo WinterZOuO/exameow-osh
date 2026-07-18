@@ -245,21 +245,21 @@ fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
 
 #[cfg(desktop)]
 #[tauri::command]
-fn capture_screen(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError> {
-    std::panic::catch_unwind(|| capture_screen_inner(x, y, w, h))
+fn capture_screen(x: i32, y: i32, w: i32, h: i32, force: Option<bool>) -> Result<tauri::ipc::Response, CommandError> {
+    std::panic::catch_unwind(|| capture_screen_inner(x, y, w, h, force.unwrap_or(false)))
         .map_err(|_| CommandError("Screen capture panicked".to_string()))?
 }
 
 #[cfg(not(desktop))]
 #[tauri::command]
-fn capture_screen(_x: i32, _y: i32, _w: i32, _h: i32) -> Result<String, CommandError> {
+fn capture_screen(_x: i32, _y: i32, _w: i32, _h: i32, _force: Option<bool>) -> Result<tauri::ipc::Response, CommandError> {
     Err(CommandError(
         "Screen capture is only supported on desktop".to_string(),
     ))
 }
 
 #[cfg(desktop)]
-fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32) -> Result<String, CommandError> {
+fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32, force: bool) -> Result<tauri::ipc::Response, CommandError> {
     let t0 = std::time::Instant::now();
     let monitors = xcap::Monitor::all()
         .map_err(|e| CommandError(format!("Failed to enumerate monitors: {e}")))?;
@@ -278,12 +278,60 @@ fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32) -> Result<String, Comman
     let cw = (w.max(1) as u32).min(img_w - cx);
     let ch = (h.max(1) as u32).min(img_h - cy);
     let cropped = dyn_img.crop(cx, cy, cw, ch);
+    let changed = frame_changed(&cropped);
+    if !force && !changed {
+        eprintln!("[capture_screen] unchanged, skipped, elapsed={:?}", t0.elapsed());
+        return Ok(tauri::ipc::Response::new(Vec::new()));
+    }
     eprintln!("[capture_screen] crop=({cx},{cy},{cw}x{ch}) of {img_w}x{img_h}, elapsed={:?}", t0.elapsed());
     let mut buf = std::io::Cursor::new(Vec::new());
     cropped
         .write_to(&mut buf, image::ImageFormat::Jpeg)
         .map_err(|e| CommandError(format!("Failed to encode JPEG: {e}")))?;
-    Ok(base64::engine::general_purpose::STANDARD.encode(buf.into_inner()))
+    Ok(tauri::ipc::Response::new(buf.into_inner()))
+}
+
+// 抽稀采样对比相邻两帧：静态画面直接跳过 JPEG 编码和 IPC 传输。
+// 阈值 1.5%：光标闪烁/动画不计入，切换题目（整片文字变化）必然超过。
+#[cfg(desktop)]
+static LAST_FRAME: std::sync::Mutex<Option<(u32, u32, Vec<u8>)>> = std::sync::Mutex::new(None);
+
+#[cfg(desktop)]
+fn frame_changed(img: &image::DynamicImage) -> bool {
+    let rgba = img.to_rgba8();
+    let (w, h) = (rgba.width(), rgba.height());
+    let data = rgba.as_raw();
+    const STRIDE: usize = 4096;
+    let mut samples = Vec::with_capacity(data.len() / STRIDE * 3 + 3);
+    let mut i = 0;
+    while i + 2 < data.len() {
+        samples.push(data[i]);
+        samples.push(data[i + 1]);
+        samples.push(data[i + 2]);
+        i += STRIDE;
+    }
+    let mut guard = LAST_FRAME.lock().unwrap();
+    let changed = match guard.as_ref() {
+        Some((pw, ph, prev)) if *pw == w && *ph == h && prev.len() == samples.len() => {
+            let mut diff = 0usize;
+            for (a, b) in prev.iter().zip(samples.iter()) {
+                if (*a as i32 - *b as i32).abs() > 24 {
+                    diff += 1;
+                }
+            }
+            diff * 1000 / samples.len().max(1) > 15
+        }
+        _ => true,
+    };
+    if changed {
+        *guard = Some((w, h, samples));
+    }
+    changed
+}
+
+#[tauri::command]
+fn frontend_log(msg: String) {
+    eprintln!("[frontend] {msg}");
 }
 
 #[tauri::command]
@@ -306,6 +354,8 @@ fn create_record_windows(
 ) -> Result<(), CommandError> {
     if let Some(w) = app.get_webview_window("record-overlay") { w.close().ok(); }
     if let Some(w) = app.get_webview_window("answer-float") { w.close().ok(); }
+
+    *LAST_FRAME.lock().unwrap() = None;
 
     #[cfg(debug_assertions)]
     let overlay_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/record-overlay".parse().unwrap());
@@ -460,6 +510,7 @@ pub fn run() {
             save_vision_config,
             load_vision_config,
             capture_screen,
+            frontend_log,
             create_record_windows,
             close_record_windows,
             resize_record_overlay,

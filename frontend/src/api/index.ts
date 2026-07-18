@@ -177,11 +177,11 @@ export const api = {
     return httpApi.extractQuestionText(imageDataUrl, config, signal)
   },
 
-  async captureScreen(x: number, y: number, w: number, h: number): Promise<string> {
+  async captureScreen(x: number, y: number, w: number, h: number, force = false): Promise<Uint8Array> {
     if (!isTauri()) {
       throw new Error('Screen capture is only available in the desktop/mobile app')
     }
-    return tauriApi.captureScreen(x, y, w, h)
+    return tauriApi.captureScreen(x, y, w, h, force)
   },
 
   async createRecordWindows(

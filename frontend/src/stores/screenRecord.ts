@@ -25,7 +25,6 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
   })
   const currentResult = ref<MatchResult | null>(null)
   const ocrText = ref('')
-  const lastCaptureHash = ref('')
   const overlayVisible = ref(true)
   const collapsed = ref(false)
 
@@ -53,7 +52,6 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     status.value = 'idle'
     currentResult.value = null
     ocrText.value = ''
-    lastCaptureHash.value = ''
   }
 
   function setRegion(r: Partial<ScreenRegion>) {
@@ -63,10 +61,6 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
   function setResult(result: MatchResult | null, text: string) {
     currentResult.value = result
     ocrText.value = text
-  }
-
-  function setLastCaptureHash(hash: string) {
-    lastCaptureHash.value = hash
   }
 
   function toggleOverlay() {
@@ -82,7 +76,6 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     region,
     currentResult,
     ocrText,
-    lastCaptureHash,
     overlayVisible,
     collapsed,
     isRecording,
@@ -93,7 +86,6 @@ export const useScreenRecordStore = defineStore('screenRecord', () => {
     stopRecording,
     setRegion,
     setResult,
-    setLastCaptureHash,
     toggleOverlay,
     setCollapsed,
   }

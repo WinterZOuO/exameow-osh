@@ -125,8 +125,13 @@ export const tauriApi = {
     })
   },
 
-  async captureScreen(x: number, y: number, w: number, h: number): Promise<string> {
-    return invoke<string>('capture_screen', { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) })
+  async captureScreen(x: number, y: number, w: number, h: number, force = false): Promise<Uint8Array> {
+    const res = await invoke<Uint8Array | ArrayBuffer | number[]>('capture_screen', {
+      x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), force,
+    })
+    if (res instanceof Uint8Array) return res
+    if (res instanceof ArrayBuffer) return new Uint8Array(res)
+    return new Uint8Array(res)
   },
 
   async createRecordWindows(

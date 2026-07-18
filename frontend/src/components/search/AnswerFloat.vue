@@ -11,11 +11,13 @@ import {
   VideoCameraIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import { PlayIcon } from '@heroicons/vue/24/solid'
 
 const store = useScreenRecordStore()
 const i18n = useI18nStore()
 
 const adjusting = ref(true)
+const hasBegun = ref(false)
 const unlistenFns: Array<() => void> = []
 
 let win: any = null
@@ -37,6 +39,7 @@ onMounted(async () => {
 
   unlistenFns.push(await listen('screen-record:begin', () => {
     adjusting.value = false
+    hasBegun.value = true
   }))
 })
 
@@ -60,6 +63,12 @@ async function handleAdjust() {
 
 async function handleExit() {
   await ctl?.stop()
+}
+
+async function handleBegin() {
+  hasBegun.value = true
+  const { emit } = await import('@tauri-apps/api/event')
+  await emit('screen-record:request-begin')
 }
 
 function isCorrect(idx: number): boolean {
@@ -116,7 +125,7 @@ function isCorrect(idx: number): boolean {
         </div>
       </div>
 
-      <div v-if="adjusting" class="shrink-0 px-3.5 pb-1.5">
+      <div v-if="adjusting && hasBegun" class="shrink-0 px-3.5 pb-1.5">
         <div class="float-paused">
           <PauseCircleIcon class="w-3.5 h-3.5 shrink-0" />
           <span class="truncate">{{ i18n.t('searchScreenRecordPaused') }}</span>
@@ -124,7 +133,25 @@ function isCorrect(idx: number): boolean {
       </div>
 
       <div class="float-body flex-1 overflow-y-auto px-3.5 pb-3 min-h-0" @dblclick="handleRefresh">
-        <div v-if="store.currentResult" :key="store.currentResult.question.id" class="space-y-2 pt-0.5">
+        <div v-if="adjusting" class="flex flex-col items-center justify-center h-full gap-3">
+          <button
+            class="float-begin-btn"
+            @mousedown.stop
+            @click="handleBegin"
+          >
+            <PlayIcon class="w-6 h-6" />
+          </button>
+          <div class="text-center">
+            <p class="text-[15px] font-semibold" style="color: var(--accent);">
+              {{ hasBegun ? i18n.t('searchScreenRecordResume') : i18n.t('searchScreenRecordStart') }}
+            </p>
+            <p v-if="!hasBegun" class="text-[11px] mt-1" style="color: var(--fg2);">
+              先调整录制框，再点击开始
+            </p>
+          </div>
+        </div>
+
+        <div v-else-if="store.currentResult" :key="store.currentResult.question.id" class="space-y-2 pt-0.5">
           <div class="float-answer">
             <CheckIcon class="w-4 h-4 shrink-0" />
             <span class="text-[13px] font-bold">
@@ -310,5 +337,27 @@ html, body, #app {
 @keyframes float-pop {
   from { transform: scale(0.85); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+.float-begin-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: #ffffff;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(10, 132, 255, 0.35);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.float-begin-btn:hover {
+  filter: brightness(1.06);
+  transform: scale(1.04);
+}
+.float-begin-btn:active {
+  transform: scale(0.96);
 }
 </style>

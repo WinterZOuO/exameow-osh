@@ -44,9 +44,9 @@ interface StoredSettings {
 function loadSettings(): StoredSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (raw) return { bankIds: null, scope: 'stem', types: null, ...JSON.parse(raw) }
+    if (raw) return { bankIds: null, scope: 'stem_options', types: null, ...JSON.parse(raw) }
   } catch {}
-  return { bankIds: null, scope: 'stem', types: null }
+  return { bankIds: null, scope: 'stem_options', types: null }
 }
 
 const stored = loadSettings()
@@ -248,11 +248,11 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
         <div>
           <div class="text-label-lg mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchMatchScope') }}</div>
           <div class="flex flex-wrap gap-2">
-            <button class="chip-filter" :class="{ 'chip-filter-active': scope === 'stem' }" @click="scope = 'stem'">
-              {{ i18n.t('searchMatchStem') }}
-            </button>
             <button class="chip-filter" :class="{ 'chip-filter-active': scope === 'stem_options' }" @click="scope = 'stem_options'">
               {{ i18n.t('searchMatchStemOptions') }}
+            </button>
+            <button class="chip-filter" :class="{ 'chip-filter-active': scope === 'stem' }" @click="scope = 'stem'">
+              {{ i18n.t('searchMatchStem') }}
             </button>
           </div>
         </div>

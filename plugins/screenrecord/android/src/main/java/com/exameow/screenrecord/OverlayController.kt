@@ -24,8 +24,8 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.Space
 import android.widget.TextView
 import kotlin.math.max
 import kotlin.math.min
@@ -59,8 +59,8 @@ class OverlayController(
   private lateinit var optionsLabel: TextView
   private lateinit var bankLabel: TextView
   private lateinit var emptyLabel: TextView
-  private lateinit var beginButton: TextView
-  private lateinit var adjustButton: TextView
+  private lateinit var beginCardButton: TextView
+  private lateinit var adjustButton: ImageButton
   private var everBegan = false
 
   companion object {
@@ -117,14 +117,16 @@ class OverlayController(
 
   fun markBegan() {
     everBegan = true
-  }
-
-  fun setAdjusting(adjusting: Boolean) {
     mainHandler.post {
-      if (::beginButton.isInitialized) {
-        beginButton.text = if (adjusting && everBegan) "\u25B6 完成调整，继续录制" else "\u25B6 开始录制"
+      if (::beginCardButton.isInitialized) {
+        beginCardButton.visibility = View.GONE
       }
     }
+  }
+
+  @Suppress("UNUSED_PARAMETER")
+  fun setAdjusting(adjusting: Boolean) {
+    // No-op: the begin button now lives in the answer card, not the frame.
   }
 
   fun frameRect(): Rect? {
@@ -240,20 +242,6 @@ class OverlayController(
           setColor(0x9E000000.toInt())
           cornerRadius = dp(14f).toFloat()
         }
-      })
-      addView(Space(activity), LinearLayout.LayoutParams(1, dp(10f)))
-      addView(TextView(activity).apply {
-        text = "\u25B6 开始录制"
-        setTextColor(Color.WHITE)
-        textSize = 13f
-        typeface = android.graphics.Typeface.DEFAULT_BOLD
-        setPadding(dp(20f), dp(9f), dp(20f), dp(9f))
-        background = GradientDrawable().apply {
-          setColor(ACCENT)
-          cornerRadius = dp(18f).toFloat()
-        }
-        setOnClickListener { listener.onBeginClicked() }
-        beginButton = this
       })
     }
     val cp = FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
@@ -376,10 +364,31 @@ class OverlayController(
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
     header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-    header.addView(iconButton("\u26F6") { listener.onAdjustClicked() }.also { adjustButton = it })
-    header.addView(iconButton("\u21BB") { listener.onRefreshClicked() })
-    header.addView(iconButton("\u2715", DANGER) { listener.onExitClicked() })
+    header.addView(iconButton(R.drawable.ic_adjust) { listener.onAdjustClicked() }.also { adjustButton = it })
+    header.addView(iconButton(R.drawable.ic_refresh) { listener.onRefreshClicked() })
+    header.addView(iconButton(R.drawable.ic_close, DANGER) { listener.onExitClicked() })
     root.addView(header)
+
+    beginCardButton = TextView(activity).apply {
+      text = "\u25B6 开始录制"
+      setTextColor(Color.WHITE)
+      textSize = 14f
+      typeface = android.graphics.Typeface.DEFAULT_BOLD
+      gravity = Gravity.CENTER
+      setPadding(dp(20f), dp(14f), dp(20f), dp(14f))
+      background = GradientDrawable().apply {
+        setColor(ACCENT)
+        cornerRadius = dp(24f).toFloat()
+      }
+      setOnClickListener { listener.onBeginClicked() }
+    }
+    val beginLp = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+      topMargin = dp(12f)
+      bottomMargin = dp(12f)
+      leftMargin = dp(8f)
+      rightMargin = dp(8f)
+    }
+    root.addView(beginCardButton, beginLp)
 
     pausedChip = TextView(activity).apply {
       text = "调整录制框中，识别已暂停"
@@ -460,15 +469,14 @@ class OverlayController(
     wm.addView(root, p)
   }
 
-  private fun iconButton(icon: String, color: Int = TEXT_PRIMARY, onClick: () -> Unit): TextView {
-    return TextView(activity).apply {
-      text = icon
-      setTextColor(color)
-      textSize = 16f
-      gravity = Gravity.CENTER
-      typeface = android.graphics.Typeface.DEFAULT_BOLD
+  private fun iconButton(iconRes: Int, color: Int = TEXT_PRIMARY, onClick: () -> Unit): ImageButton {
+    return ImageButton(activity).apply {
+      setImageResource(iconRes)
+      setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
+      scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+      val padding = dp(6f)
+      setPadding(padding, padding, padding, padding)
       val size = dp(32f)
-      setPadding(0, 0, 0, 0)
       background = GradientDrawable().apply {
         setColor(FILL)
         cornerRadius = size / 2f
@@ -519,7 +527,19 @@ class OverlayController(
   ) {
     mainHandler.post {
       if (answerRoot == null) return@post
-      pausedChip.visibility = if (paused) View.VISIBLE else View.GONE
+      if (paused || !everBegan) {
+        beginCardButton.visibility = View.VISIBLE
+        beginCardButton.text = if (everBegan) "\u25B6 继续录制" else "\u25B6 开始录制"
+        pausedChip.visibility = if (paused) View.VISIBLE else View.GONE
+        emptyLabel.visibility = View.GONE
+        answerLabel.visibility = View.GONE
+        stemLabel.visibility = View.GONE
+        optionsLabel.visibility = View.GONE
+        bankLabel.visibility = View.GONE
+        return@post
+      }
+      beginCardButton.visibility = View.GONE
+      pausedChip.visibility = View.GONE
       if (!found) {
         emptyLabel.visibility = View.VISIBLE
         answerLabel.visibility = View.GONE

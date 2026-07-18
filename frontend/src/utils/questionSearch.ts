@@ -153,7 +153,7 @@ export interface ScanDecision {
   reason: string
 }
 
-const SCAN_SWITCH_MARGIN = 0.15
+const SCAN_SWITCH_MARGIN = 0.05
 const SCAN_GONE_SCORE = 0.35
 
 export function decideScanResult(prev: Question | null, hits: SearchHit[]): ScanDecision {
@@ -163,6 +163,8 @@ export function decideScanResult(prev: Question | null, hits: SearchHit[]): Scan
 
   const same = (q: Question) => q === prev || (q.id !== '' && q.id === prev.id)
   if (same(best.question)) return { action: 'set', hit: best, reason: 'same question, refresh score' }
+
+  if (best.tier === 'exact') return { action: 'set', hit: best, reason: 'exact hit, switch' }
 
   const prevScore = hits.find((h) => same(h.question))?.score ?? 0
   if (prevScore < SCAN_GONE_SCORE) {
@@ -223,7 +225,10 @@ export function searchQuestions(
     }
   } else {
     let denom = 0
-    for (const term of qTerms.keys()) denom += idfOf(term)
+    for (const term of qTerms.keys()) {
+      if (!index.df.has(term)) continue
+      denom += idfOf(term)
+    }
 
     for (const doc of index.docs) {
       let tier: MatchTier = 'fuzzy'
@@ -250,8 +255,8 @@ export function searchQuestions(
   }
 
   hits.sort((a, b) => {
-    if (a.tier !== b.tier) return a.tier === 'exact' ? -1 : 1
-    return b.score - a.score
+    if (b.score !== a.score) return b.score - a.score
+    return a.tier === b.tier ? 0 : a.tier === 'exact' ? -1 : 1
   })
   return hits.slice(0, MAX_HITS)
 }

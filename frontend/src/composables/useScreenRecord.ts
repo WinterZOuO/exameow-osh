@@ -14,56 +14,84 @@ let floatUnlistenFns: Array<() => void> = []
 
 function log(...args: unknown[]) {
   console.log('[录屏搜题]', ...args)
+  const msg = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')
+  import('@tauri-apps/api/core')
+    .then(({ invoke }) => invoke('frontend_log', { msg: `[录屏搜题] ${msg}` }).catch(() => {}))
+    .catch(() => {})
 }
 
-function computeThumbHash(src: string): Promise<string> {
-  return new Promise<string>((resolve) => {
-    const img = new Image()
-    img.onload = () => {
-      const W = 128
-      const H = 96
-      const canvas = document.createElement('canvas')
-      canvas.width = W
-      canvas.height = H
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })!
-      ctx.drawImage(img, 0, 0, W, H)
-      const data = ctx.getImageData(0, 0, W, H).data
-      let sig = ''
-      for (let i = 0; i < data.length; i += 4) {
-        const lum = (data[i]! * 3 + data[i + 1]! * 4 + data[i + 2]!) >> 3
-        sig += (lum >> 4).toString(16)
+// 移动端帧去重（桌面端由 Rust 帧变化检测负责，见 capture_screen）
+let lastJpeg = ''
+
+function resetFrameDedup() {
+  lastJpeg = ''
+}
+
+// ---- 帧处理队列：只保留最新待处理帧，过期帧直接丢弃 ----
+// 截屏（IPC）与 OCR（WASM 线程）由此并行，吞吐约提升一倍
+interface PendingFrame {
+  bitmap: ImageBitmap
+  done: () => void
+}
+let processBusy = false
+let pendingFrame: PendingFrame | null = null
+
+function enqueueFrame(bitmap: ImageBitmap): Promise<void> {
+  return new Promise((resolve) => {
+    if (processBusy) {
+      if (pendingFrame) {
+        pendingFrame.bitmap.close()
+        pendingFrame.done()
       }
-      resolve(sig)
+      pendingFrame = { bitmap, done: resolve }
+      return
     }
-    img.onerror = () => resolve('')
-    img.src = src
+    processBusy = true
+    void (async () => {
+      let current: PendingFrame | null = { bitmap, done: resolve }
+      try {
+        while (current) {
+          const frame = current
+          current = null
+          try {
+            await processFrameBitmap(frame.bitmap)
+          } catch (e) {
+            console.warn('[录屏搜题] frame failed:', e)
+          }
+          frame.bitmap.close()
+          frame.done()
+          current = pendingFrame
+          pendingFrame = null
+        }
+      } finally {
+        processBusy = false
+      }
+    })()
   })
 }
 
-let processBusy = false
-let processQueued: string | null = null
-
-async function processFrame(dataUrl: string) {
+async function processFrameBitmap(bitmap: ImageBitmap) {
   const store = useScreenRecordStore()
   if (store.status !== 'recording') return
-  const hash = await computeThumbHash(dataUrl)
-  if (hash && hash === store.lastCaptureHash) return
-  store.setLastCaptureHash(hash)
 
-  const img = new Image()
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('Failed to load JPEG'))
-    img.src = dataUrl
-  })
-
-  const MAX_SIDE = 1280
-  const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height))
+  const MAX_SIDE = 1600
+  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
-  canvas.width = Math.max(1, Math.round(img.width * scale))
-  canvas.height = Math.max(1, Math.round(img.height * scale))
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+  // 画布为空（webview 被遮挡时 drawImage 可能得到全零像素）则跳过本帧
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+  let sum = 0
+  for (let i = 0; i < pixels.length; i += 4096 * 4) {
+    sum += pixels[i]! + pixels[i + 1]! + pixels[i + 2]!
+  }
+  if (sum === 0) {
+    log('画布全零（窗口可能被遮挡），丢弃本帧')
+    return
+  }
 
   const t1 = performance.now()
   const text = await recognizeImage(canvas)
@@ -77,6 +105,10 @@ async function processFrame(dataUrl: string) {
     log(`OCR ${ocrMs}ms，无文本`)
     return
   }
+  if (text.replace(/\s+/g, '').length < 8) {
+    log(`OCR ${ocrMs}ms，文本过短，忽略:`, text.slice(0, 30))
+    return
+  }
   log(`OCR ${ocrMs}ms (${canvas.width}x${canvas.height}):`, text.slice(0, 100) + (text.length > 100 ? '…' : ''))
 
   const practiceStore = usePracticeStore()
@@ -84,7 +116,7 @@ async function processFrame(dataUrl: string) {
     bankIds: null,
     scope: 'stem_options',
     types: null,
-    mode: 'scan',
+    mode: 'search',
   })
 
   log('候选:', hits.length
@@ -108,21 +140,23 @@ async function processFrame(dataUrl: string) {
   }
 }
 
-async function captureOnce() {
+async function captureOnce(force = false) {
   const store = useScreenRecordStore()
   if (store.status !== 'recording') return
   try {
     const { x, y, w, h } = store.region
     const t0 = performance.now()
-    const jpeg = await api.captureScreen(x, y, w, h)
+    const bytes = await api.captureScreen(x, y, w, h, force)
     log(`截图 ${Math.round(performance.now() - t0)}ms`)
-    await processFrame(`data:image/jpeg;base64,${jpeg}`)
+    if (bytes.byteLength === 0) return
+    const bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: 'image/jpeg' }))
+    void enqueueFrame(bitmap)
   } catch (e) {
     console.warn('[录屏搜题] capture failed:', e)
   }
 }
 
-async function capture() {
+async function capture(force = false) {
   if (captureBusy) {
     captureQueued = true
     return
@@ -131,7 +165,8 @@ async function capture() {
   try {
     do {
       captureQueued = false
-      await captureOnce()
+      await captureOnce(force)
+      force = false
     } while (captureQueued)
   } finally {
     captureBusy = false
@@ -140,7 +175,7 @@ async function capture() {
 
 function startTimer() {
   if (timer) clearInterval(timer)
-  timer = setInterval(capture, 1200)
+  timer = setInterval(capture, 900)
 }
 
 function stopTimer() {
@@ -157,26 +192,19 @@ export function useScreenRecord() {
   // receives cropped JPEG frames over a Channel and pushes results back =====
 
   async function processFrameMobile(dataUrl: string) {
-    if (processBusy) {
-      processQueued = dataUrl
-      return
-    }
-    processBusy = true
-    let current: string | null = dataUrl
+    if (dataUrl === lastJpeg) return
+    lastJpeg = dataUrl
     try {
-      while (current) {
-        const frame = current
-        current = null
-        try {
-          await processFrame(frame)
-        } catch (e) {
-          console.warn('[录屏搜题] mobile frame failed:', e)
-        }
-        current = processQueued
-        processQueued = null
-      }
-    } finally {
-      processBusy = false
+      const img = new Image()
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Failed to load frame'))
+        img.src = dataUrl
+      })
+      const bitmap = await createImageBitmap(img)
+      await enqueueFrame(bitmap)
+    } catch (e) {
+      console.warn('[录屏搜题] mobile frame failed:', e)
     }
     await pushAnswerToOverlay()
   }
@@ -206,7 +234,7 @@ export function useScreenRecord() {
       switch (msg?.type) {
         case 'begin':
           store.beginRecording()
-          store.setLastCaptureHash('')
+          resetFrameDedup()
           void pushAnswerToOverlay()
           break
         case 'frame':
@@ -217,7 +245,7 @@ export function useScreenRecord() {
           void pushAnswerToOverlay()
           break
         case 'refresh':
-          store.setLastCaptureHash('')
+          resetFrameDedup()
           break
         case 'exit':
         case 'denied':
@@ -267,7 +295,7 @@ export function useScreenRecord() {
     floatUnlistenFns.push(await listen<ScreenRegion>('screen-record:begin', (e) => {
       if (e.payload) store.setRegion(e.payload)
       store.beginRecording()
-      store.setLastCaptureHash('')
+      resetFrameDedup()
       startTimer()
       void capture()
     }))
@@ -279,8 +307,8 @@ export function useScreenRecord() {
   }
 
   async function refresh() {
-    store.setLastCaptureHash('')
-    await capture()
+    resetFrameDedup()
+    await capture(true)
   }
 
   async function adjust() {
