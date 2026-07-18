@@ -326,8 +326,8 @@ class OverlayController(
   // ==================== 答案卡片 ====================
 
   private fun showAnswerOverlay() {
-    val width = min(dp(340f), screenW - dp(24f))
-    val p = overlayParams(width, WRAP_CONTENT, screenW - width - dp(12f), (screenH * 0.5f).toInt())
+    val width = min(dp(200f), screenW - dp(10f))
+    val p = overlayParams(width, WRAP_CONTENT, screenW - width - dp(6f), (screenH * 0.5f).toInt())
     answerParams = p
 
     val cardBg = GradientDrawable().apply {
@@ -337,7 +337,7 @@ class OverlayController(
 
     val root = LinearLayout(activity).apply {
       orientation = LinearLayout.VERTICAL
-      setPadding(dp(14f), dp(8f), dp(14f), dp(12f))
+      setPadding(dp(8f), dp(6f), dp(8f), dp(8f))
       background = cardBg
       elevation = dp(10f).toFloat()
     }
@@ -350,7 +350,7 @@ class OverlayController(
     }
     val gripLp = LinearLayout.LayoutParams(dp(36f), dp(5f))
     gripLp.gravity = Gravity.CENTER_HORIZONTAL
-    gripLp.bottomMargin = dp(6f)
+    gripLp.bottomMargin = dp(4f)
     root.addView(grip, gripLp)
 
     val header = LinearLayout(activity).apply {
@@ -360,7 +360,7 @@ class OverlayController(
     val title = TextView(activity).apply {
       text = "录屏搜题"
       setTextColor(TEXT_PRIMARY)
-      textSize = 13f
+      textSize = 10f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
     header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
@@ -372,10 +372,10 @@ class OverlayController(
     beginCardButton = TextView(activity).apply {
       text = "\u25B6 开始录制"
       setTextColor(Color.WHITE)
-      textSize = 14f
+      textSize = 11f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       gravity = Gravity.CENTER
-      setPadding(dp(20f), dp(14f), dp(20f), dp(14f))
+      setPadding(dp(14f), dp(10f), dp(14f), dp(10f))
       background = GradientDrawable().apply {
         setColor(ACCENT)
         cornerRadius = dp(24f).toFloat()
@@ -383,19 +383,19 @@ class OverlayController(
       setOnClickListener { listener.onBeginClicked() }
     }
     val beginLp = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-      topMargin = dp(12f)
-      bottomMargin = dp(12f)
-      leftMargin = dp(8f)
-      rightMargin = dp(8f)
+      topMargin = dp(8f)
+      bottomMargin = dp(8f)
+      leftMargin = dp(6f)
+      rightMargin = dp(6f)
     }
     root.addView(beginCardButton, beginLp)
 
     pausedChip = TextView(activity).apply {
       text = "调整录制框中，识别已暂停"
       setTextColor(0xFFFF9500.toInt())
-      textSize = 11f
+      textSize = 10f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
-      setPadding(dp(10f), dp(4f), dp(10f), dp(4f))
+      setPadding(dp(8f), dp(3f), dp(8f), dp(3f))
       background = GradientDrawable().apply {
         setColor(0x1FFF9500)
         cornerRadius = dp(12f).toFloat()
@@ -403,14 +403,14 @@ class OverlayController(
       visibility = View.GONE
     }
     val chipLp = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-    chipLp.topMargin = dp(6f)
+    chipLp.topMargin = dp(4f)
     root.addView(pausedChip, chipLp)
 
     answerLabel = TextView(activity).apply {
       setTextColor(ACCENT)
       textSize = 15f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
-      setPadding(dp(12f), dp(6f), dp(12f), dp(6f))
+      setPadding(dp(8f), dp(5f), dp(8f), dp(5f))
       background = GradientDrawable().apply {
         setColor(0x1F0A84FF)
         cornerRadius = dp(14f).toFloat()
@@ -418,46 +418,46 @@ class OverlayController(
       visibility = View.GONE
     }
     val answerLp = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-    answerLp.topMargin = dp(8f)
+    answerLp.topMargin = dp(6f)
     root.addView(answerLabel, answerLp)
 
     stemLabel = TextView(activity).apply {
       setTextColor(TEXT_PRIMARY)
-      textSize = 13f
+      textSize = 10f
       maxLines = 3
       ellipsize = android.text.TextUtils.TruncateAt.END
       visibility = View.GONE
     }
     val stemLp = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-    stemLp.topMargin = dp(6f)
+    stemLp.topMargin = dp(4f)
     root.addView(stemLabel, stemLp)
 
     optionsLabel = TextView(activity).apply {
       setTextColor(TEXT_SECONDARY)
-      textSize = 12f
+      textSize = 9f
       maxLines = 6
       ellipsize = android.text.TextUtils.TruncateAt.END
       visibility = View.GONE
     }
     val optLp = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-    optLp.topMargin = dp(6f)
+    optLp.topMargin = dp(4f)
     root.addView(optionsLabel, optLp)
 
     bankLabel = TextView(activity).apply {
       setTextColor(TEXT_SECONDARY)
-      textSize = 10f
+      textSize = 8f
       visibility = View.GONE
     }
     val bankLp = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-    bankLp.topMargin = dp(4f)
+    bankLp.topMargin = dp(3f)
     root.addView(bankLabel, bankLp)
 
     emptyLabel = TextView(activity).apply {
       text = "未匹配到题目"
       setTextColor(TEXT_SECONDARY)
-      textSize = 13f
+      textSize = 10f
       gravity = Gravity.CENTER
-      setPadding(0, dp(12f), 0, dp(8f))
+      setPadding(0, dp(8f), 0, dp(6f))
     }
     root.addView(emptyLabel)
 
@@ -474,15 +474,15 @@ class OverlayController(
       setImageResource(iconRes)
       setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
       scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-      val padding = dp(6f)
+      val padding = dp(4f)
       setPadding(padding, padding, padding, padding)
-      val size = dp(32f)
+      val size = dp(24f)
       background = GradientDrawable().apply {
         setColor(FILL)
         cornerRadius = size / 2f
       }
       layoutParams = LinearLayout.LayoutParams(size, size).apply {
-        leftMargin = dp(6f)
+        leftMargin = dp(4f)
       }
       setOnClickListener { onClick() }
     }
@@ -557,7 +557,7 @@ class OverlayController(
 
       if (options.isNotEmpty()) {
         optionsLabel.visibility = View.VISIBLE
-        val correctLetter = answer.trim().uppercase().firstOrNull()
+        val correctLetters = answer.uppercase().filter { it in 'A'..'H' }.toSet()
         val sb = StringBuilder()
         options.forEachIndexed { idx, opt ->
           if (idx > 0) sb.append('\n')
@@ -569,7 +569,7 @@ class OverlayController(
         for ((idx, line) in lines.withIndex()) {
           val end = lineStart + line.length
           val letter = 'A' + idx
-          if (correctLetter != null && letter == correctLetter) {
+          if (correctLetters.contains(letter)) {
             spannable.setSpan(
               ForegroundColorSpan(ACCENT), lineStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )

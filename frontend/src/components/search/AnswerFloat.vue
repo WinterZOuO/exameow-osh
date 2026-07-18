@@ -73,8 +73,11 @@ async function handleBegin() {
 
 function isCorrect(idx: number): boolean {
   const r = store.currentResult
-  if (!r || r.question.type === 'short_answer') return false
-  return String.fromCharCode(65 + idx) === r.question.answer?.trim().toUpperCase()
+  if (!r) return false
+  const q = r.question
+  if (q.type !== 'single_choice' && q.type !== 'multi_choice') return false
+  const letters = (q.answer ?? '').trim().toUpperCase().replace(/[^A-H]/g, '')
+  return letters.includes(String.fromCharCode(65 + idx))
 }
 </script>
 
