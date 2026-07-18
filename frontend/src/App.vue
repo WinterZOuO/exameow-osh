@@ -7,14 +7,15 @@ const configStore = useConfigStore()
 
 const childWindow = ref<string | null>(null)
 
-function detectChildWindow() {
+// 先用 hash 同步检测（避免闪烁），再用 Tauri API 确认
+function syncDetect(): string | null {
   const hash = window.location.hash
   if (hash === '#/src-windows/record-overlay') return 'record-overlay'
   if (hash === '#/src-windows/answer-float') return 'answer-float'
   return null
 }
 
-childWindow.value = detectChildWindow()
+childWindow.value = syncDetect()
 
 const childComponent = computed(() => {
   if (childWindow.value === 'record-overlay') {
@@ -27,11 +28,18 @@ const childComponent = computed(() => {
 })
 
 onMounted(async () => {
+  // Tauri API 确认（覆盖 hash 检测结果）
+  try {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window')
+    const label = getCurrentWindow().label
+    if (label === 'record-overlay' || label === 'answer-float') {
+      childWindow.value = label
+    }
+  } catch { /* not in Tauri */ }
+
   if (childWindow.value) {
-    const theme = localStorage.getItem('exameow-theme') || 'system'
-    const dark = theme === 'dark'
-      || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-    document.documentElement.classList.toggle('dark', dark)
+    const { initChildTheme } = await import('@/utils/childTheme')
+    await initChildTheme()
     return
   }
   await configStore.loadSaved()

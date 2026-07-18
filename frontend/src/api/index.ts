@@ -184,12 +184,9 @@ export const api = {
     return tauriApi.captureScreen(x, y, w, h, force)
   },
 
-  async createRecordWindows(
-    overlayX: number, overlayY: number, overlayW: number, overlayH: number,
-    floatX: number, floatY: number, floatW: number, floatH: number,
-  ): Promise<void> {
+  async createRecordWindows(): Promise<void> {
     if (!isTauri()) throw new Error('Not available on this platform')
-    return tauriApi.createRecordWindows(overlayX, overlayY, overlayW, overlayH, floatX, floatY, floatW, floatH)
+    return tauriApi.createRecordWindows()
   },
 
   async closeRecordWindows(): Promise<void> {

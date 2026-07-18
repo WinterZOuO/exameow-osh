@@ -134,14 +134,8 @@ export const tauriApi = {
     return new Uint8Array(res)
   },
 
-  async createRecordWindows(
-    overlayX: number, overlayY: number, overlayW: number, overlayH: number,
-    floatX: number, floatY: number, floatW: number, floatH: number,
-  ): Promise<void> {
-    return invoke<void>('create_record_windows', {
-      overlayX, overlayY, overlayW, overlayH,
-      floatX, floatY, floatW, floatH,
-    })
+  async createRecordWindows(): Promise<void> {
+    return invoke<void>('create_record_windows')
   },
 
   async closeRecordWindows(): Promise<void> {

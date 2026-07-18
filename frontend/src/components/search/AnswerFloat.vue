@@ -82,7 +82,7 @@ function isCorrect(idx: number): boolean {
 </script>
 
 <template>
-  <div class="w-full h-full select-none" style="padding: 14px;">
+  <div class="w-full h-full select-none">
     <div class="float-card w-full h-full flex flex-col">
       <div
         class="shrink-0 cursor-grab active:cursor-grabbing"
@@ -185,6 +185,18 @@ function isCorrect(idx: number): boolean {
           </p>
         </div>
 
+        <div v-else-if="store.ocrError" class="flex flex-col items-center justify-center h-full gap-2.5">
+          <div class="float-empty-icon" style="color: rgb(var(--md-error));">
+            <XMarkIcon class="w-5 h-5" />
+          </div>
+          <p class="text-[13px] text-center" style="color: rgb(var(--md-error));">
+            OCR 初始化失败
+          </p>
+          <p class="text-[11px] text-center px-2" style="color: var(--fg2);">
+            {{ store.ocrError }}
+          </p>
+        </div>
+
         <div v-else class="flex flex-col items-center justify-center h-full gap-2.5">
           <div class="float-empty-icon">
             <MagnifyingGlassIcon class="w-5 h-5" />
@@ -211,32 +223,21 @@ html, body, #app {
 
 <style scoped>
 .float-card {
-  --fg: #1c1c1e;
-  --fg2: rgba(60, 60, 67, 0.6);
-  --fill: rgba(120, 120, 128, 0.14);
-  --accent: #0a84ff;
-  background: #ffffff;
-  border-radius: 24px;
-  box-shadow:
-    0 16px 44px rgba(0, 0, 0, 0.16),
-    0 2px 10px rgba(0, 0, 0, 0.07);
+  --fg: rgb(var(--md-on-surface));
+  --fg2: rgb(var(--md-on-surface-variant));
+  --fill: rgb(var(--md-surface-container-high));
+  --accent: rgb(var(--md-primary));
+  background: rgb(var(--md-surface-container));
+  border-radius: 16px;
+  border: 1px solid rgb(var(--md-outline-variant));
   overflow: hidden;
-}
-:global(.dark) .float-card {
-  --fg: #f2f2f7;
-  --fg2: rgba(235, 235, 245, 0.6);
-  --fill: rgba(120, 120, 128, 0.3);
-  background: #1c1c1e;
-  box-shadow:
-    0 16px 44px rgba(0, 0, 0, 0.55),
-    0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .float-grip {
   width: 36px;
   height: 5px;
   border-radius: 999px;
-  background: var(--fill);
+  background: rgb(var(--md-outline-variant));
 }
 
 .float-btn {
@@ -259,7 +260,7 @@ html, body, #app {
   transform: scale(0.88);
 }
 .float-btn-danger {
-  color: #ff3b30;
+  color: rgb(var(--md-error));
 }
 
 .float-paused {
@@ -270,8 +271,8 @@ html, body, #app {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  color: #ff9500;
-  background: rgba(255, 149, 0, 0.12);
+  color: rgb(var(--md-on-tertiary-container));
+  background: rgb(var(--md-tertiary-container));
 }
 
 .float-answer {
@@ -280,8 +281,8 @@ html, body, #app {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
-  color: var(--accent);
-  background: rgba(10, 132, 255, 0.12);
+  color: rgb(var(--md-on-primary-container));
+  background: rgb(var(--md-primary-container));
   animation: float-pop 0.25s ease;
 }
 
@@ -295,9 +296,9 @@ html, body, #app {
   background: var(--fill);
 }
 .float-option-correct {
-  color: var(--fg);
+  color: rgb(var(--md-on-primary-container));
   font-weight: 600;
-  background: rgba(10, 132, 255, 0.1);
+  background: rgb(var(--md-primary-container));
 }
 
 .float-letter {
@@ -311,11 +312,11 @@ html, body, #app {
   font-size: 10px;
   font-weight: 700;
   color: var(--fg2);
-  background: rgba(120, 120, 128, 0.18);
+  background: rgb(var(--md-surface-container-highest));
 }
 .float-letter-correct {
-  color: #ffffff;
-  background: var(--accent);
+  color: rgb(var(--md-on-primary));
+  background: rgb(var(--md-primary));
 }
 
 .float-empty-icon {
@@ -350,10 +351,10 @@ html, body, #app {
   align-items: center;
   justify-content: center;
   border: none;
-  color: #ffffff;
-  background: var(--accent);
+  color: rgb(var(--md-on-primary));
+  background: rgb(var(--md-primary));
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(10, 132, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(var(--md-primary) / 0.35);
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 .float-begin-btn:hover {

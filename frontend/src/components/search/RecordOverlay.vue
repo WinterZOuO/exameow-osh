@@ -165,18 +165,18 @@ html, body, #app {
 .overlay-frame {
   inset: 3px;
   border-radius: 16px;
-  border: 2px solid rgb(255 255 255);
-  background: rgba(0 0 0 / 0.04);
+  border: 2px solid rgb(var(--md-primary));
+  background: rgba(var(--md-primary) / 0.05);
   box-shadow:
-    0 0 0 1px rgba(0 0 0 / 0.3),
-    inset 0 0 0 1px rgba(0 0 0 / 0.3);
+    0 0 0 1px rgba(var(--md-scrim) / 0.3),
+    inset 0 0 0 1px rgba(var(--md-scrim) / 0.3);
 }
 
 .overlay-grip {
   position: absolute;
   border-radius: 999px;
-  background: rgb(255 255 255);
-  box-shadow: 0 0 0 1px rgba(0 0 0 / 0.35), 0 1px 4px rgba(0 0 0 / 0.3);
+  background: rgb(var(--md-primary));
+  box-shadow: 0 0 0 1px rgba(var(--md-scrim) / 0.35), 0 1px 4px rgba(var(--md-scrim) / 0.3);
   pointer-events: none;
 }
 
@@ -185,8 +185,8 @@ html, body, #app {
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: rgb(255 255 255);
-  box-shadow: 0 0 0 1px rgba(0 0 0 / 0.35), 0 1px 4px rgba(0 0 0 / 0.3);
+  background: rgb(var(--md-primary));
+  box-shadow: 0 0 0 1px rgba(var(--md-scrim) / 0.35), 0 1px 4px rgba(var(--md-scrim) / 0.3);
   pointer-events: none;
 }
 
@@ -195,8 +195,9 @@ html, body, #app {
   line-height: 1;
   padding: 7px 12px;
   border-radius: 999px;
-  color: rgb(255 255 255);
-  background: rgba(0 0 0 / 0.62);
+  color: rgb(var(--md-on-surface));
+  background: rgb(var(--md-surface-container));
+  border: 1px solid rgb(var(--md-outline-variant));
   white-space: nowrap;
 }
 </style>

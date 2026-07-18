@@ -38,6 +38,11 @@ function applyTheme() {
   const dark = theme.value === 'dark' || (theme.value === 'system' && media.matches)
   document.documentElement.classList.toggle('dark', dark)
   localStorage.setItem(THEME_KEY, theme.value)
+  if (isTauri()) {
+    import('@tauri-apps/api/event')
+      .then(({ emit }) => emit('theme-changed', theme.value))
+      .catch(() => {})
+  }
 }
 
 function onMediaChange() {

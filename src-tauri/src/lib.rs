@@ -263,18 +263,36 @@ fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32, force: bool) -> Result<t
     let t0 = std::time::Instant::now();
     let monitors = xcap::Monitor::all()
         .map_err(|e| CommandError(format!("Failed to enumerate monitors: {e}")))?;
-    let primary = monitors
-        .into_iter()
-        .next()
-        .ok_or_else(|| CommandError("No monitor found".to_string()))?;
-    let captured = primary
+
+    // Pick the monitor whose bounds contain the capture region center,
+    // falling back to the primary monitor.
+    let cx = x + w / 2;
+    let cy = y + h / 2;
+    let monitor = monitors
+        .iter()
+        .find(|m| {
+            let mx = m.x().unwrap_or(0);
+            let my = m.y().unwrap_or(0);
+            let mw = m.width().unwrap_or(0) as i32;
+            let mh = m.height().unwrap_or(0) as i32;
+            cx >= mx && cx < mx + mw && cy >= my && cy < my + mh
+        })
+        .unwrap_or(&monitors[0]);
+
+    let captured = monitor
         .capture_image()
         .map_err(|e| CommandError(format!("Failed to capture screen: {e}")))?;
     let mut dyn_img = image::DynamicImage::ImageRgba8(captured);
     let img_w = dyn_img.width();
     let img_h = dyn_img.height();
-    let cx = (x.max(0) as u32).min(img_w.saturating_sub(1));
-    let cy = (y.max(0) as u32).min(img_h.saturating_sub(1));
+
+    // Convert global coordinates to monitor-local coordinates
+    let mon_x = monitor.x().unwrap_or(0);
+    let mon_y = monitor.y().unwrap_or(0);
+    let local_x = x - mon_x;
+    let local_y = y - mon_y;
+    let cx = (local_x.max(0) as u32).min(img_w.saturating_sub(1));
+    let cy = (local_y.max(0) as u32).min(img_h.saturating_sub(1));
     let cw = (w.max(1) as u32).min(img_w - cx);
     let ch = (h.max(1) as u32).min(img_h - cy);
     let cropped = dyn_img.crop(cx, cy, cw, ch);
@@ -283,7 +301,7 @@ fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32, force: bool) -> Result<t
         eprintln!("[capture_screen] unchanged, skipped, elapsed={:?}", t0.elapsed());
         return Ok(tauri::ipc::Response::new(Vec::new()));
     }
-    eprintln!("[capture_screen] crop=({cx},{cy},{cw}x{ch}) of {img_w}x{img_h}, elapsed={:?}", t0.elapsed());
+    eprintln!("[capture_screen] crop=({cx},{cy},{cw}x{ch}) of {img_w}x{img_h} on monitor({mon_x},{mon_y}), elapsed={:?}", t0.elapsed());
     let mut buf = std::io::Cursor::new(Vec::new());
     cropped
         .write_to(&mut buf, image::ImageFormat::Jpeg)
@@ -340,22 +358,49 @@ fn greet(name: &str) -> String {
 }
 
 #[cfg(desktop)]
+fn place_window(win: &tauri::WebviewWindow, x: f64, y: f64, w: f64, h: f64) -> Result<(), CommandError> {
+    use tauri::{PhysicalPosition, PhysicalSize};
+    win.set_position(PhysicalPosition::new(x as i32, y as i32))
+        .map_err(|e| CommandError(format!("Failed to position window: {e}")))?;
+    win.set_size(PhysicalSize::new(w.max(1.0) as u32, h.max(1.0) as u32))
+        .map_err(|e| CommandError(format!("Failed to size window: {e}")))?;
+    Ok(())
+}
+
+#[cfg(desktop)]
 #[tauri::command]
-fn create_record_windows(
-    app: tauri::AppHandle,
-    overlay_x: f64,
-    overlay_y: f64,
-    overlay_w: f64,
-    overlay_h: f64,
-    float_x: f64,
-    float_y: f64,
-    float_w: f64,
-    float_h: f64,
-) -> Result<(), CommandError> {
+async fn create_record_windows(app: tauri::AppHandle) -> Result<(), CommandError> {
     if let Some(w) = app.get_webview_window("record-overlay") { w.close().ok(); }
     if let Some(w) = app.get_webview_window("answer-float") { w.close().ok(); }
 
     *LAST_FRAME.lock().unwrap() = None;
+
+    // Geometry is computed here (not in JS) on the monitor hosting the main
+    // window, in physical pixels: window.screen in the webview only covers the
+    // current monitor and Tauri's builder position/inner_size are logical, so
+    // JS-side math breaks on multi-monitor or scaled (125%/150%) displays.
+    let main_win = app.get_webview_window("main");
+    let monitor = main_win
+        .as_ref()
+        .and_then(|w| w.current_monitor().ok().flatten())
+        .or_else(|| main_win.as_ref().and_then(|w| w.primary_monitor().ok().flatten()))
+        .ok_or_else(|| CommandError("No monitor found".to_string()))?;
+
+    let sf = monitor.scale_factor();
+    let mx = monitor.position().x as f64;
+    let my = monitor.position().y as f64;
+    let mw = monitor.size().width as f64;
+    let mh = monitor.size().height as f64;
+
+    let overlay_w = (mw * 0.6).round();
+    let overlay_h = (mh * 0.4).round();
+    let overlay_x = (mx + (mw - overlay_w) / 2.0).round();
+    let overlay_y = (my + mh * 0.08).round();
+
+    let float_w = (340.0 * sf).round();
+    let float_h = (320.0 * sf).round();
+    let float_x = (mx + mw - float_w - 20.0 * sf).round();
+    let float_y = (my + mh - float_h - 40.0 * sf).round();
 
     #[cfg(debug_assertions)]
     let overlay_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/record-overlay".parse().unwrap());
@@ -367,8 +412,11 @@ fn create_record_windows(
         "record-overlay",
         overlay_url,
     )
-    .position(overlay_x, overlay_y)
-    .inner_size(overlay_w, overlay_h)
+    // Windows quirk: a transparent window created hidden renders an opaque
+    // white background when shown later (until moved/resized), so create it
+    // visible with logical geometry, then correct with physical values below.
+    .position(overlay_x / sf, overlay_y / sf)
+    .inner_size(overlay_w / sf, overlay_h / sf)
     .min_inner_size(240.0, 120.0)
     .decorations(false)
     .transparent(true)
@@ -381,6 +429,8 @@ fn create_record_windows(
     #[cfg(target_os = "macos")]
     make_webview_transparent(&_overlay);
 
+    place_window(&_overlay, overlay_x, overlay_y, overlay_w, overlay_h)?;
+
     #[cfg(debug_assertions)]
     let float_url = tauri::WebviewUrl::External("http://localhost:5273/#/src-windows/answer-float".parse().unwrap());
     #[cfg(not(debug_assertions))]
@@ -391,8 +441,8 @@ fn create_record_windows(
         "answer-float",
         float_url,
     )
-    .position(float_x, float_y)
-    .inner_size(float_w, float_h)
+    .position(float_x / sf, float_y / sf)
+    .inner_size(float_w / sf, float_h / sf)
     .min_inner_size(280.0, 200.0)
     .decorations(false)
     .transparent(true)
@@ -405,22 +455,14 @@ fn create_record_windows(
     #[cfg(target_os = "macos")]
     make_webview_transparent(&_float);
 
+    place_window(&_float, float_x, float_y, float_w, float_h)?;
+
     Ok(())
 }
 
 #[cfg(not(desktop))]
 #[tauri::command]
-fn create_record_windows(
-    _app: tauri::AppHandle,
-    _overlay_x: f64,
-    _overlay_y: f64,
-    _overlay_w: f64,
-    _overlay_h: f64,
-    _float_x: f64,
-    _float_y: f64,
-    _float_w: f64,
-    _float_h: f64,
-) -> Result<(), CommandError> {
+async fn create_record_windows(_app: tauri::AppHandle) -> Result<(), CommandError> {
     Err(CommandError(
         "Recording windows are only supported on desktop".to_string(),
     ))

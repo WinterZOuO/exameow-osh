@@ -230,7 +230,9 @@ export function useScreenRecord() {
   async function startMobile() {
     const { invoke, Channel } = await import('@tauri-apps/api/core')
 
-    preloadOcr().catch(() => {})
+    preloadOcr().catch((e) => {
+      store.ocrError = e instanceof Error ? e.message : String(e)
+    })
 
     const chan = new Channel<Record<string, unknown>>()
     chan.onmessage = (msg) => {
@@ -269,20 +271,7 @@ export function useScreenRecord() {
       return
     }
 
-    const screenWidth = window.screen.width
-    const screenHeight = window.screen.height
-
-    const rw = Math.round(screenWidth * 0.6)
-    const rh = Math.round(screenHeight * 0.4)
-    const rx = Math.round((screenWidth - rw) / 2)
-    const ry = Math.round(screenHeight * 0.08)
-
-    const floatW = 340
-    const floatH = 320
-    const floatX = screenWidth - floatW - 20
-    const floatY = screenHeight - floatH - 40
-
-    await api.createRecordWindows(rx, ry, rw, rh, floatX, floatY, floatW, floatH)
+    await api.createRecordWindows()
   }
 
   // ===== Answer-float window side (capture loop lives here: this window is
@@ -294,7 +283,9 @@ export function useScreenRecord() {
     for (const fn of floatUnlistenFns) fn()
     floatUnlistenFns = []
 
-    preloadOcr().catch(() => {})
+    preloadOcr().catch((e) => {
+      store.ocrError = e instanceof Error ? e.message : String(e)
+    })
 
     floatUnlistenFns.push(await listen<ScreenRegion>('screen-record:begin', (e) => {
       if (e.payload) store.setRegion(e.payload)
