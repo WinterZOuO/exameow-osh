@@ -56,7 +56,7 @@ function enqueueFrame(bitmap: ImageBitmap): Promise<void> {
           try {
             await processFrameBitmap(frame.bitmap)
           } catch (e) {
-            console.warn('[录屏搜题] frame failed:', e)
+            log('frame failed:', e instanceof Error ? e.message : String(e))
           }
           frame.bitmap.close()
           frame.done()
@@ -94,6 +94,7 @@ async function processFrameBitmap(bitmap: ImageBitmap) {
   }
 
   const t1 = performance.now()
+  log(`开始 OCR (${canvas.width}x${canvas.height})`)
   const text = await recognizeImage(canvas)
   const ocrMs = Math.round(performance.now() - t1)
 
@@ -195,6 +196,7 @@ export function useScreenRecord() {
     if (dataUrl === lastJpeg) return
     lastJpeg = dataUrl
     try {
+      log(`移动端帧到达 len=${dataUrl.length}`)
       const img = new Image()
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve()
@@ -202,9 +204,10 @@ export function useScreenRecord() {
         img.src = dataUrl
       })
       const bitmap = await createImageBitmap(img)
+      log(`位图就绪 ${bitmap.width}x${bitmap.height}`)
       await enqueueFrame(bitmap)
     } catch (e) {
-      console.warn('[录屏搜题] mobile frame failed:', e)
+      log('mobile frame failed:', e instanceof Error ? e.message : String(e))
     }
     await pushAnswerToOverlay()
   }
@@ -231,6 +234,7 @@ export function useScreenRecord() {
 
     const chan = new Channel<Record<string, unknown>>()
     chan.onmessage = (msg) => {
+      if (msg?.type !== 'frame') log(`通道消息: ${String(msg?.type)}`)
       switch (msg?.type) {
         case 'begin':
           store.beginRecording()
