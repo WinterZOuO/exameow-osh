@@ -8,6 +8,7 @@ import {
   DocumentTextIcon,
   TrashIcon,
   ArrowRightIcon,
+  ArrowDownTrayIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -20,6 +21,7 @@ const emit = defineEmits<{
   (e: 'select', id: string): void
   (e: 'delete', id: string): void
   (e: 'import'): void
+  (e: 'downloadTemplate'): void
   (e: 'manageWrong', bankId: string): void
 }>()
 
@@ -51,9 +53,15 @@ const typeCounts = (bank: QuestionBank) => {
       <h3 class="text-title-sm" :style="{ color: 'rgb(var(--md-on-surface))' }">
         {{ i18n.t('practiceSelectBank') }}
       </h3>
-      <button class="btn-text text-sm" @click="emit('import')">
-        {{ i18n.t('practiceImportBtn') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button class="btn-text text-sm" @click="emit('downloadTemplate')">
+          <ArrowDownTrayIcon class="w-4 h-4" />
+          {{ i18n.t('practiceDownloadTemplate') }}
+        </button>
+        <button class="btn-text text-sm" @click="emit('import')">
+          {{ i18n.t('practiceImportBtn') }}
+        </button>
+      </div>
     </div>
 
     <!-- Empty State -->
