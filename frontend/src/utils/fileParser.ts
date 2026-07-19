@@ -40,7 +40,8 @@ export async function parseBrowserFileWithProgress(
     const text = await parseBrowserFile(file)
     onProgress({ current: 1, total: 1, images: 0, pdfPages: 0, files: 0, message: '' })
     return text
-  } catch (e) {
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw e
     console.warn(`[fileParser] Failed to parse ${file.name}:`, e)
     onProgress({ current: 1, total: 1, images: 0, pdfPages: 0, files: 0, message: '' })
     return ''

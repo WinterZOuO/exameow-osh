@@ -393,8 +393,8 @@ export const useExamStore = defineStore('exam', () => {
           const label = fileNameFromInput(entry.input)
           fullText += (fullText ? `\n\n---\n\n## ${label}\n` : `## ${label}\n`) + text
         }
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') {
+      } catch (e: any) {
+        if (e?.name === 'AbortError') {
           throw e
         }
         console.warn(`[exam] Parse failed for ${fileNameFromInput(entry.input)}:`, e)
