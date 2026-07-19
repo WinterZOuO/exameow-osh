@@ -101,7 +101,9 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist
           Copy-Item src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.msi
-          Copy-Item src-tauri/target/${{ matrix.target }}/release/exameow.exe dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.exe
+          Copy-Item src-tauri/target/${{ matrix.target }}/release/exameow.exe dist/Exameow.exe
+          Compress-Archive -Path dist/Exameow.exe -DestinationPath dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
+          Remove-Item dist/Exameow.exe
         shell: pwsh
 
       - name: Collect macOS artifacts
