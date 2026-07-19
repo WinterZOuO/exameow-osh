@@ -13,8 +13,9 @@ const dialogReady = ref(false)
 const isDragOver = ref(false)
 
 const DOC_EXTENSIONS = ['txt', 'md', 'markdown', 'docx', 'pdf', 'pptx', 'html', 'htm', 'odt', 'epub', 'csv', 'xlsx', 'xlsm', 'xls', 'ods']
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp']
 const CODE_EXTENSIONS = ['py', 'js', 'ts', 'jsx', 'tsx', 'mjs', 'cjs', 'java', 'c', 'cpp', 'cc', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'kts', 'sql', 'sh', 'bash', 'zsh', 'bat', 'ps1', 'json', 'yaml', 'yml', 'toml', 'xml', 'ini', 'cfg', 'conf', 'log', 'tex', 'r', 'lua', 'pl', 'scala', 'dart', 'vue', 'svelte', 'css', 'scss', 'less']
-const acceptAttr = [...DOC_EXTENSIONS, ...CODE_EXTENSIONS].map((e) => '.' + e).join(',')
+const acceptAttr = [...DOC_EXTENSIONS, ...IMAGE_EXTENSIONS, ...CODE_EXTENSIONS].map((e) => '.' + e).join(',')
 
 onMounted(async () => {
   if (props.isTauri) {
@@ -56,6 +57,7 @@ async function pick() {
       multiple: true,
       filters: [
         { name: 'Documents', extensions: DOC_EXTENSIONS },
+        { name: 'Images', extensions: IMAGE_EXTENSIONS },
         { name: 'Text & Code', extensions: CODE_EXTENSIONS },
         { name: 'All Files', extensions: ['*'] },
       ],
