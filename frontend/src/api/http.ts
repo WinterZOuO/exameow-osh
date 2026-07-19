@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -132,52 +132,7 @@ export const httpApi = {
     const stored = localStorage.getItem('exameow_config')
     return stored ? JSON.parse(stored) : null
   },
-
-  async saveVisionConfig(config: VisionConfig): Promise<void> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/config/vision/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      })
-      if (res.ok) return
-    } catch {}
-    localStorage.setItem('exameow_vision_config', JSON.stringify(config))
-  },
-
-  async loadVisionConfig(): Promise<VisionConfig | null> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/config/vision/load`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data) return data
-      }
-    } catch {}
-    const stored = localStorage.getItem('exameow_vision_config')
-    return stored ? JSON.parse(stored) : null
-  },
-
-  async extractQuestionText(
-    imageDataUrl: string,
-    config: VisionConfig,
-    signal?: AbortSignal,
-  ): Promise<string> {
-    const res = await fetch(`${BASE_URL}/api/extract-question`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image_data_url: imageDataUrl,
-        endpoint: config.endpoint,
-        api_key: config.api_key,
-        model: config.model,
-      }),
-      signal,
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
-    const data = await res.json()
-    return data.text
-  },
-}
+};
 
 export function generateCsvContent(questions: Question[]): string {
   const typeLabels: Record<string, string> = {

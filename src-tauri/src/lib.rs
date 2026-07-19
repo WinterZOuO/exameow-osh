@@ -1,7 +1,7 @@
 use exameow_core::ai::{AIClient, ModelInfo};
-use exameow_core::config::{AIConfigData, ConfigStore, VisionConfigData};
+use exameow_core::config::{AIConfigData, ConfigStore};
 use exameow_core::exam::{
-    answer_question as core_answer_question, extract_question_text as core_extract_question_text,
+    answer_question as core_answer_question,
     generate_exam as core_generate_exam,
     judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
@@ -125,22 +125,6 @@ async fn judge_answer(
 }
 
 #[tauri::command]
-async fn extract_question_text(
-    image_data_url: String,
-    endpoint: String,
-    api_key: String,
-    model: String,
-) -> Result<String, CommandError> {
-    if image_data_url.trim().is_empty() {
-        return Err(CommandError("Image is empty".to_string()));
-    }
-    let client = AIClient::new(&endpoint, &api_key);
-    core_extract_question_text(&client, &image_data_url, &model)
-        .await
-        .map_err(|e| CommandError(format!("Extract error: {e}")))
-}
-
-#[tauri::command]
 fn parse_file_text(file_path: String) -> Result<String, CommandError> {
     parse_file(&file_path).map_err(|e| CommandError(format!("File parse error: {e}")))
 }
@@ -221,27 +205,28 @@ fn load_config() -> Result<Option<AIConfigData>, CommandError> {
 }
 
 #[tauri::command]
-fn save_vision_config(
-    mode: String,
-    endpoint: String,
-    api_key: String,
-    model: String,
-) -> Result<(), CommandError> {
-    let store = ConfigStore::new(APP_NAME)
-        .map_err(|e| CommandError(format!("Config init error: {e}")))?;
-    store
-        .save_vision(&VisionConfigData { mode, endpoint, api_key, model })
-        .map_err(|e| CommandError(format!("Vision config save error: {e}")))
+fn open_app_settings() -> Result<(), CommandError> {
+    #[cfg(target_os = "android")]
+    {
+        // On Android handled via @tauri-apps/plugin-opener on the frontend side
+    }
+    #[cfg(target_os = "ios")]
+    {
+        use objc::runtime::{Class, Object};
+        use objc::{msg_send, sel, sel_impl};
+        unsafe {
+            let ns_url: *mut Object = {
+                let cls = Class::get("NSURL").unwrap();
+                let ns_str: *mut Object = msg_send![Class::get("NSString").unwrap(), stringWithUTF8String: "app-settings:\0".as_ptr() as *const i8];
+                msg_send![cls, URLWithString: ns_str]
+            };
+            let app: *mut Object = msg_send![Class::get("UIApplication").unwrap(), sharedApplication];
+            let _: () = msg_send![app, openURL: ns_url options: 0_usize completionHandler: 0_usize];
+        }
+    }
+    Ok(())
 }
 
-#[tauri::command]
-fn load_vision_config() -> Result<Option<VisionConfigData>, CommandError> {
-    let store = ConfigStore::new(APP_NAME)
-        .map_err(|e| CommandError(format!("Config init error: {e}")))?;
-    store
-        .load_vision()
-        .map_err(|e| CommandError(format!("Vision config load error: {e}")))
-}
 
 #[cfg(desktop)]
 #[tauri::command]
@@ -540,7 +525,6 @@ pub fn run() {
             generate_exam,
             answer_question,
             judge_answer,
-            extract_question_text,
             parse_file_text,
             parse_file_bytes,
             export_csv,
@@ -549,8 +533,7 @@ pub fn run() {
             save_to_downloads,
             save_config,
             load_config,
-            save_vision_config,
-            load_vision_config,
+            open_app_settings,
             capture_screen,
             frontend_log,
             create_record_windows,

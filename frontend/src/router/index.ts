@@ -44,6 +44,12 @@ const router = createRouter({
       meta: { title: 'Screen Record Search' },
     },
     {
+      path: '/search/camera-live',
+      name: 'search-camera-live',
+      component: () => import('@/views/CameraLiveView.vue'),
+      meta: { title: 'Camera Live Search' },
+    },
+    {
       path: '/src-windows/record-overlay',
       component: () => import('@/components/search/RecordOverlay.vue'),
     },

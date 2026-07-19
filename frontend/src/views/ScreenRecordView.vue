@@ -54,7 +54,12 @@ function goBack() {
 
     <template v-else>
       <div class="card-filled p-6 flex flex-col items-center gap-4">
-        <VideoCameraIcon class="w-16 h-16" style="color: rgb(var(--md-primary))" />
+        <div
+          class="w-16 h-16 rounded-full flex items-center justify-center"
+          :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
+        >
+          <VideoCameraIcon class="w-8 h-8" />
+        </div>
         <button
           class="px-8 py-3 rounded-full text-title-md font-medium transition-all duration-200 cursor-pointer"
           :style="{
@@ -65,9 +70,6 @@ function goBack() {
         >
           {{ i18n.t('searchScreenRecordStart') }}
         </button>
-        <p class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
-          {{ i18n.t('searchScreenRecordRefresh') }}
-        </p>
       </div>
     </template>
   </div>

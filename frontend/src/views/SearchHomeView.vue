@@ -18,7 +18,7 @@ const modes = [
   { key: 'text', titleKey: 'searchModeText', descKey: 'searchModeTextDesc', icon: DocumentTextIcon, available: true, supported: true, path: '/search/text' },
   { key: 'photo', titleKey: 'searchModePhoto', descKey: 'searchModePhotoDesc', icon: CameraIcon, available: true, supported: true, path: '/search/photo' },
   { key: 'screenRecord', titleKey: 'searchModeScreenRecord', descKey: 'searchModeScreenRecordDesc', icon: ComputerDesktopIcon, available: true, supported: isDesktopTauri() || isAndroid(), path: '/search/screen-record' },
-  { key: 'cameraLive', titleKey: 'searchModeCameraLive', descKey: 'searchModeCameraLiveDesc', icon: VideoCameraIcon, available: false, supported: isTauriMobile, path: '' },
+  { key: 'cameraLive', titleKey: 'searchModeCameraLive', descKey: 'searchModeCameraLiveDesc', icon: VideoCameraIcon, available: true, supported: isTauriMobile, path: '/search/camera-live' },
 ] as const
 
 function open(mode: (typeof modes)[number]) {

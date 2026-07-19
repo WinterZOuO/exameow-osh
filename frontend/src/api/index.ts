@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, VisionConfig } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo } from '@exameow/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
 import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
 import { cfApi } from './cf'
@@ -142,41 +142,6 @@ export const api = {
     return httpApi.loadConfig()
   },
 
-  async saveVisionConfig(config: VisionConfig): Promise<void> {
-    if (isTauri()) {
-      return tauriApi.saveVisionConfig(config)
-    }
-    if (isCloudflare()) {
-      return cfApi.saveVisionConfig(config)
-    }
-    return httpApi.saveVisionConfig(config)
-  },
-
-  async loadVisionConfig(): Promise<VisionConfig | null> {
-    if (isTauri()) {
-      return tauriApi.loadVisionConfig()
-    }
-    if (isCloudflare()) {
-      return cfApi.loadVisionConfig()
-    }
-    return httpApi.loadVisionConfig()
-  },
-
-  async extractQuestionText(
-    imageDataUrl: string,
-    config: VisionConfig,
-    signal?: AbortSignal,
-  ): Promise<string> {
-    if (isTauri()) {
-      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
-      return tauriApi.extractQuestionText(imageDataUrl, config)
-    }
-    if (isCloudflare()) {
-      throw new Error('Use extractQuestionViaLLM on Cloudflare')
-    }
-    return httpApi.extractQuestionText(imageDataUrl, config, signal)
-  },
-
   async captureScreen(x: number, y: number, w: number, h: number, force = false): Promise<Uint8Array> {
     if (!isTauri()) {
       throw new Error('Screen capture is only available in the desktop/mobile app')
@@ -192,6 +157,11 @@ export const api = {
   async closeRecordWindows(): Promise<void> {
     if (!isTauri()) throw new Error('Not available on this platform')
     return tauriApi.closeRecordWindows()
+  },
+
+  async openAppSettings(): Promise<void> {
+    if (!isTauri()) throw new Error('Not available on this platform')
+    return tauriApi.openAppSettings()
   },
 
   async resizeRecordOverlay(w: number, h: number): Promise<void> {

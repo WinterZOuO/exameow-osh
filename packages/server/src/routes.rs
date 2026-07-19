@@ -5,9 +5,9 @@ use axum::{
     Json,
 };
 use exameow_core::ai::{AIClient, ModelInfo};
-use exameow_core::config::{AIConfigData, ConfigStore, VisionConfigData};
+use exameow_core::config::{AIConfigData, ConfigStore};
 use exameow_core::exam::{
-    answer_question, extract_question_text, generate_exam, judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
+    answer_question, generate_exam, judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
 };
 use exameow_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
@@ -256,71 +256,6 @@ pub async fn answer_handler(
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
     Ok(Json(result))
-}
-
-#[derive(Deserialize)]
-pub struct ExtractRequest {
-    pub image_data_url: String,
-    pub endpoint: Option<String>,
-    pub api_key: Option<String>,
-    pub model: Option<String>,
-}
-
-#[derive(Serialize)]
-pub struct ExtractResult {
-    pub text: String,
-}
-
-pub async fn extract_question_handler(
-    Json(req): Json<ExtractRequest>,
-) -> Result<Json<ExtractResult>, (StatusCode, String)> {
-    if req.image_data_url.trim().is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "Image is empty".to_string()));
-    }
-
-    let endpoint = req
-        .endpoint
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_endpoint);
-    let api_key = req
-        .api_key
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_api_key);
-    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
-
-    if endpoint.is_empty() || api_key.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
-        ));
-    }
-
-    let client = AIClient::new(&endpoint, &api_key);
-    let text = extract_question_text(&client, &req.image_data_url, &model)
-        .await
-        .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
-    Ok(Json(ExtractResult { text }))
-}
-
-pub async fn save_vision_config_handler(
-    State(state): State<Arc<AppState>>,
-    Json(config): Json<VisionConfigData>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    state
-        .config_store
-        .save_vision(&config)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Save error: {e}")))?;
-    Ok(StatusCode::OK)
-}
-
-pub async fn load_vision_config_handler(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Option<VisionConfigData>>, (StatusCode, String)> {
-    let config = state
-        .config_store
-        .load_vision()
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Load error: {e}")))?;
-    Ok(Json(config))
 }
 
 #[derive(Deserialize)]

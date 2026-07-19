@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useScreenRecordStore } from '@/stores/screenRecord'
 import { useI18nStore } from '@/stores/i18n'
 import {
-  ArrowPathIcon,
   ArrowsPointingOutIcon,
   CheckIcon,
   MagnifyingGlassIcon,
@@ -23,7 +22,6 @@ const unlistenFns: Array<() => void> = []
 let win: any = null
 let ctl: {
   initFloat: () => Promise<void>
-  refresh: () => Promise<void>
   adjust: () => Promise<void>
   stop: () => Promise<void>
 } | null = null
@@ -50,10 +48,6 @@ onUnmounted(() => {
 function onDragArea(e: MouseEvent) {
   if (e.button !== 0 || !win) return
   win.startDragging().catch(() => {})
-}
-
-async function handleRefresh() {
-  await ctl?.refresh()
 }
 
 async function handleAdjust() {
@@ -87,7 +81,6 @@ function isCorrect(idx: number): boolean {
       <div
         class="shrink-0 cursor-grab active:cursor-grabbing"
         @mousedown="onDragArea"
-        @dblclick="handleRefresh"
       >
         <div class="flex justify-center pt-2">
           <div class="float-grip" />
@@ -109,14 +102,6 @@ function isCorrect(idx: number): boolean {
               <ArrowsPointingOutIcon class="w-4 h-4" />
             </button>
             <button
-              class="float-btn"
-              @mousedown.stop
-              @click="handleRefresh"
-              :title="i18n.t('searchScreenRecordRefresh')"
-            >
-              <ArrowPathIcon class="w-4 h-4" />
-            </button>
-            <button
               class="float-btn float-btn-danger"
               @mousedown.stop
               @click="handleExit"
@@ -135,7 +120,7 @@ function isCorrect(idx: number): boolean {
         </div>
       </div>
 
-      <div class="float-body flex-1 overflow-y-auto px-3.5 pb-3 min-h-0" @dblclick="handleRefresh">
+      <div class="float-body flex-1 overflow-y-auto px-3.5 pb-3 min-h-0">
         <div v-if="adjusting" class="flex flex-col items-center justify-center h-full gap-3">
           <button
             class="float-begin-btn"

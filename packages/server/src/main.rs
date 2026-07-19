@@ -24,13 +24,10 @@ async fn main() {
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))
         .route("/api/judge", post(routes::judge_handler))
-        .route("/api/extract-question", post(routes::extract_question_handler))
         .route("/api/export", get(routes::export_handler))
         .route("/api/export/xlsx", post(routes::export_xlsx_handler))
         .route("/api/config/save", post(routes::save_config_handler))
         .route("/api/config/load", get(routes::load_config_handler))
-        .route("/api/config/vision/save", post(routes::save_vision_config_handler))
-        .route("/api/config/vision/load", get(routes::load_vision_config_handler))
         .fallback_service(ServeDir::new(&static_dir))
         .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
         .with_state(state);

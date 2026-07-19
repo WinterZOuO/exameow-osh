@@ -2,7 +2,6 @@
 import { ref, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
-import { useVisionConfigStore } from '@/stores/visionConfig'
 import { useImageSearch } from '@/composables/useImageSearch'
 import { isMobileDevice } from '@/utils/platform'
 import {
@@ -15,8 +14,7 @@ import SearchPanel from '@/components/search/SearchPanel.vue'
 
 const router = useRouter()
 const i18n = useI18nStore()
-const visionStore = useVisionConfigStore()
-const { phase, error, busy, usedFallback, recognize, cancel } = useImageSearch()
+const { phase, error, busy, recognize, cancel } = useImageSearch()
 
 const cameraInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -49,23 +47,18 @@ function onDrop(e: DragEvent) {
   if (file && file.type.startsWith('image/')) handleFile(file)
 }
 
-async function handleFile(file: File, opts: { forceOcr?: boolean } = {}) {
+async function handleFile(file: File) {
   currentFile = file
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   previewUrl.value = URL.createObjectURL(file)
   query.value = ''
   recognizedEmpty.value = false
-  const text = await recognize(file, opts)
+  const text = await recognize(file)
   if (text !== null) {
     query.value = text
     recognizedEmpty.value = !text.trim()
   }
 }
-
-function retryOcr() {
-  if (currentFile) handleFile(currentFile, { forceOcr: true })
-}
-
 onBeforeUnmount(() => {
   cancel()
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
@@ -93,18 +86,29 @@ onBeforeUnmount(() => {
       @drop.prevent="onDrop"
     >
       <template v-if="!previewUrl">
-        <p class="text-body-md mb-4 hidden sm:block" style="color: rgb(var(--md-on-surface-variant))">
-          {{ i18n.t('searchPhotoDropHint') }}
-        </p>
-        <div class="flex items-center justify-center gap-3">
-          <button v-if="showCamera" class="btn-filled" @click="pickCamera">
-            <CameraIcon class="w-5 h-5" />
-            {{ i18n.t('searchPhotoTake') }}
-          </button>
-          <button class="btn-tonal" @click="pickFile">
-            <PhotoIcon class="w-5 h-5" />
-            {{ i18n.t('searchPhotoUpload') }}
-          </button>
+        <div class="flex flex-col items-center gap-4">
+          <div
+            class="w-16 h-16 rounded-full flex items-center justify-center"
+            :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
+          >
+            <CameraIcon class="w-8 h-8" />
+          </div>
+          <div class="flex items-center gap-3">
+            <button v-if="showCamera"
+              class="px-8 py-3 rounded-full text-title-md font-medium transition-all duration-200 cursor-pointer"
+              :style="{ backgroundColor: 'rgb(var(--md-primary))', color: 'rgb(var(--md-on-primary))' }"
+              @click="pickCamera"
+            >
+              {{ i18n.t('searchPhotoTake') }}
+            </button>
+            <button
+              class="px-8 py-3 rounded-full text-title-md font-medium transition-all duration-200 cursor-pointer"
+              :style="{ backgroundColor: 'rgb(var(--md-secondary-container))', color: 'rgb(var(--md-on-secondary-container))' }"
+              @click="pickFile"
+            >
+              {{ i18n.t('searchPhotoUpload') }}
+            </button>
+          </div>
         </div>
       </template>
 
@@ -136,15 +140,8 @@ onBeforeUnmount(() => {
         <button class="btn-tonal !h-8 text-xs !px-3" @click="currentFile && handleFile(currentFile)">
           {{ i18n.t('searchRetry') }}
         </button>
-        <button v-if="visionStore.mode === 'llm'" class="btn-outlined !h-8 text-xs !px-3" @click="retryOcr">
-          {{ i18n.t('searchPhotoOcrRetry') }}
-        </button>
       </div>
     </div>
-
-    <p v-if="usedFallback && !busy" class="text-body-sm mb-4" style="color: rgb(var(--md-on-surface-variant))">
-      {{ i18n.t('searchPhotoLlmFallback') }}
-    </p>
 
     <p v-if="recognizedEmpty && !busy && !error" class="text-body-sm mb-4" style="color: rgb(var(--md-on-surface-variant))">
       {{ i18n.t('searchPhotoEmpty') }}

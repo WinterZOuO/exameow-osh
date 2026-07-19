@@ -4,5 +4,7 @@
 <dict>
 	<key>LSHasLocalizedDisplayName</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is needed to scan exam questions in real time</string>
 </dict>
 </plist>

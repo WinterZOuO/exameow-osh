@@ -301,11 +301,6 @@ export function useScreenRecord() {
     }))
   }
 
-  async function refresh() {
-    resetFrameDedup()
-    await capture(true)
-  }
-
   async function adjust() {
     stopTimer()
     store.pauseToAdjust()
@@ -323,5 +318,5 @@ export function useScreenRecord() {
     } catch { /* ignore */ }
   }
 
-  return { start, initFloat, refresh, adjust, stop }
+  return { start, initFloat, adjust, stop }
 }

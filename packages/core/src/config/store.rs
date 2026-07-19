@@ -12,17 +12,8 @@ pub struct AIConfigData {
     pub model: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VisionConfigData {
-    pub mode: String,
-    pub endpoint: String,
-    pub api_key: String,
-    pub model: String,
-}
-
 pub struct ConfigStore {
     config_path: PathBuf,
-    vision_path: PathBuf,
     key: [u8; 32],
 }
 
@@ -76,7 +67,6 @@ impl ConfigStore {
             .map_err(|e| CoreError::Config(format!("cannot create config dir: {e}")))?;
 
         let config_path = app_dir.join("config.enc");
-        let vision_path = app_dir.join("vision.enc");
         let key_path = app_dir.join("key.bin");
 
         let key = if key_path.exists() {
@@ -107,7 +97,7 @@ impl ConfigStore {
             key
         };
 
-        Ok(Self { config_path, vision_path, key })
+        Ok(Self { config_path, key })
     }
 
     pub fn save(&self, endpoint: &str, api_key: &str, model: &str) -> Result<(), CoreError> {
@@ -134,27 +124,6 @@ impl ConfigStore {
             .map_err(|e| CoreError::Config(format!("read error: {e}")))?;
         let plaintext = open_sealed(&self.key, &encoded)?;
         let config: AIConfigData = serde_json::from_slice(&plaintext)
-            .map_err(|e| CoreError::Config(format!("deserialize error: {e}")))?;
-        Ok(Some(config))
-    }
-
-    pub fn save_vision(&self, config: &VisionConfigData) -> Result<(), CoreError> {
-        let plaintext = serde_json::to_vec(config)
-            .map_err(|e| CoreError::Config(format!("serialize error: {e}")))?;
-        let encoded = seal(&self.key, &plaintext)?;
-        std::fs::write(&self.vision_path, encoded)
-            .map_err(|e| CoreError::Config(format!("write error: {e}")))?;
-        Ok(())
-    }
-
-    pub fn load_vision(&self) -> Result<Option<VisionConfigData>, CoreError> {
-        if !self.vision_path.exists() {
-            return Ok(None);
-        }
-        let encoded = std::fs::read_to_string(&self.vision_path)
-            .map_err(|e| CoreError::Config(format!("read error: {e}")))?;
-        let plaintext = open_sealed(&self.key, &encoded)?;
-        let config: VisionConfigData = serde_json::from_slice(&plaintext)
             .map_err(|e| CoreError::Config(format!("deserialize error: {e}")))?;
         Ok(Some(config))
     }

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question, VisionConfig } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 
 export interface GenerateResult {
   questions: Question[]
@@ -100,31 +100,6 @@ export const tauriApi = {
     return invoke<AIConfig | null>('load_config')
   },
 
-  async saveVisionConfig(config: VisionConfig): Promise<void> {
-    return invoke<void>('save_vision_config', {
-      mode: config.mode,
-      endpoint: config.endpoint,
-      apiKey: config.api_key,
-      model: config.model,
-    })
-  },
-
-  async loadVisionConfig(): Promise<VisionConfig | null> {
-    return invoke<VisionConfig | null>('load_vision_config')
-  },
-
-  async extractQuestionText(
-    imageDataUrl: string,
-    config: VisionConfig,
-  ): Promise<string> {
-    return invoke<string>('extract_question_text', {
-      imageDataUrl,
-      endpoint: config.endpoint,
-      apiKey: config.api_key,
-      model: config.model,
-    })
-  },
-
   async captureScreen(x: number, y: number, w: number, h: number, force = false): Promise<Uint8Array> {
     const res = await invoke<Uint8Array | ArrayBuffer | number[]>('capture_screen', {
       x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), force,
@@ -144,5 +119,9 @@ export const tauriApi = {
 
   async resizeRecordOverlay(w: number, h: number): Promise<void> {
     return invoke<void>('resize_record_overlay', { w, h })
+  },
+
+  async openAppSettings(): Promise<void> {
+    return invoke<void>('open_app_settings')
   },
 }

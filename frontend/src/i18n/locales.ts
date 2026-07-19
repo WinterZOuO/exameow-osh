@@ -239,6 +239,15 @@ export interface LocaleMessages {
   searchScreenRecordPaused: string
   searchScreenRecordOverlayPerm: string
   searchScreenRecordProjectionDenied: string
+  searchCameraLiveStart: string
+  searchCameraLivePause: string
+  searchCameraLiveResume: string
+  searchCameraLiveExit: string
+  searchCameraLiveNoMatch: string
+  searchCameraLiveStartFailed: string
+  searchCameraLivePermissionDenied: string
+  searchCameraLivePausedLabel: string
+  searchCameraLiveOpenSettings: string
   searchComingSoon: string
   searchNotSupported: string
   searchInputPlaceholder: string
@@ -267,20 +276,10 @@ export interface LocaleMessages {
   searchPhotoLoadingModel: string
   searchPhotoRecognizing: string
   searchPhotoEmpty: string
-  searchPhotoLlmFallback: string
   searchPhotoTake: string
   searchPhotoUpload: string
   searchPhotoReselect: string
-  searchPhotoOcrRetry: string
   searchPhotoDropHint: string
-
-  // Vision config
-  configVisionDesc: string
-  configVisionModeOcr: string
-  configVisionModeOcrDesc: string
-  configVisionModeLlm: string
-  configVisionModeLlmDesc: string
-  configVisionLlmHint: string
 
   // Practice grading
   practiceSubmitAuto: string
@@ -521,6 +520,15 @@ export const zh: LocaleMessages = {
   searchScreenRecordPaused: '调整录制框中，识别已暂停',
   searchScreenRecordOverlayPerm: '请在系统设置中授予「在其他应用上显示」权限后重试',
   searchScreenRecordProjectionDenied: '屏幕录制权限被拒绝，无法启动录屏搜题',
+  searchCameraLiveStart: '开始扫描',
+  searchCameraLivePause: '暂停',
+  searchCameraLiveResume: '继续',
+  searchCameraLiveExit: '退出',
+  searchCameraLiveNoMatch: '未匹配到题目',
+  searchCameraLiveStartFailed: '摄像头启动失败',
+  searchCameraLivePermissionDenied: '请在系统设置中允许相机权限后重试',
+  searchCameraLivePausedLabel: '已暂停',
+  searchCameraLiveOpenSettings: '前往设置',
   searchComingSoon: '即将推出',
   searchNotSupported: '该平台不支持',
   searchInputPlaceholder: '输入题目内容…',
@@ -549,19 +557,10 @@ export const zh: LocaleMessages = {
   searchPhotoLoadingModel: '正在加载识别模型…',
   searchPhotoRecognizing: '识别中…',
   searchPhotoEmpty: '未识别到文字，请换更清晰的图片或手动输入',
-  searchPhotoLlmFallback: '大模型配置不完整，已改用本地 OCR 识别',
   searchPhotoTake: '拍照',
   searchPhotoUpload: '上传图片',
   searchPhotoReselect: '重新选择',
-  searchPhotoOcrRetry: '用本地 OCR 重试',
   searchPhotoDropHint: '拖拽图片到此处，或选择下方按钮',
-
-  configVisionDesc: '拍照/上传图片搜题时的文字识别方式',
-  configVisionModeOcr: '本地 OCR',
-  configVisionModeOcrDesc: '快速、离线，无需额外配置',
-  configVisionModeLlm: '大模型识别',
-  configVisionModeLlmDesc: '更准确但较慢，需配置支持图片输入的模型',
-  configVisionLlmHint: '需要支持图片输入的视觉模型（如 gpt-4o、qwen-vl 等），可与出题模型不同',
 
   // Practice grading
   practiceSubmitAuto: '提交',
@@ -802,6 +801,15 @@ export const en: LocaleMessages = {
   searchScreenRecordPaused: 'Adjusting frame, recognition paused',
   searchScreenRecordOverlayPerm: 'Please grant "Display over other apps" permission in Settings and try again',
   searchScreenRecordProjectionDenied: 'Screen capture permission was denied',
+  searchCameraLiveStart: 'Start Scanning',
+  searchCameraLivePause: 'Pause',
+  searchCameraLiveResume: 'Resume',
+  searchCameraLiveExit: 'Exit',
+  searchCameraLiveNoMatch: 'No matching question found',
+  searchCameraLiveStartFailed: 'Camera failed to start',
+  searchCameraLivePermissionDenied: 'Please allow camera permission in Settings and try again',
+  searchCameraLivePausedLabel: 'Paused',
+  searchCameraLiveOpenSettings: 'Open Settings',
   searchComingSoon: 'Coming soon',
   searchNotSupported: 'Not available on this platform',
   searchInputPlaceholder: 'Type the question…',
@@ -830,19 +838,10 @@ export const en: LocaleMessages = {
   searchPhotoLoadingModel: 'Loading OCR model…',
   searchPhotoRecognizing: 'Recognizing…',
   searchPhotoEmpty: 'No text recognized — try a clearer photo or type it manually',
-  searchPhotoLlmFallback: 'AI vision config incomplete — used local OCR instead',
   searchPhotoTake: 'Take photo',
   searchPhotoUpload: 'Upload image',
   searchPhotoReselect: 'Choose another',
-  searchPhotoOcrRetry: 'Retry with local OCR',
   searchPhotoDropHint: 'Drop an image here, or use the buttons below',
-
-  configVisionDesc: 'How question photos are converted to text',
-  configVisionModeOcr: 'Local OCR',
-  configVisionModeOcrDesc: 'Fast, offline, no extra setup',
-  configVisionModeLlm: 'AI vision model',
-  configVisionModeLlmDesc: 'More accurate but slower; needs a vision-capable model',
-  configVisionLlmHint: 'Requires a vision-capable model (e.g. gpt-4o, qwen-vl); can differ from the exam model',
 
   // Practice grading
   practiceSubmitAuto: 'Submit',
