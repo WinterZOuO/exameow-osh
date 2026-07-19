@@ -317,10 +317,40 @@ export const useExamStore = defineStore('exam', () => {
   ): Promise<string> {
     // 1. 预扫描：统计每个文件需要解析的单元数
     type FileEntry = { input: string | File; total: number; isImage: boolean; isPdf: boolean }
+    const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp']
     const entries: FileEntry[] = []
+
+    function getImageMimeType(ext: string): string {
+      switch (ext) {
+        case 'png': return 'image/png'
+        case 'jpg':
+        case 'jpeg': return 'image/jpeg'
+        case 'webp': return 'image/webp'
+        case 'gif': return 'image/gif'
+        case 'bmp': return 'image/bmp'
+        default: return 'image/' + ext
+      }
+    }
+
     for (const input of inputs) {
       if (typeof input === 'string') {
-        entries.push({ input, total: 1, isImage: false, isPdf: false })
+        const rawName = input.replace(/\\/g, '/').split('/').pop() || input
+        const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
+        if (IMAGE_EXTENSIONS.includes(ext)) {
+          const { readFile } = await import('@tauri-apps/plugin-fs')
+          const buf = await readFile(input)
+          const file = new File([new Uint8Array(buf)], rawName, { type: getImageMimeType(ext) })
+          entries.push({ input: file, total: 1, isImage: true, isPdf: false })
+        } else if (ext === 'pdf') {
+          const { readFile } = await import('@tauri-apps/plugin-fs')
+          const buf = await readFile(input)
+          const file = new File([new Uint8Array(buf)], rawName, { type: 'application/pdf' })
+          const { getPdfPageCount } = await import('@/utils/pdfParser')
+          const pageCount = await getPdfPageCount(file, signal)
+          entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+        } else {
+          entries.push({ input, total: 1, isImage: false, isPdf: false })
+        }
       } else {
         const file = input
         if (file.type.startsWith('image/')) {
