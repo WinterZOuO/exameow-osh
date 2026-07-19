@@ -51,13 +51,21 @@ export async function extractPdfTextWithOcr(
   for (let i = 1; i <= total; i++) {
     if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
 
-    const page = await pdf.getPage(i)
-    const content = await page.getTextContent()
-    const pageText = content.items
-      .map((item: any) => item.str)
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim()
+    let page: any
+    let pageText = ''
+    try {
+      page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      pageText = content.items
+        .map((item: any) => item.str)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    } catch (e) {
+      console.warn(`[pdfParser] Failed to extract text for page ${i}:`, e)
+      onProgress(i, total, ocrPages)
+      continue
+    }
 
     if (pageText.length >= MIN_CHARS_PER_PAGE) {
       if (pageText) texts.push(pageText)
@@ -76,6 +84,7 @@ export async function extractPdfTextWithOcr(
       }
       try {
         const text = await recognizeImage(canvas)
+        if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
         if (text) texts.push(text)
         ocrPages++
       } catch (e) {

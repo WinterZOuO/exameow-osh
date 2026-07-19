@@ -21,6 +21,7 @@ export async function parseBrowserFileWithProgress(
     if (file.type.startsWith('image/')) {
       const canvas = await fileToCanvas(file)
       const text = await recognizeImage(canvas)
+      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
       onProgress({ current: 1, total: 1, images: 1, pdfPages: 0, files: 0, message: '' })
       return text
     }
