@@ -52,6 +52,7 @@ export interface LocaleMessages {
   genProgressCancelled: string
   genProgressGeneratingBatch: string
   genErrorNoText: string
+  genErrorReadFile: string
 
   // Preview
   previewTitle: string
@@ -349,6 +350,7 @@ export const zh: LocaleMessages = {
   genProgressCancelled: '已取消',
   genProgressGeneratingBatch: '正在生成第 {current}/{total} 批...',
   genErrorNoText: '未从文件识别到有效文本，请检查文件内容',
+  genErrorReadFile: '无法读取文件：{file}',
 
   previewTitle: '预览',
   previewSubtitleEmpty: '生成试题后可在此预览',
@@ -636,6 +638,7 @@ export const en: LocaleMessages = {
   genProgressCancelled: 'Cancelled',
   genProgressGeneratingBatch: 'Generating batch {current}/{total}...',
   genErrorNoText: 'No recognizable text was extracted from the files. Please check the file contents.',
+  genErrorReadFile: 'Cannot read file: {file}',
 
   previewTitle: 'Preview',
   previewSubtitleEmpty: 'Review generated questions before export',
