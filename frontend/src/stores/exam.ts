@@ -6,7 +6,7 @@ import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
 import { useI18nStore } from './i18n'
 import type { ParseProgressReport } from '@/utils/fileParser'
-import { isCloudflare } from '@/utils/platform'
+import { isTauri, isCloudflare } from '@/utils/platform'
 
 const ALL_TYPES: QuestionType[] = [
   'single_choice' as QuestionType,
@@ -327,7 +327,7 @@ export const useExamStore = defineStore('exam', () => {
           entries.push({ input: file, total: 1, isImage: true, isPdf: false })
         } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
           const { getPdfPageCount } = await import('@/utils/pdfParser')
-          const pageCount = await getPdfPageCount(file)
+          const pageCount = await getPdfPageCount(file, signal)
           entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
         } else {
           entries.push({ input: file, total: 1, isImage: false, isPdf: false })
@@ -424,11 +424,9 @@ export const useExamStore = defineStore('exam', () => {
       const baseParams = getParams()
 
       // Parse all files and concatenate text
-      const isTauriEnv = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
-
       let fullText = await parseInputs(
         inputs,
-        isTauriEnv,
+        isTauri(),
         (p) => {
           const message = p.total > 0
             ? i18n.t('genProgressParsingPdfPage', {
@@ -444,10 +442,13 @@ export const useExamStore = defineStore('exam', () => {
 
       baseParams.text = fullText
       baseParams.source_name = sourceFileName.value
+      if (!fullText.trim()) {
+        throw new Error(i18n.t('genErrorNoText'))
+      }
       const batches = buildBatches(baseParams)
       const firstInput = inputs[0]!
-      console.log('[Exameow] fileRef debug:', { isTauriEnv, firstInputType: typeof firstInput, firstInputVal: firstInput })
-      const fileRef = isTauriEnv
+      console.log('[Exameow] fileRef debug:', { isTauri: isTauri(), firstInputType: typeof firstInput, firstInputVal: firstInput })
+      const fileRef = isTauri()
         ? (typeof firstInput === 'string' ? firstInput : (firstInput as File).name || 'file')
         : (firstInput as File)
 
