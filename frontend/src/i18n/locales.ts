@@ -46,6 +46,11 @@ export interface LocaleMessages {
   genGenerateBtn: string
   genGenerating: string
   genFileSelected: string
+  genProgressParsing: string
+  genProgressParsingPdfPage: string
+  genProgressGeneratingBatch: string
+  genProgressComplete: string
+  genProgressCancelled: string
 
   // Preview
   previewTitle: string
@@ -337,6 +342,11 @@ export const zh: LocaleMessages = {
   genGenerateBtn: '生成试题',
   genGenerating: '生成中...',
   genFileSelected: '已选择',
+  genProgressParsing: '正在解析文件...',
+  genProgressParsingPdfPage: '正在解析第 {current}/{total} 页，已识别 {images} 张图片...',
+  genProgressGeneratingBatch: '正在生成第 {current}/{total} 批试题...',
+  genProgressComplete: '生成完成！',
+  genProgressCancelled: '已取消',
 
   previewTitle: '预览',
   previewSubtitleEmpty: '生成试题后可在此预览',
@@ -618,6 +628,11 @@ export const en: LocaleMessages = {
   genGenerateBtn: 'Generate Questions',
   genGenerating: 'Generating...',
   genFileSelected: 'Selected',
+  genProgressParsing: 'Parsing files...',
+  genProgressParsingPdfPage: 'Parsing page {current}/{total}, recognized {images} images...',
+  genProgressGeneratingBatch: 'Generating batch {current}/{total}...',
+  genProgressComplete: 'Complete!',
+  genProgressCancelled: 'Cancelled',
 
   previewTitle: 'Preview',
   previewSubtitleEmpty: 'Review generated questions before export',

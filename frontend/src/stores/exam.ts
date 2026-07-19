@@ -4,6 +4,8 @@ import type { ExamParams, Question, QuestionType, Difficulty } from '@exameow/sh
 import { api } from '@/api'
 import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
+import { useI18nStore } from './i18n'
+import type { ParseProgressReport } from '@/utils/fileParser'
 import { isCloudflare } from '@/utils/platform'
 
 const ALL_TYPES: QuestionType[] = [
@@ -26,7 +28,7 @@ export const useExamStore = defineStore('exam', () => {
   const sourceFileName = ref(loadCachedSourceFile())
   const generating = ref(false)
   const error = ref<string | null>(null)
-  const progress = ref({ current: 0, total: 0, message: '' })
+  const progress = ref({ current: 0, total: 0, message: '', phase: 'parsing' as ProgressPhase })
   let abortController: AbortController | null = null
   const generated = computed(() => questions.value.length > 0)
   const totalCount = computed(() =>
@@ -47,6 +49,8 @@ export const useExamStore = defineStore('exam', () => {
       topic_filter: topicFilter.value || undefined,
     }
   }
+
+  type ProgressPhase = 'parsing' | 'generating' | 'complete' | 'cancelled'
 
   const MAX_CHARS_PER_CHUNK = 32000
   const MAX_Q_PER_CHUNK = 15
@@ -305,10 +309,107 @@ export const useExamStore = defineStore('exam', () => {
     return btoa(parts.join(''))
   }
 
+  async function parseInputs(
+    inputs: (string | File)[],
+    isTauriEnv: boolean,
+    onProgress: (p: ParseProgressReport) => void,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    // 1. 预扫描：统计每个文件需要解析的单元数
+    type FileEntry = { input: string | File; total: number; isImage: boolean; isPdf: boolean }
+    const entries: FileEntry[] = []
+    for (const input of inputs) {
+      if (typeof input === 'string') {
+        entries.push({ input, total: 1, isImage: false, isPdf: false })
+      } else {
+        const file = input
+        if (file.type.startsWith('image/')) {
+          entries.push({ input: file, total: 1, isImage: true, isPdf: false })
+        } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          const { getPdfPageCount } = await import('@/utils/pdfParser')
+          const pageCount = await getPdfPageCount(file)
+          entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+        } else {
+          entries.push({ input: file, total: 1, isImage: false, isPdf: false })
+        }
+      }
+    }
+    const total = entries.reduce((sum, it) => sum + it.total, 0)
+
+    // 2. 串行解析
+    let current = 0
+    let images = 0
+    let pdfPages = 0
+    let files = 0
+    let fullText = ''
+
+    const { parseBrowserFileWithProgress } = await import('@/utils/fileParser')
+
+    for (const entry of entries) {
+      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
+
+      try {
+        const start = current
+        let text = ''
+
+        if (typeof entry.input === 'string') {
+          // Tauri 文件路径：走后端解析
+          const { tauriApi } = await import('@/api/bridge')
+          const { readFile } = await import('@tauri-apps/plugin-fs')
+          const rawName = entry.input.replace(/\\/g, '/').split('/').pop() || entry.input
+          const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
+          const buf = await readFile(entry.input)
+          const base64 = uint8ToBase64(new Uint8Array(buf))
+          text = await tauriApi.parseFileBytes(base64, ext)
+          current += 1
+          files += 1
+        } else if (entry.input instanceof File) {
+          const file = entry.input
+          const isTauriBackend = isTauriEnv && !entry.isImage && !entry.isPdf
+          if (isTauriBackend) {
+            const { tauriApi } = await import('@/api/bridge')
+            const ext = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'txt'
+            const buf = await file.arrayBuffer()
+            const base64 = uint8ToBase64(new Uint8Array(buf))
+            text = await tauriApi.parseFileBytes(base64, ext)
+            current += 1
+            files += 1
+          } else {
+            text = await parseBrowserFileWithProgress(
+              file,
+              (p) => {
+                current = start + p.current
+                images += p.images
+                pdfPages = p.pdfPages
+                onProgress({ current, total, images, pdfPages, files, message: '' })
+              },
+              signal,
+            )
+            files += 1
+          }
+        }
+
+        if (text) {
+          const label = fileNameFromInput(entry.input)
+          fullText += (fullText ? `\n\n---\n\n## ${label}\n` : `## ${label}\n`) + text
+        }
+      } catch (e) {
+        console.warn(`[exam] Parse failed for ${fileNameFromInput(entry.input)}:`, e)
+        current += entry.total
+        files += 1
+      }
+
+      onProgress({ current, total, images, pdfPages, files, message: '' })
+    }
+
+    return fullText
+  }
+
   async function generate(inputs: (string | File)[]) {
     const configStore = useConfigStore()
+    const i18n = useI18nStore()
     generating.value = true
-    progress.value = { current: 0, total: 0, message: 'Preparing...' }
+    progress.value = { current: 0, total: 0, message: i18n.t('genProgressParsing'), phase: 'parsing' }
     questions.value = []
     sourceFileName.value = extractFileName(inputs)
     abortController = new AbortController()
@@ -320,63 +421,41 @@ export const useExamStore = defineStore('exam', () => {
       const baseParams = getParams()
 
       // Parse all files and concatenate text
-      let fullText = ''
-      const hasTauriPaths = inputs.some(i => typeof i === 'string')
       const isTauriEnv = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
 
-      if (hasTauriPaths) {
-        progress.value.message = 'Extracting document text...'
-        const { readFile } = await import('@tauri-apps/plugin-fs')
-        const { tauriApi } = await import('@/api/bridge')
-        for (const input of inputs) {
-          if (typeof input === 'string') {
-            const rawName = input.replace(/\\/g, '/').split('/').pop() || input
-            const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
-            const buf = await readFile(input)
-            const base64 = uint8ToBase64(new Uint8Array(buf))
-            const text = await tauriApi.parseFileBytes(base64, ext)
-            if (text) {
-              const label = fileNameFromInput(input)
-              fullText += (fullText ? `\n\n---\n\n## ${label}\n` : `## ${label}\n`) + text
-            }
-          }
-        }
-      } else if (isTauriEnv) {
-        progress.value.message = 'Parsing files...'
-        const { tauriApi } = await import('@/api/bridge')
-        for (const input of inputs) {
-          const file = input as File
-          const ext = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'txt'
-          const buf = await file.arrayBuffer()
-          const base64 = uint8ToBase64(new Uint8Array(buf))
-          const text = await tauriApi.parseFileBytes(base64, ext)
-          if (text) {
-            fullText += (fullText ? `\n\n---\n\n## ${file.name}\n` : `## ${file.name}\n`) + text
-          }
-        }
-      } else {
-        const { parseBrowserFile } = await import('@/utils/fileParser')
-        for (const input of inputs) {
-          const file = input as File
-          const text = await parseBrowserFile(file)
-          if (text) {
-            fullText += (fullText ? `\n\n---\n\n## ${file.name}\n` : `## ${file.name}\n`) + text
-          }
-        }
+      progress.value = {
+        current: 0,
+        total: 0,
+        phase: 'parsing',
+        message: i18n.t('genProgressParsing'),
       }
+
+      let fullText = await parseInputs(
+        inputs,
+        isTauriEnv,
+        (p) => {
+          const message = p.total > 0
+            ? i18n.t('genProgressParsingPdfPage', {
+                current: p.current,
+                total: p.total,
+                images: p.images,
+              })
+            : i18n.t('genProgressParsing')
+          progress.value = { current: p.current, total: p.total, phase: 'parsing', message }
+        },
+        signal,
+      )
 
       baseParams.text = fullText
       baseParams.source_name = sourceFileName.value
       const batches = buildBatches(baseParams)
       const firstInput = inputs[0]!
-      console.log('[Exameow] fileRef debug:', { hasTauriPaths, isTauriEnv, firstInputType: typeof firstInput, firstInputVal: firstInput })
-      const fileRef = hasTauriPaths
-        ? (firstInput as string)
-        : (isTauriEnv
-          ? (typeof firstInput === 'string' ? firstInput : (firstInput as File).name || 'file')
-          : (firstInput as File))
+      console.log('[Exameow] fileRef debug:', { isTauriEnv, firstInputType: typeof firstInput, firstInputVal: firstInput })
+      const fileRef = isTauriEnv
+        ? (typeof firstInput === 'string' ? firstInput : (firstInput as File).name || 'file')
+        : (firstInput as File)
 
-      progress.value = { current: 0, total: batches.length, message: 'Generating...' }
+      progress.value = { current: 0, total: batches.length, phase: 'generating', message: i18n.t('genProgressGeneratingBatch', { current: 1, total: batches.length }) }
 
       const useDirectAI = isCloudflare() && configStore.aiProvider === 'custom'
 
@@ -388,7 +467,7 @@ export const useExamStore = defineStore('exam', () => {
 
       for (let i = 0; i < batches.length; i++) {
         if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
-        progress.value = { current: i, total: batches.length, message: `Generating batch ${i + 1}/${batches.length}...` }
+        progress.value = { current: i, total: batches.length, phase: 'generating', message: i18n.t('genProgressGeneratingBatch', { current: i + 1, total: batches.length }) }
         const batch = batches[i]
         if (!batch) continue
 
@@ -410,14 +489,14 @@ export const useExamStore = defineStore('exam', () => {
         console.log(`[Exameow] Batch ${batch.batch_index} done: ${questions.value.length} questions total`)
       }
 
-      progress.value = { current: batches.length, total: batches.length, message: 'Complete!' }
+      progress.value = { current: batches.length, total: batches.length, phase: 'complete', message: i18n.t('genProgressComplete') }
       saveCachedQuestions()
 
       const practiceStore = usePracticeStore()
       practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
     } catch (e: any) {
       if (e?.name === 'AbortError' || signal.aborted) {
-        progress.value = { ...progress.value, message: 'Cancelled' }
+        progress.value = { ...progress.value, phase: 'cancelled', message: i18n.t('genProgressCancelled') }
       } else {
         error.value = e?.message || e?.toString() || 'Unknown error'
         throw e
