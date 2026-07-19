@@ -375,12 +375,13 @@ export const useExamStore = defineStore('exam', () => {
             current += 1
             files += 1
           } else {
+            const startPdfPages = pdfPages
             text = await parseBrowserFileWithProgress(
               file,
               (p) => {
                 current = start + p.current
                 images += p.images
-                pdfPages += p.pdfPages
+                pdfPages = startPdfPages + p.pdfPages
                 onProgress({ current, total, images, pdfPages, files, message: '' })
               },
               signal,
