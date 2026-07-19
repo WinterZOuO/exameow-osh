@@ -131,3 +131,7 @@ exameow/
 ## License
 
 Apache-2.0
+
+## Third-Party Licenses
+
+This project uses third-party open source software. A complete list of dependencies, their licenses, and license URLs can be found in [THIRD_PARTY_LICENSES.csv](THIRD_PARTY_LICENSES.csv).
