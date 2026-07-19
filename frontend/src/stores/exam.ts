@@ -333,6 +333,8 @@ export const useExamStore = defineStore('exam', () => {
     }
 
     for (const input of inputs) {
+      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
+
       if (typeof input === 'string') {
         const rawName = input.replace(/\\/g, '/').split('/').pop() || input
         const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
@@ -389,8 +391,10 @@ export const useExamStore = defineStore('exam', () => {
           const rawName = entry.input.replace(/\\/g, '/').split('/').pop() || entry.input
           const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
           const buf = await readFile(entry.input)
+          if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
           const base64 = uint8ToBase64(new Uint8Array(buf))
           text = await tauriApi.parseFileBytes(base64, ext)
+          if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
           current += 1
           files += 1
         } else if (entry.input instanceof File) {
