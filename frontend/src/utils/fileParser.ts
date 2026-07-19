@@ -1,3 +1,52 @@
+import { fileToCanvas } from './image'
+import { recognizeImage } from './ocr'
+
+export interface ParseProgressReport {
+  current: number
+  total: number
+  images: number
+  pdfPages: number
+  files: number
+  message: string
+}
+
+export async function parseBrowserFileWithProgress(
+  file: File,
+  onProgress: (p: ParseProgressReport) => void,
+  signal?: AbortSignal,
+): Promise<string> {
+  if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
+
+  try {
+    if (file.type.startsWith('image/')) {
+      const canvas = await fileToCanvas(file)
+      const text = await recognizeImage(canvas)
+      onProgress({ current: 1, total: 1, images: 1, pdfPages: 0, files: 0, message: '' })
+      return text
+    }
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      const { extractPdfTextWithOcr } = await import('./pdfParser')
+      const text = await extractPdfTextWithOcr(
+        file,
+        (done, total, ocrPages) => {
+          onProgress({ current: done, total, images: 0, pdfPages: ocrPages, files: 0, message: '' })
+        },
+        signal,
+      )
+      return text
+    }
+
+    const text = await parseBrowserFile(file)
+    onProgress({ current: 1, total: 1, images: 0, pdfPages: 0, files: 0, message: '' })
+    return text
+  } catch (e) {
+    console.warn(`[fileParser] Failed to parse ${file.name}:`, e)
+    onProgress({ current: 1, total: 1, images: 0, pdfPages: 0, files: 0, message: '' })
+    return ''
+  }
+}
+
 export async function parseBrowserFile(file: File): Promise<string> {
   const ext = file.name.split('.').pop()?.toLowerCase() || 'txt'
 
