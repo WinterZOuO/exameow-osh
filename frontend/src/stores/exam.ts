@@ -335,39 +335,55 @@ export const useExamStore = defineStore('exam', () => {
     for (const input of inputs) {
       if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
 
-      try {
-        if (typeof input === 'string') {
-          const rawName = input.replace(/\\/g, '/').split('/').pop() || input
-          const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
-          if (IMAGE_EXTENSIONS.includes(ext)) {
+      if (typeof input === 'string') {
+        const rawName = input.replace(/\\/g, '/').split('/').pop() || input
+        const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
+        if (IMAGE_EXTENSIONS.includes(ext)) {
+          try {
             const { readFile } = await import('@tauri-apps/plugin-fs')
             const buf = await readFile(input)
             const file = new File([new Uint8Array(buf)], rawName, { type: getImageMimeType(ext) })
             entries.push({ input: file, total: 1, isImage: true, isPdf: false })
-          } else if (ext === 'pdf') {
+          } catch (e) {
+            console.warn('[exam] Pre-scan failed for image', input, ':', e)
+            entries.push({ input, total: 1, isImage: false, isPdf: false })
+          }
+        } else if (ext === 'pdf') {
+          try {
             const { readFile } = await import('@tauri-apps/plugin-fs')
             const buf = await readFile(input)
             const file = new File([new Uint8Array(buf)], rawName, { type: 'application/pdf' })
-            const { getPdfPageCount } = await import('@/utils/pdfParser')
-            const pageCount = await getPdfPageCount(file, signal)
-            entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
-          } else {
+            try {
+              const { getPdfPageCount } = await import('@/utils/pdfParser')
+              const pageCount = await getPdfPageCount(file, signal)
+              entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+            } catch (e) {
+              console.warn('[exam] Pre-scan failed for PDF page count', input, ':', e)
+              entries.push({ input: file, total: 1, isImage: false, isPdf: true })
+            }
+          } catch (e) {
+            console.warn('[exam] Pre-scan failed for PDF', input, ':', e)
             entries.push({ input, total: 1, isImage: false, isPdf: false })
           }
         } else {
-          const file = input
-          if (file.type.startsWith('image/')) {
-            entries.push({ input: file, total: 1, isImage: true, isPdf: false })
-          } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          entries.push({ input, total: 1, isImage: false, isPdf: false })
+        }
+      } else {
+        const file = input
+        if (file.type.startsWith('image/')) {
+          entries.push({ input: file, total: 1, isImage: true, isPdf: false })
+        } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          try {
             const { getPdfPageCount } = await import('@/utils/pdfParser')
             const pageCount = await getPdfPageCount(file, signal)
             entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
-          } else {
-            entries.push({ input: file, total: 1, isImage: false, isPdf: false })
+          } catch (e) {
+            console.warn('[exam] Pre-scan failed for PDF page count', file.name, ':', e)
+            entries.push({ input: file, total: 1, isImage: false, isPdf: true })
           }
+        } else {
+          entries.push({ input: file, total: 1, isImage: false, isPdf: false })
         }
-      } catch (e) {
-        console.warn('[exam] Pre-scan failed for', input, ':', e)
       }
     }
     const total = entries.reduce((sum, it) => sum + it.total, 0)
