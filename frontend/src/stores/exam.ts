@@ -335,35 +335,39 @@ export const useExamStore = defineStore('exam', () => {
     for (const input of inputs) {
       if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
 
-      if (typeof input === 'string') {
-        const rawName = input.replace(/\\/g, '/').split('/').pop() || input
-        const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
-        if (IMAGE_EXTENSIONS.includes(ext)) {
-          const { readFile } = await import('@tauri-apps/plugin-fs')
-          const buf = await readFile(input)
-          const file = new File([new Uint8Array(buf)], rawName, { type: getImageMimeType(ext) })
-          entries.push({ input: file, total: 1, isImage: true, isPdf: false })
-        } else if (ext === 'pdf') {
-          const { readFile } = await import('@tauri-apps/plugin-fs')
-          const buf = await readFile(input)
-          const file = new File([new Uint8Array(buf)], rawName, { type: 'application/pdf' })
-          const { getPdfPageCount } = await import('@/utils/pdfParser')
-          const pageCount = await getPdfPageCount(file, signal)
-          entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+      try {
+        if (typeof input === 'string') {
+          const rawName = input.replace(/\\/g, '/').split('/').pop() || input
+          const ext = rawName.includes('.') ? rawName.split('.').pop()!.toLowerCase() : 'txt'
+          if (IMAGE_EXTENSIONS.includes(ext)) {
+            const { readFile } = await import('@tauri-apps/plugin-fs')
+            const buf = await readFile(input)
+            const file = new File([new Uint8Array(buf)], rawName, { type: getImageMimeType(ext) })
+            entries.push({ input: file, total: 1, isImage: true, isPdf: false })
+          } else if (ext === 'pdf') {
+            const { readFile } = await import('@tauri-apps/plugin-fs')
+            const buf = await readFile(input)
+            const file = new File([new Uint8Array(buf)], rawName, { type: 'application/pdf' })
+            const { getPdfPageCount } = await import('@/utils/pdfParser')
+            const pageCount = await getPdfPageCount(file, signal)
+            entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+          } else {
+            entries.push({ input, total: 1, isImage: false, isPdf: false })
+          }
         } else {
-          entries.push({ input, total: 1, isImage: false, isPdf: false })
+          const file = input
+          if (file.type.startsWith('image/')) {
+            entries.push({ input: file, total: 1, isImage: true, isPdf: false })
+          } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            const { getPdfPageCount } = await import('@/utils/pdfParser')
+            const pageCount = await getPdfPageCount(file, signal)
+            entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
+          } else {
+            entries.push({ input: file, total: 1, isImage: false, isPdf: false })
+          }
         }
-      } else {
-        const file = input
-        if (file.type.startsWith('image/')) {
-          entries.push({ input: file, total: 1, isImage: true, isPdf: false })
-        } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-          const { getPdfPageCount } = await import('@/utils/pdfParser')
-          const pageCount = await getPdfPageCount(file, signal)
-          entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
-        } else {
-          entries.push({ input: file, total: 1, isImage: false, isPdf: false })
-        }
+      } catch (e) {
+        console.warn('[exam] Pre-scan failed for', input, ':', e)
       }
     }
     const total = entries.reduce((sum, it) => sum + it.total, 0)
@@ -380,8 +384,8 @@ export const useExamStore = defineStore('exam', () => {
     for (const entry of entries) {
       if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
 
+      const start = current
       try {
-        const start = current
         let text = ''
 
         if (typeof entry.input === 'string') {
@@ -433,7 +437,7 @@ export const useExamStore = defineStore('exam', () => {
           throw e
         }
         console.warn(`[exam] Parse failed for ${fileNameFromInput(entry.input)}:`, e)
-        current += entry.total
+        current = start + entry.total
         files += 1
       }
 
