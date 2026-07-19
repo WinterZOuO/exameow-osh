@@ -7,12 +7,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString()
 
 const MIN_CHARS_PER_PAGE = 30
-const PDF_RENDER_SCALE = 1.5
+const MAX_PDF_RENDER_SIDE = 2000
 
-export interface PdfPageResult {
-  pageNum: number
-  text: string
-  usedOcr: boolean
+function renderScaleForViewport(viewport: { width: number; height: number }): number {
+  const longSide = Math.max(viewport.width, viewport.height)
+  if (longSide <= MAX_PDF_RENDER_SIDE) return 1
+  return MAX_PDF_RENDER_SIDE / longSide
 }
 
 export async function extractPdfText(file: File): Promise<string> {
@@ -62,15 +62,16 @@ export async function extractPdfTextWithOcr(
     if (pageText.length >= MIN_CHARS_PER_PAGE) {
       if (pageText) texts.push(pageText)
     } else {
-      const viewport = page.getViewport({ scale: PDF_RENDER_SCALE })
+      const viewport = page.getViewport({ scale: renderScaleForViewport(page.getViewport({ scale: 1 })) })
       const canvas = document.createElement('canvas')
       canvas.width = Math.round(viewport.width)
       canvas.height = Math.round(viewport.height)
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new Error('canvas 2d context unavailable')
-      await page.render({ canvasContext: ctx, viewport, canvas }).promise
+      await page.render({ canvasContext: ctx, viewport } as unknown as Parameters<typeof page.render>[0]).promise
       if (signal?.aborted) {
-        canvas.remove()
+        canvas.width = 0
+        canvas.height = 0
         throw new DOMException('Cancelled', 'AbortError')
       }
       try {
@@ -80,7 +81,8 @@ export async function extractPdfTextWithOcr(
       } catch (e) {
         console.warn(`[pdfParser] OCR failed for page ${i}:`, e)
       } finally {
-        canvas.remove()
+        canvas.width = 0
+        canvas.height = 0
       }
     }
 
@@ -90,9 +92,11 @@ export async function extractPdfTextWithOcr(
   return texts.join('\n\n')
 }
 
-export async function getPdfPageCount(file: File): Promise<number> {
+export async function getPdfPageCount(file: File, signal?: AbortSignal): Promise<number> {
   const arrayBuffer = await file.arrayBuffer()
+  if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
   return pdf.numPages
 }
 
