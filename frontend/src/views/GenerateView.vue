@@ -35,7 +35,7 @@ const progressPercent = computed(() => {
   return Math.round((p.current / p.total) * 100)
 })
 
-const isBatched = computed(() => examStore.progress.total > 1)
+const isBatched = computed(() => examStore.progress.total > 0)
 
 async function handleGenerate() {
   const inputs = getFileInputs()
