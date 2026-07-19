@@ -380,7 +380,7 @@ export const useExamStore = defineStore('exam', () => {
               (p) => {
                 current = start + p.current
                 images += p.images
-                pdfPages = p.pdfPages
+                pdfPages += p.pdfPages
                 onProgress({ current, total, images, pdfPages, files, message: '' })
               },
               signal,
@@ -394,6 +394,9 @@ export const useExamStore = defineStore('exam', () => {
           fullText += (fullText ? `\n\n---\n\n## ${label}\n` : `## ${label}\n`) + text
         }
       } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          throw e
+        }
         console.warn(`[exam] Parse failed for ${fileNameFromInput(entry.input)}:`, e)
         current += entry.total
         files += 1
@@ -422,13 +425,6 @@ export const useExamStore = defineStore('exam', () => {
 
       // Parse all files and concatenate text
       const isTauriEnv = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
-
-      progress.value = {
-        current: 0,
-        total: 0,
-        phase: 'parsing',
-        message: i18n.t('genProgressParsing'),
-      }
 
       let fullText = await parseInputs(
         inputs,
