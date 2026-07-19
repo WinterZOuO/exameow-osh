@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 echo.
 echo   ==================================
-echo           Exameow v2.1.1
+echo           Exameow v1.0.0
 echo     AI Exam Question Generator
 echo   ==================================
 echo.

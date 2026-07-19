@@ -10,6 +10,7 @@ import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, 
 const configStore = useConfigStore()
 const router = useRouter()
 const i18n = useI18nStore()
+const version = import.meta.env.VITE_APP_VERSION
 
 const showKey = ref(false)
 const saveSuccess = ref(false)
@@ -38,7 +39,10 @@ async function handleSave() {
 
 <template>
   <div>
-    <h1 class="text-display-sm mb-1">{{ i18n.t('configTitle') }}</h1>
+    <div class="flex items-center justify-between mb-1">
+      <h1 class="text-display-sm">{{ i18n.t('configTitle') }}</h1>
+      <span class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
+    </div>
     <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSubtitle') }}</p>
 
     <!-- CF: Provider toggle -->
