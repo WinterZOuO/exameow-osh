@@ -10,7 +10,9 @@ import {
   PhotoIcon,
   ArrowPathIcon,
 } from '@heroicons/vue/24/outline'
+import { AdjustmentsHorizontalIcon } from '@heroicons/vue/24/outline'
 import SearchPanel from '@/components/search/SearchPanel.vue'
+import SearchSettingsPanel from '@/components/search/SearchSettingsPanel.vue'
 
 const router = useRouter()
 const i18n = useI18nStore()
@@ -25,6 +27,7 @@ const dragging = ref(false)
 let currentFile: File | null = null
 
 const showCamera = isMobileDevice()
+const showSettings = ref(false)
 
 function pickCamera() {
   cameraInput.value?.click()
@@ -71,7 +74,7 @@ onBeforeUnmount(() => {
       <button class="btn-icon" @click="router.push('/search')">
         <ArrowLeftIcon class="w-5 h-5" />
       </button>
-      <h1 class="text-display-sm">{{ i18n.t('searchModePhoto') }}</h1>
+      <h1 class="text-display-sm flex-1">{{ i18n.t('searchModePhoto') }}</h1>
     </div>
     <p class="text-body-lg mb-4" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchModePhotoDesc') }}</p>
 
@@ -79,14 +82,26 @@ onBeforeUnmount(() => {
     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
 
     <div
-      class="card-filled p-5 mb-4 text-center transition-all"
+      class="card-filled p-5 mb-4 transition-all"
       :style="dragging ? { outline: '2px dashed rgb(var(--md-primary))' } : {}"
       @dragover.prevent="dragging = true"
       @dragleave="dragging = false"
       @drop.prevent="onDrop"
     >
+      <div class="flex items-start justify-end gap-2 mb-4">
+        <button
+          class="btn-tonal text-sm shrink-0 !px-3 !py-2"
+          :style="{ color: showSettings ? 'rgb(var(--md-primary))' : 'rgb(var(--md-on-surface-variant))' }"
+          @click="showSettings = !showSettings"
+          :title="i18n.t('searchSettings')"
+        >
+          <AdjustmentsHorizontalIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ i18n.t('searchSettings') }}</span>
+        </button>
+      </div>
+
       <template v-if="!previewUrl">
-        <div class="flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center gap-4 text-center">
           <div
             class="w-16 h-16 rounded-full flex items-center justify-center"
             :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
@@ -125,6 +140,10 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </template>
+
+      <div v-if="showSettings" class="mt-4 pt-4" style="border-top: 1px solid rgb(var(--md-outline-variant) / 0.4)">
+        <SearchSettingsPanel />
+      </div>
     </div>
 
     <div v-if="busy" class="card-outlined p-4 mb-4 flex items-center justify-between">

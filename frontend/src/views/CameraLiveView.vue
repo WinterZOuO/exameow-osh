@@ -4,9 +4,10 @@ import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useCameraLiveStore } from '@/stores/cameraLive'
 import { useCameraLive } from '@/composables/useCameraLive'
-import { PauseIcon, XMarkIcon, MagnifyingGlassIcon, CheckIcon, Cog6ToothIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { PauseIcon, XMarkIcon, MagnifyingGlassIcon, CheckIcon, Cog6ToothIcon, ArrowLeftIcon, AdjustmentsHorizontalIcon } from '@heroicons/vue/24/outline'
 import { PlayIcon } from '@heroicons/vue/24/solid'
 import { api } from '@/api'
+import SearchSettingsPanel from '@/components/search/SearchSettingsPanel.vue'
 
 const router = useRouter()
 const i18n = useI18nStore()
@@ -17,6 +18,7 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const cameraReady = ref(false)
 const cameraError = ref('')
 const permissionDenied = ref(false)
+const showSettings = ref(false)
 
 async function handleStart() {
   cameraError.value = ''
@@ -94,35 +96,53 @@ function isCorrect(idx: number): boolean {
       <button class="btn-icon" @click="handleExit">
         <ArrowLeftIcon class="w-5 h-5" />
       </button>
-      <h1 class="text-display-sm">{{ i18n.t('searchModeCameraLive') }}</h1>
+      <h1 class="text-display-sm flex-1">{{ i18n.t('searchModeCameraLive') }}</h1>
     </div>
     <p class="text-body-lg mb-4" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchModeCameraLiveDesc') }}</p>
 
-    <div v-if="!cameraReady && store.status === 'idle'" class="card-filled p-6 flex flex-col items-center gap-4">
-      <div
-        class="w-16 h-16 rounded-full flex items-center justify-center"
-        :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
-      >
-        <MagnifyingGlassIcon class="w-8 h-8" />
+    <div v-if="!cameraReady && store.status === 'idle'" class="card-filled p-6 flex flex-col gap-4">
+      <div class="flex items-start justify-end gap-2">
+        <button
+          class="btn-tonal text-sm shrink-0 !px-3 !py-2"
+          :style="{ color: showSettings ? 'rgb(var(--md-primary))' : 'rgb(var(--md-on-surface-variant))' }"
+          @click="showSettings = !showSettings"
+          :title="i18n.t('searchSettings')"
+        >
+          <AdjustmentsHorizontalIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ i18n.t('searchSettings') }}</span>
+        </button>
       </div>
-      <button
-        class="px-8 py-3 rounded-full text-title-md font-medium transition-all duration-200 cursor-pointer"
-        :style="{ backgroundColor: 'rgb(var(--md-primary))', color: 'rgb(var(--md-on-primary))' }"
-        @click="handleStart"
-      >
-        {{ i18n.t('searchCameraLiveStart') }}
-      </button>
-      <p v-if="cameraError" class="text-body-sm" :style="{ color: 'rgb(var(--md-error))' }">
-        {{ cameraError }}
-      </p>
-      <div v-if="permissionDenied" class="flex gap-3 flex-wrap justify-center">
-        <button class="btn-tonal text-sm !px-5 !py-2.5" @click="openSettings">
-          <Cog6ToothIcon class="w-4 h-4" />
-          {{ i18n.t('searchCameraLiveOpenSettings') }}
+
+      <div class="flex flex-col items-center gap-4 text-center">
+        <div
+          class="w-16 h-16 rounded-full flex items-center justify-center"
+          :style="{ backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
+        >
+          <MagnifyingGlassIcon class="w-8 h-8" />
+        </div>
+        <button
+          class="px-8 py-3 rounded-full text-title-md font-medium transition-all duration-200 cursor-pointer"
+          :style="{ backgroundColor: 'rgb(var(--md-primary))', color: 'rgb(var(--md-on-primary))' }"
+          @click="handleStart"
+        >
+          {{ i18n.t('searchCameraLiveStart') }}
         </button>
-        <button class="btn-outlined text-sm !px-5 !py-2.5" @click="handleStart">
-          {{ i18n.t('searchRetry') }}
-        </button>
+        <p v-if="cameraError" class="text-body-sm" :style="{ color: 'rgb(var(--md-error))' }">
+          {{ cameraError }}
+        </p>
+        <div v-if="permissionDenied" class="flex gap-3 flex-wrap justify-center">
+          <button class="btn-tonal text-sm !px-5 !py-2.5" @click="openSettings">
+            <Cog6ToothIcon class="w-4 h-4" />
+            {{ i18n.t('searchCameraLiveOpenSettings') }}
+          </button>
+          <button class="btn-outlined text-sm !px-5 !py-2.5" @click="handleStart">
+            {{ i18n.t('searchRetry') }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="showSettings" class="pt-4" style="border-top: 1px solid rgb(var(--md-outline-variant) / 0.4)">
+        <SearchSettingsPanel />
       </div>
     </div>
 

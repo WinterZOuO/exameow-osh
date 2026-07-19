@@ -2,6 +2,7 @@ import { useScreenRecordStore, type ScreenRegion } from '@/stores/screenRecord'
 import { api } from '@/api'
 import { recognizeImage, preloadOcr } from '@/utils/ocr'
 import { searchQuestions, decideScanResult } from '@/utils/questionSearch'
+import { getSearchSettings } from '@/composables/useSearchSettings'
 import { usePracticeStore } from '@/stores/practice'
 import { isAndroid } from '@/utils/platform'
 
@@ -113,10 +114,11 @@ async function processFrameBitmap(bitmap: ImageBitmap) {
   log(`OCR ${ocrMs}ms (${canvas.width}x${canvas.height}):`, text.slice(0, 100) + (text.length > 100 ? '…' : ''))
 
   const practiceStore = usePracticeStore()
+  const settings = getSearchSettings()
   const hits = searchQuestions(text, practiceStore.banks, {
-    bankIds: null,
-    scope: 'stem_options',
-    types: null,
+    bankIds: settings.bankIds,
+    scope: settings.scope,
+    types: settings.types,
     mode: 'search',
   })
 

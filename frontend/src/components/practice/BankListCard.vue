@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
 import type { QuestionBank } from '@exameow/shared'
@@ -10,7 +10,10 @@ import {
   ArrowRightIcon,
   ArrowDownTrayIcon,
   ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ShareIcon,
 } from '@heroicons/vue/24/outline'
+import { isAndroid } from '@/utils/platform'
 
 const props = defineProps<{
   banks: QuestionBank[]
@@ -21,12 +24,16 @@ const emit = defineEmits<{
   (e: 'select', id: string): void
   (e: 'delete', id: string): void
   (e: 'import'): void
-  (e: 'downloadTemplate'): void
   (e: 'manageWrong', bankId: string): void
 }>()
 
 const i18n = useI18nStore()
 const wrongStore = useWrongQuestionsStore()
+
+const templateExportSuccess = ref('')
+const templateExportFilePath = ref('')
+const templateExportError = ref('')
+const downloadingTemplate = ref(false)
 
 const sourceLabel = (source: string): string => {
   if (source === 'ai-generated') return i18n.t('practiceSourceAI')
@@ -45,6 +52,98 @@ const typeCounts = (bank: QuestionBank) => {
   }
   return counts
 }
+
+async function handleDownloadTemplate() {
+  templateExportSuccess.value = ''
+  templateExportError.value = ''
+  templateExportFilePath.value = ''
+  downloadingTemplate.value = true
+
+  try {
+    const XLSX = await import('xlsx')
+    const typeLabel = (t: string) => {
+      const m: Record<string, string> = {
+        single_choice: '单选题', multi_choice: '多选题', true_false: '判断题',
+        fill_blank: '填空题', short_answer: '简答题',
+      }
+      return m[t] ?? t
+    }
+    const sample = {
+      '题型 （必填）': typeLabel('single_choice'),
+      '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
+      '选项 A': 'OpenAI 兼容 API',
+      '选项 B': 'WebSocket',
+      '选项 C': 'gRPC',
+      '选项 D': 'GraphQL',
+      '选项 E': '',
+      '选项 F': '',
+      '选项 G': '',
+      '选项 H': '',
+      '正确答案': 'A',
+      '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
+      '章节': '',
+      '难度': '',
+    }
+    const ws = XLSX.utils.json_to_sheet([sample])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+
+    const isTauriPlatform = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
+    const filename = 'exameow_template.xlsx'
+
+    if (isTauriPlatform) {
+      try {
+        const mod: any = await import('@tauri-apps/plugin-dialog')
+        const path = await mod.save({ defaultPath: filename, filters: [{ name: 'Excel File', extensions: ['xlsx'] }] })
+        if (path === null) {
+          return
+        }
+        const { writeFile } = await import('@tauri-apps/plugin-fs')
+        await writeFile(path, new Uint8Array(buf))
+        templateExportSuccess.value = i18n.t('previewExportSaved') + path
+        templateExportFilePath.value = path
+        return
+      } catch {}
+
+      try {
+        const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
+        const { tauriApi } = await import('@/api/bridge')
+        const savedPath = await tauriApi.saveToDownloads(filename, b64)
+        templateExportSuccess.value = i18n.t('previewExportSaved') + savedPath
+        templateExportFilePath.value = savedPath
+      } catch (e: any) {
+        templateExportError.value = 'Template download failed: ' + String(e?.message ?? e)
+      }
+    } else {
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      templateExportSuccess.value = i18n.t('previewExportSaved') + filename
+      templateExportFilePath.value = filename
+    }
+  } catch (e: any) {
+    templateExportError.value = 'Template download failed: ' + String(e?.message ?? e)
+  } finally {
+    downloadingTemplate.value = false
+  }
+}
+
+async function handleShareTemplate() {
+  try {
+    const { shareFile } = await import('@choochmeque/tauri-plugin-sharekit-api')
+    await shareFile('file://' + templateExportFilePath.value!, {
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      title: templateExportFilePath.value!.split('/').pop() || 'exameow_template.xlsx',
+    })
+  } catch (_e) {}
+}
+
+const hasExportMessage = computed(() => templateExportSuccess.value || templateExportError.value)
 </script>
 
 <template>
@@ -54,7 +153,7 @@ const typeCounts = (bank: QuestionBank) => {
         {{ i18n.t('practiceSelectBank') }}
       </h3>
       <div class="flex items-center gap-2">
-        <button class="btn-text text-sm" @click="emit('downloadTemplate')">
+        <button class="btn-text text-sm" :disabled="downloadingTemplate" @click="handleDownloadTemplate">
           <ArrowDownTrayIcon class="w-4 h-4" />
           {{ i18n.t('practiceDownloadTemplate') }}
         </button>
@@ -63,6 +162,28 @@ const typeCounts = (bank: QuestionBank) => {
         </button>
       </div>
     </div>
+
+    <Transition name="scale">
+      <div
+        v-if="hasExportMessage"
+        class="px-4 py-3 rounded-2xl text-sm flex items-center gap-2 break-all"
+        :style="{
+          backgroundColor: templateExportError ? 'rgba(var(--md-error) / 0.12)' : 'rgba(var(--md-primary) / 0.12)',
+          color: templateExportError ? 'rgb(var(--md-error))' : 'rgb(var(--md-primary))',
+        }"
+      >
+        <CheckCircleIcon v-if="templateExportSuccess" class="w-5 h-5 shrink-0" />
+        <ExclamationTriangleIcon v-else class="w-5 h-5 shrink-0" />
+        <span class="flex-1 min-w-0">{{ templateExportSuccess || templateExportError }}</span>
+        <button
+          v-if="templateExportFilePath && isAndroid()"
+          class="btn-tonal !h-7 !px-3 !text-xs shrink-0"
+          @click="handleShareTemplate"
+        >
+          <ShareIcon class="w-3.5 h-3.5" /> {{ i18n.t('previewExportShare') }}
+        </button>
+      </div>
+    </Transition>
 
     <!-- Empty State -->
     <div

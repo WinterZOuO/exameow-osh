@@ -63,6 +63,10 @@ const swipeContainer = ref<HTMLElement | null>(null)
 
 let pendingDirection: 'next' | 'prev' | null = null
 
+function isView(state: ViewState) {
+  return viewState.value === state
+}
+
 function doNavigate(dir: 'next' | 'prev') {
   if (animating.value) return
   if (dir === 'prev') {
@@ -333,69 +337,6 @@ function handleImportDone(count: number) {
   showImportDialog.value = false
   if (count > 0) {
     showToast(i18n.t('practiceImportSuccess', { n: count }))
-  }
-}
-
-async function handleDownloadTemplate() {
-  const XLSX = await import('xlsx')
-  const typeLabel = (t: string) => {
-    const m: Record<string, string> = {
-      single_choice: '单选题', multi_choice: '多选题', true_false: '判断题',
-      fill_blank: '填空题', short_answer: '简答题',
-    }
-    return m[t] ?? t
-  }
-  const sample = {
-    '题型 （必填）': typeLabel('single_choice'),
-    '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
-    '选项 A': 'OpenAI 兼容 API',
-    '选项 B': 'WebSocket',
-    '选项 C': 'gRPC',
-    '选项 D': 'GraphQL',
-    '选项 E': '',
-    '选项 F': '',
-    '选项 G': '',
-    '选项 H': '',
-    '正确答案': 'A',
-    '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
-    '章节': '',
-    '难度': '',
-  }
-  const ws = XLSX.utils.json_to_sheet([sample])
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
-  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-
-  const isTauriPlatform = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
-  const filename = 'exameow_template.xlsx'
-
-  if (isTauriPlatform) {
-    try {
-      const mod: any = await import('@tauri-apps/plugin-dialog')
-      const path = await mod.save({ defaultPath: filename, filters: [{ name: 'Excel File', extensions: ['xlsx'] }] })
-      if (path) {
-        const { writeFile } = await import('@tauri-apps/plugin-fs')
-        await writeFile(path, new Uint8Array(buf))
-        showToast(i18n.t('previewExportSaved') + path)
-        return
-      }
-    } catch {}
-    try {
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
-      const { tauriApi } = await import('@/api/bridge')
-      const savedPath = await tauriApi.saveToDownloads(filename, b64)
-      showToast(i18n.t('previewExportSaved') + savedPath)
-    } catch (e: any) {
-      showToast('Template download failed: ' + String(e?.message ?? e))
-    }
-  } else {
-    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
   }
 }
 
@@ -691,13 +632,12 @@ function handleBack() {
         @select="selectBank"
         @delete="handleDelete"
         @import="showImportDialog = true"
-        @download-template="handleDownloadTemplate"
         @manage-wrong="handleManageWrong"
       />
     </template>
 
     <!-- Mode Selection View -->
-    <template v-if="viewState === 'select-mode'">
+    <template v-if="isView('select-mode')">
       <template v-if="selectedBankId">
         <div class="card-outlined p-4 mb-4">
           <div class="text-sm truncate" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
@@ -716,7 +656,7 @@ function handleBack() {
     </template>
 
     <!-- Mock Exam Config View -->
-    <template v-if="viewState === 'mock-config'">
+    <template v-if="isView('mock-config')">
       <MockExamConfigComponent
         :available-types="availableTypes"
         :config="mockConfig"
@@ -726,7 +666,7 @@ function handleBack() {
     </template>
 
     <!-- Practice View -->
-    <template v-if="viewState === 'practice' && practiceStore.session && practiceStore.currentQuestion">
+    <template v-if="isView('practice') && practiceStore.session && practiceStore.currentQuestion">
       <div ref="swipeContainer" class="space-y-4 cursor-grab select-none">
         <!-- Progress Bar + Mode Toggle -->
         <div class="card-outlined p-3">
@@ -804,7 +744,7 @@ function handleBack() {
     </template>
 
     <!-- Result View -->
-    <template v-if="viewState === 'result' && practiceStore.session">
+    <template v-if="isView('result') && practiceStore.session">
       <PracticeResult
         :session="practiceStore.session"
         :score="practiceStore.score"

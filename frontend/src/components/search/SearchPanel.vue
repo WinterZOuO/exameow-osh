@@ -7,6 +7,7 @@ import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 import { searchQuestions, type MatchScope, type SearchHit } from '@/utils/questionSearch'
+import { useSearchSettings, getSearchSettings } from '@/composables/useSearchSettings'
 import type { AnswerResult, QuestionType } from '@exameow/shared'
 import {
   MagnifyingGlassIcon,
@@ -14,6 +15,7 @@ import {
   SparklesIcon,
 } from '@heroicons/vue/24/outline'
 import SearchHitCard from '@/components/search/SearchHitCard.vue'
+import SearchSettingsPanel from '@/components/search/SearchSettingsPanel.vue'
 
 const query = defineModel<string>('query', { default: '' })
 
@@ -22,79 +24,10 @@ const i18n = useI18nStore()
 const practiceStore = usePracticeStore()
 const configStore = useConfigStore()
 
-const SETTINGS_KEY = 'exameow-search-settings'
-
 const ALL_TYPES = ['single_choice', 'multi_choice', 'true_false', 'fill_blank', 'short_answer'] as QuestionType[]
 
-const typeLabelKeys: Record<string, 'typeSingle' | 'typeMulti' | 'typeTrueFalse' | 'typeFillBlank' | 'typeShortAnswer'> = {
-  single_choice: 'typeSingle',
-  multi_choice: 'typeMulti',
-  true_false: 'typeTrueFalse',
-  fill_blank: 'typeFillBlank',
-  short_answer: 'typeShortAnswer',
-}
-
-// ---------- settings (persisted) ----------
-interface StoredSettings {
-  bankIds: string[] | null
-  scope: MatchScope
-  types: QuestionType[] | null
-}
-
-function loadSettings(): StoredSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY)
-    if (raw) return { bankIds: null, scope: 'stem_options', types: null, ...JSON.parse(raw) }
-  } catch {}
-  return { bankIds: null, scope: 'stem_options', types: null }
-}
-
-const stored = loadSettings()
-const selectedBankIds = ref<string[] | null>(stored.bankIds)
-const scope = ref<MatchScope>(stored.scope === 'stem_options' ? 'stem_options' : 'stem')
-const selectedTypes = ref<QuestionType[] | null>(stored.types)
+const { selectedBankIds, scope, selectedTypes } = useSearchSettings()
 const showSettings = ref(false)
-
-watch(
-  [selectedBankIds, scope, selectedTypes],
-  () => {
-    try {
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify({ bankIds: selectedBankIds.value, scope: scope.value, types: selectedTypes.value }),
-      )
-    } catch {}
-  },
-  { deep: true },
-)
-
-function toggleBank(id: string) {
-  if (selectedBankIds.value === null) {
-    selectedBankIds.value = [id]
-    return
-  }
-  const idx = selectedBankIds.value.indexOf(id)
-  if (idx >= 0) {
-    selectedBankIds.value.splice(idx, 1)
-    if (selectedBankIds.value.length === 0) selectedBankIds.value = null
-  } else {
-    selectedBankIds.value.push(id)
-  }
-}
-
-function toggleType(t: QuestionType) {
-  if (selectedTypes.value === null) {
-    selectedTypes.value = [t]
-    return
-  }
-  const idx = selectedTypes.value.indexOf(t)
-  if (idx >= 0) {
-    selectedTypes.value.splice(idx, 1)
-    if (selectedTypes.value.length === 0) selectedTypes.value = null
-  } else {
-    selectedTypes.value.push(t)
-  }
-}
 
 // ---------- search ----------
 const hits = ref<SearchHit[]>([])
@@ -210,68 +143,19 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
           style="color: rgb(var(--md-on-surface)); overflow-y: auto"
         />
         <button
-          class="btn-icon shrink-0"
+          class="btn-tonal text-sm shrink-0 !px-3 !py-2"
           :style="{ color: showSettings ? 'rgb(var(--md-primary))' : 'rgb(var(--md-on-surface-variant))' }"
           @click="showSettings = !showSettings"
           :title="i18n.t('searchSettings')"
         >
-          <AdjustmentsHorizontalIcon class="w-5 h-5" />
+          <AdjustmentsHorizontalIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">{{ i18n.t('searchSettings') }}</span>
         </button>
       </div>
 
       <!-- Settings panel -->
-      <div v-if="showSettings" class="mt-4 pt-4 space-y-4" style="border-top: 1px solid rgb(var(--md-outline-variant) / 0.4)">
-        <!-- Bank scope -->
-        <div>
-          <div class="text-label-lg mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchBankScope') }}</div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              class="chip-filter"
-              :class="{ 'chip-filter-active': selectedBankIds === null }"
-              @click="selectedBankIds = null"
-            >
-              {{ i18n.t('searchAllBanks') }}
-            </button>
-            <button
-              v-for="bank in practiceStore.banks"
-              :key="bank.id"
-              class="chip-filter"
-              :class="{ 'chip-filter-active': selectedBankIds !== null && selectedBankIds.includes(bank.id) }"
-              @click="toggleBank(bank.id)"
-            >
-              {{ bank.name }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Match scope -->
-        <div>
-          <div class="text-label-lg mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchMatchScope') }}</div>
-          <div class="flex flex-wrap gap-2">
-            <button class="chip-filter" :class="{ 'chip-filter-active': scope === 'stem_options' }" @click="scope = 'stem_options'">
-              {{ i18n.t('searchMatchStemOptions') }}
-            </button>
-            <button class="chip-filter" :class="{ 'chip-filter-active': scope === 'stem' }" @click="scope = 'stem'">
-              {{ i18n.t('searchMatchStem') }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Type filter -->
-        <div>
-          <div class="text-label-lg mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('searchTypeFilter') }}</div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="t in ALL_TYPES"
-              :key="t"
-              class="chip-filter"
-              :class="{ 'chip-filter-active': selectedTypes === null || selectedTypes.includes(t) }"
-              @click="toggleType(t)"
-            >
-              {{ i18n.t(typeLabelKeys[t]!) }}
-            </button>
-          </div>
-        </div>
+      <div v-if="showSettings" class="mt-4 pt-4" style="border-top: 1px solid rgb(var(--md-outline-variant) / 0.4)">
+        <SearchSettingsPanel />
       </div>
     </div>
 

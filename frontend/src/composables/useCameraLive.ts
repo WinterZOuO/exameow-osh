@@ -1,6 +1,7 @@
 import { useCameraLiveStore, type MatchResult } from '@/stores/cameraLive'
 import { recognizeImage, preloadOcr } from '@/utils/ocr'
 import { searchQuestions, decideScanResult } from '@/utils/questionSearch'
+import { getSearchSettings } from '@/composables/useSearchSettings'
 import { usePracticeStore } from '@/stores/practice'
 
 type TimerHandle = ReturnType<typeof setInterval> | null
@@ -69,10 +70,11 @@ async function processFrame(bitmap: ImageBitmap) {
   log(`OCR ${ocrMs}ms:`, text.slice(0, 80))
 
   const practiceStore = usePracticeStore()
+  const settings = getSearchSettings()
   const hits = searchQuestions(text, practiceStore.banks, {
-    bankIds: null,
-    scope: 'stem_options',
-    types: null,
+    bankIds: settings.bankIds,
+    scope: settings.scope,
+    types: settings.types,
     mode: 'search',
   })
 
