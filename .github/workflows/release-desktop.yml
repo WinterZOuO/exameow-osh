@@ -1,0 +1,144 @@
+name: Release Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  APP_NAME: Exameow
+  PNPM_VERSION: '10'
+  NODE_VERSION: '22'
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+        working-directory: frontend
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-desktop
+          path: frontend/dist
+
+  build-desktop:
+    needs: build-frontend
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: linux_amd64
+          - platform: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: linux_arm64
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: windows_amd64
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            artifact: macos_arm64
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist-desktop
+          path: frontend/dist
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux deps
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build Tauri
+        run: pnpm tauri build --target ${{ matrix.target }}
+
+      - name: Collect Linux artifacts
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          mkdir -p dist
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.deb
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.AppImage
+        shell: bash
+
+      - name: Collect Windows artifacts
+        if: matrix.platform == 'windows-latest'
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.msi
+          Copy-Item src-tauri/target/${{ matrix.target }}/release/exameow.exe dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.exe
+        shell: pwsh
+
+      - name: Collect macOS artifacts
+        if: matrix.platform == 'macos-latest'
+        run: |
+          mkdir -p dist
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg
+          APP_DIR=$(find src-tauri/target/${{ matrix.target }}/release/bundle/macos -maxdepth 1 -name "*.app" -type d | head -n 1)
+          zip -r dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip "$APP_DIR"
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.artifact }}
+          path: dist/*
+
+  release:
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ env.APP_NAME }} ${{ github.ref_name }}
+          body: |
+            ## 🔗 Quick Links
+            - [Docker Image](https://github.com/${{ github.repository }}/pkgs/container/exameow)
+            - [Documentation](https://github.com/${{ github.repository }}#readme)
+
+            ## 📦 Downloads
+            See attached assets.
+          files: artifacts/*
+          fail_on_unmatched_files: false
