@@ -312,6 +312,7 @@ export const useExamStore = defineStore('exam', () => {
   async function parseInputs(
     inputs: (string | File)[],
     isTauriEnv: boolean,
+    i18n: ReturnType<typeof useI18nStore>,
     onProgress: (p: ParseProgressReport) => void,
     signal?: AbortSignal,
   ): Promise<string> {
@@ -346,7 +347,7 @@ export const useExamStore = defineStore('exam', () => {
             entries.push({ input: file, total: 1, isImage: true, isPdf: false })
           } catch (e) {
             console.warn('[exam] Pre-scan failed for image', input, ':', e)
-            entries.push({ input, total: 1, isImage: false, isPdf: false })
+            throw new Error(i18n.t('genErrorReadFile', { file: rawName }))
           }
         } else if (ext === 'pdf') {
           try {
@@ -359,11 +360,11 @@ export const useExamStore = defineStore('exam', () => {
               entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
             } catch (e) {
               console.warn('[exam] Pre-scan failed for PDF page count', input, ':', e)
-              entries.push({ input: file, total: 1, isImage: false, isPdf: true })
+              throw new Error(i18n.t('genErrorReadFile', { file: rawName }))
             }
           } catch (e) {
             console.warn('[exam] Pre-scan failed for PDF', input, ':', e)
-            entries.push({ input, total: 1, isImage: false, isPdf: false })
+            throw new Error(i18n.t('genErrorReadFile', { file: rawName }))
           }
         } else {
           entries.push({ input, total: 1, isImage: false, isPdf: false })
@@ -379,7 +380,7 @@ export const useExamStore = defineStore('exam', () => {
             entries.push({ input: file, total: pageCount, isImage: false, isPdf: true })
           } catch (e) {
             console.warn('[exam] Pre-scan failed for PDF page count', file.name, ':', e)
-            entries.push({ input: file, total: 1, isImage: false, isPdf: true })
+            throw new Error(i18n.t('genErrorReadFile', { file: file.name }))
           }
         } else {
           entries.push({ input: file, total: 1, isImage: false, isPdf: false })
@@ -433,9 +434,9 @@ export const useExamStore = defineStore('exam', () => {
             text = await parseBrowserFileWithProgress(
               file,
               (p) => {
-                current = start + p.current
+                current = Math.min(start + entry.total, start + p.current)
                 images += p.images
-                pdfPages = startPdfPages + p.pdfPages
+                pdfPages = Math.min(startPdfPages + entry.total, startPdfPages + p.pdfPages)
                 onProgress({ current, total, images, pdfPages, files, message: '' })
               },
               signal,
@@ -482,6 +483,7 @@ export const useExamStore = defineStore('exam', () => {
       let fullText = await parseInputs(
         inputs,
         isTauri(),
+        i18n,
         (p) => {
           const message = p.total > 0
             ? i18n.t('genProgressParsingPdfPage', {
