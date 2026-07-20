@@ -218,6 +218,7 @@ export function useScreenRecord() {
     const r = store.currentResult
     try {
       const { invoke } = await import('@tauri-apps/api/core')
+      const dark = document.documentElement.classList.contains('dark')
       await invoke('plugin:screenrecord|show_answer', {
         paused: store.status === 'adjusting',
         found: !!r,
@@ -225,6 +226,7 @@ export function useScreenRecord() {
         stem: r?.question.stem ?? '',
         options: r?.question.options ?? [],
         bankName: r?.bankName ?? '',
+        dark,
       })
     } catch { /* overlay gone */ }
   }

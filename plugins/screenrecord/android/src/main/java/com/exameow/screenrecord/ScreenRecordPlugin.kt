@@ -50,6 +50,7 @@ class ShowAnswerArgs {
   var stem: String = ""
   var options: List<String> = emptyList()
   var bankName: String = ""
+  var dark: Boolean = false
 }
 
 @TauriPlugin
@@ -148,14 +149,17 @@ class ScreenRecordPlugin(private val activity: Activity) : Plugin(activity), Ove
   @Command
   fun showAnswer(invoke: Invoke) {
     val args = invoke.parseArgs(ShowAnswerArgs::class.java)
-    ScreenRecordRuntime.overlay?.updateAnswer(
-      paused = args.paused,
-      found = args.found,
-      answer = args.answer,
-      stem = args.stem,
-      options = args.options,
-      bankName = args.bankName,
-    )
+    ScreenRecordRuntime.overlay?.let { overlay ->
+      overlay.setDark(args.dark)
+      overlay.updateAnswer(
+        paused = args.paused,
+        found = args.found,
+        answer = args.answer,
+        stem = args.stem,
+        options = args.options,
+        bankName = args.bankName,
+      )
+    }
     invoke.resolve()
   }
 

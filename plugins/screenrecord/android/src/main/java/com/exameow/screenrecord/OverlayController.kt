@@ -61,9 +61,23 @@ class OverlayController(
   private lateinit var beginCardButton: TextView
   private lateinit var adjustButton: ImageButton
   private var everBegan = false
+  private var currentDark = false
+  private var titleView: TextView? = null
+  private var gripView: View? = null
+
+  private val accent get() = 0xFF0A84FF.toInt()
+  private val textPrimary get() = if (currentDark) 0xFFE5E5EA.toInt() else 0xFF1C1C1E.toInt()
+  private val textSecondary get() = if (currentDark) 0x99EBEBF5.toInt() else 0x993C3C43.toInt()
+  private val fill get() = if (currentDark) 0x14EBEBF5.toInt() else 0x143C3C43.toInt()
+  private val cardBgColor get() = if (currentDark) 0xFF1C1C1E.toInt() else 0xFFFFFFFF.toInt()
+  private val gripColor get() = if (currentDark) 0x4DEBEBF5.toInt() else 0x4D3C3C43.toInt()
+  private val iconButtonColor get() = if (currentDark) 0xFFE5E5EA.toInt() else TEXT_PRIMARY
+  private val chipBgColor get() = if (currentDark) 0x33FF9500.toInt() else 0x1FFF9500
+  private val chipTextColor get() = if (currentDark) 0xFFFFA500.toInt() else 0xFFFF9500.toInt()
+  private val answerBgColor get() = if (currentDark) 0x330A84FF.toInt() else 0x1F0A84FF
 
   companion object {
-    private const val ACCENT = 0xFF0A84FF.toInt()
+    private const val ACCENT_CONST = 0xFF0A84FF.toInt()
     private const val TEXT_PRIMARY = 0xFF1C1C1E.toInt()
     private const val TEXT_SECONDARY = 0x993C3C43.toInt()
     private const val FILL = 0x143C3C43
@@ -330,7 +344,7 @@ class OverlayController(
     answerParams = p
 
     val cardBg = GradientDrawable().apply {
-      setColor(Color.WHITE)
+      setColor(cardBgColor)
       cornerRadius = dp(20f).toFloat()
     }
 
@@ -341,28 +355,28 @@ class OverlayController(
       elevation = dp(10f).toFloat()
     }
 
-    val grip = View(activity).apply {
+    gripView = View(activity).apply {
       background = GradientDrawable().apply {
-        setColor(0x4D3C3C43)
+        setColor(gripColor)
         cornerRadius = dp(2.5f).toFloat()
       }
     }
     val gripLp = LinearLayout.LayoutParams(dp(36f), dp(5f))
     gripLp.gravity = Gravity.CENTER_HORIZONTAL
     gripLp.bottomMargin = dp(4f)
-    root.addView(grip, gripLp)
+    root.addView(gripView!!, gripLp)
 
     val header = LinearLayout(activity).apply {
       orientation = LinearLayout.HORIZONTAL
       gravity = Gravity.CENTER_VERTICAL
     }
-    val title = TextView(activity).apply {
+    titleView = TextView(activity).apply {
       text = "录屏搜题"
-      setTextColor(TEXT_PRIMARY)
+      setTextColor(textPrimary)
       textSize = 10f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
-    header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+    header.addView(titleView!!, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
     header.addView(iconButton(R.drawable.ic_adjust) { listener.onAdjustClicked() }.also { adjustButton = it })
     header.addView(iconButton(R.drawable.ic_close, DANGER) { listener.onExitClicked() })
     root.addView(header)
@@ -375,7 +389,7 @@ class OverlayController(
       gravity = Gravity.CENTER
       setPadding(dp(14f), dp(10f), dp(14f), dp(10f))
       background = GradientDrawable().apply {
-        setColor(ACCENT)
+        setColor(accent)
         cornerRadius = dp(24f).toFloat()
       }
       setOnClickListener { listener.onBeginClicked() }
@@ -390,12 +404,12 @@ class OverlayController(
 
     pausedChip = TextView(activity).apply {
       text = "调整录制框中，识别已暂停"
-      setTextColor(0xFFFF9500.toInt())
+      setTextColor(chipTextColor)
       textSize = 10f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(dp(8f), dp(3f), dp(8f), dp(3f))
       background = GradientDrawable().apply {
-        setColor(0x1FFF9500)
+        setColor(chipBgColor)
         cornerRadius = dp(12f).toFloat()
       }
       visibility = View.GONE
@@ -405,12 +419,12 @@ class OverlayController(
     root.addView(pausedChip, chipLp)
 
     answerLabel = TextView(activity).apply {
-      setTextColor(ACCENT)
+      setTextColor(accent)
       textSize = 15f
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(dp(8f), dp(5f), dp(8f), dp(5f))
       background = GradientDrawable().apply {
-        setColor(0x1F0A84FF)
+        setColor(answerBgColor)
         cornerRadius = dp(14f).toFloat()
       }
       visibility = View.GONE
@@ -420,7 +434,7 @@ class OverlayController(
     root.addView(answerLabel, answerLp)
 
     stemLabel = TextView(activity).apply {
-      setTextColor(TEXT_PRIMARY)
+      setTextColor(textPrimary)
       textSize = 10f
       maxLines = 3
       ellipsize = android.text.TextUtils.TruncateAt.END
@@ -431,7 +445,7 @@ class OverlayController(
     root.addView(stemLabel, stemLp)
 
     optionsLabel = TextView(activity).apply {
-      setTextColor(TEXT_SECONDARY)
+      setTextColor(textSecondary)
       textSize = 9f
       maxLines = 6
       ellipsize = android.text.TextUtils.TruncateAt.END
@@ -442,7 +456,7 @@ class OverlayController(
     root.addView(optionsLabel, optLp)
 
     bankLabel = TextView(activity).apply {
-      setTextColor(TEXT_SECONDARY)
+      setTextColor(textSecondary)
       textSize = 8f
       visibility = View.GONE
     }
@@ -452,7 +466,7 @@ class OverlayController(
 
     emptyLabel = TextView(activity).apply {
       text = "未匹配到题目"
-      setTextColor(TEXT_SECONDARY)
+      setTextColor(textSecondary)
       textSize = 10f
       gravity = Gravity.CENTER
       setPadding(0, dp(8f), 0, dp(6f))
@@ -476,7 +490,7 @@ class OverlayController(
       setPadding(padding, padding, padding, padding)
       val size = dp(24f)
       background = GradientDrawable().apply {
-        setColor(FILL)
+        setColor(fill)
         cornerRadius = size / 2f
       }
       layoutParams = LinearLayout.LayoutParams(size, size).apply {
@@ -513,6 +527,45 @@ class OverlayController(
       }
       return false
     }
+  }
+
+  fun setDark(dark: Boolean) {
+    if (dark == currentDark) return
+    currentDark = dark
+    mainHandler.post {
+      applyTheme()
+    }
+  }
+
+  private fun applyTheme() {
+    if (answerRoot == null) return
+    answerRoot!!.background = GradientDrawable().apply {
+      setColor(cardBgColor)
+      cornerRadius = dp(20f).toFloat()
+    }
+    titleView?.setTextColor(textPrimary)
+    gripView?.background = GradientDrawable().apply {
+      setColor(gripColor)
+      cornerRadius = dp(2.5f).toFloat()
+    }
+    pausedChip.apply {
+      setTextColor(chipTextColor)
+      background = GradientDrawable().apply {
+        setColor(chipBgColor)
+        cornerRadius = dp(12f).toFloat()
+      }
+    }
+    answerLabel.apply {
+      setTextColor(accent)
+      background = GradientDrawable().apply {
+        setColor(answerBgColor)
+        cornerRadius = dp(14f).toFloat()
+      }
+    }
+    stemLabel.setTextColor(textPrimary)
+    optionsLabel.setTextColor(textSecondary)
+    bankLabel.setTextColor(textSecondary)
+    emptyLabel.setTextColor(textSecondary)
   }
 
   fun updateAnswer(
@@ -569,7 +622,7 @@ class OverlayController(
           val letter = 'A' + idx
           if (correctLetters.contains(letter)) {
             spannable.setSpan(
-              ForegroundColorSpan(ACCENT), lineStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+              ForegroundColorSpan(accent), lineStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
             spannable.setSpan(
               StyleSpan(android.graphics.Typeface.BOLD), lineStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
