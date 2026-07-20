@@ -2,15 +2,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { addFileInputs, removeFileInput, clearFileInputs, fileInputsRef, fileNamesRef } from '@/stores/fileInput'
-import { DocumentArrowUpIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { isMobileDevice } from '@/utils/platform'
+import { DocumentArrowUpIcon, DocumentTextIcon, CameraIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const i18n = useI18nStore()
 const props = defineProps<{ isTauri: boolean }>()
 
 const webFiles = ref<File[]>([])
 const webFileInput = ref<HTMLInputElement>()
+const cameraInput = ref<HTMLInputElement>()
 const dialogReady = ref(false)
 const isDragOver = ref(false)
+const showCamera = isMobileDevice()
 
 const DOC_EXTENSIONS = ['txt', 'md', 'markdown', 'docx', 'pdf', 'pptx', 'html', 'htm', 'odt', 'epub', 'csv', 'xlsx', 'xlsm', 'xls', 'ods']
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp']
@@ -85,6 +88,25 @@ function onWebFilesChange(event: Event) {
   }
 }
 
+function pickCamera() {
+  cameraInput.value?.click()
+}
+
+function onCameraChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  input.value = ''
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  const ext = file.name.split('.').pop() || 'jpg'
+  const name = `拍照 ${dateStr} ${timeStr}.${ext}`
+  const photoFile = new File([file], name, { type: file.type })
+  webFiles.value.push(photoFile)
+  addFileInputs([photoFile])
+}
+
 function onDragOver(e: DragEvent) { e.preventDefault(); isDragOver.value = true }
 function onDragLeave() { isDragOver.value = false }
 function onDrop(e: DragEvent) {
@@ -141,12 +163,33 @@ function onDrop(e: DragEvent) {
       />
     </button>
 
+    <input
+      ref="cameraInput"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      class="hidden"
+      @change="onCameraChange"
+    />
+
+    <button
+      v-if="showCamera && fileNames.length === 0"
+      class="btn-tonal mt-3 gap-2"
+      @click="pickCamera"
+    >
+      <CameraIcon class="w-5 h-5" />
+      <span>{{ i18n.t('genTakePhoto') }}</span>
+    </button>
+
     <!-- File List -->
-    <div v-else class="w-full">
+    <div v-if="fileNames.length > 0" class="w-full">
       <div class="flex items-center justify-between mb-2 px-1">
         <span class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">
           {{ i18n.t('practiceFileCount', { n: fileNames.length }) }}
         </span>
+        <button v-if="showCamera" class="btn-text !h-8 !text-xs !px-3" @click="pickCamera">
+          <CameraIcon class="w-4 h-4" />
+        </button>
         <button class="btn-text !h-8 !text-xs !px-3" @click="pick">{{ i18n.t('practiceAddFile') }}</button>
       </div>
 
@@ -157,7 +200,8 @@ function onDrop(e: DragEvent) {
           class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors duration-200"
           :style="{ backgroundColor: 'rgb(var(--md-surface-container-high))' }"
         >
-          <DocumentTextIcon class="w-4 h-4 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
+          <CameraIcon v-if="name.startsWith('拍照 ')" class="w-4 h-4 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
+          <DocumentTextIcon v-else class="w-4 h-4 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
           <span class="text-sm font-medium truncate flex-1 text-left" style="color: rgb(var(--md-on-surface))">{{ name }}</span>
           <button
             class="shrink-0 rounded-full p-1 transition-colors duration-200 hover:bg-black/10 dark:hover:bg-white/10"

@@ -37,6 +37,7 @@ export interface LocaleMessages {
   genCancel: string
   genSelectFile: string
   genFileHint: string
+  genTakePhoto: string
   genQuestionTypes: string
   genQuestions: string
   genDifficulty: string
@@ -335,6 +336,7 @@ export const zh: LocaleMessages = {
   genCancel: '取消生成',
   genSelectFile: '选择文档',
   genFileHint: '支持 DOCX、PDF、PPTX、HTML、EPUB、ODT、表格（CSV/XLSX）、图片（PNG/JPG/WEBP/GIF/BMP）及任意文本/代码文件',
+  genTakePhoto: '拍照',
   genQuestionTypes: '题型',
   genQuestions: '题目数量',
   genDifficulty: '难度',
@@ -623,6 +625,7 @@ export const en: LocaleMessages = {
   genCancel: 'Cancel generation',
   genSelectFile: 'Select Document',
   genFileHint: 'DOCX, PDF, PPTX, HTML, EPUB, ODT, spreadsheets (CSV/XLSX), images (PNG/JPG/WEBP/GIF/BMP), and any text/code file',
+  genTakePhoto: 'Take Photo',
   genQuestionTypes: 'Question Types',
   genQuestions: 'Questions',
   genDifficulty: 'Difficulty',

@@ -284,13 +284,19 @@ export const useExamStore = defineStore('exam', () => {
     } catch {}
   }
 
+  const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])
+
   function extractFileName(inputs: (string | File)[]): string {
     if (inputs.length === 0) return ''
     const names = inputs.map(i => {
       const raw = i instanceof File ? i.name : i.replace(/\\/g, '/').split('/').pop() || i
       const dot = raw.lastIndexOf('.')
+      if (dot > 0) {
+        const ext = raw.substring(dot + 1).toLowerCase()
+        if (IMAGE_EXTENSIONS.has(ext)) return null
+      }
       return dot > 0 ? raw.substring(0, dot) : raw
-    })
+    }).filter((n): n is string => n !== null)
     return names.join('、')
   }
 
