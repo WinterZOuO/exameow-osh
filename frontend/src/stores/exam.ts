@@ -454,6 +454,10 @@ export const useExamStore = defineStore('exam', () => {
           throw e
         }
         console.warn(`[exam] Parse failed for ${fileNameFromInput(entry.input)}:`, e)
+        const msg = `[exam] ${fileNameFromInput(entry.input)} 解析失败: ${e?.name ?? ''} ${e?.message ?? String(e)} ${e?.stack ?? ''}`
+        import('@tauri-apps/api/core')
+          .then(({ invoke }) => invoke('frontend_log', { msg }).catch(() => {}))
+          .catch(() => {})
         current = start + entry.total
         files += 1
       }

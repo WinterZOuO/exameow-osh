@@ -44,6 +44,10 @@ export async function parseBrowserFileWithProgress(
   } catch (e: any) {
     if (e?.name === 'AbortError') throw e
     console.warn(`[fileParser] Failed to parse ${file.name}:`, e)
+    const msg = `[fileParser] ${file.name} 解析失败: ${e?.name ?? ''} ${e?.message ?? String(e)} ${e?.stack ?? ''}`
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke('frontend_log', { msg }).catch(() => {}))
+      .catch(() => {})
     onProgress({ current: 1, total: 1, images: 0, pdfPages: 0, files: 0, message: '' })
     return ''
   }

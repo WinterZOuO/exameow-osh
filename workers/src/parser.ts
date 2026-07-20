@@ -197,6 +197,11 @@ async function parseOds(data: ArrayBuffer): Promise<string> {
 }
 
 // --- PDF ---
+// macOS Quartz 生成的 PDF 常把汉字映射到 Kangxi 部首/CJK 兼容字符码点，按 NFKC 归一化
+function normalizeCompatChars(s: string): string {
+  return s.replace(/[\u2E80-\u2EFF\u2F00-\u2FDF\uF900-\uFAFF]/g, (ch) => ch.normalize('NFKC'))
+}
+
 async function parsePdf(data: ArrayBuffer): Promise<string> {
   const raw = new TextDecoder('latin1', { fatal: false, ignoreBOM: true }).decode(data)
   const rawBytes = new Uint8Array(data)
@@ -217,7 +222,7 @@ async function parsePdf(data: ArrayBuffer): Promise<string> {
   const decoded = allText.map(t => decodePdfText(t, cidMap)).filter(Boolean)
   const unique = [...new Set(decoded)]
 
-  if (unique.length > 0) return unique.join('\n')
+  if (unique.length > 0) return normalizeCompatChars(unique.join('\n'))
   return fallbackDecode(data, 'pdf')
 }
 

@@ -27,8 +27,9 @@ const BM25_B = 0.75
 
 export function normalizeText(s: string): string {
   return s
+    .replace(/[\u2E80-\u2EFF\u2F00-\u2FDF\uF900-\uFAFF]/g, (ch) => ch.normalize('NFKC'))
     .toLowerCase()
-    .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[！-～]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
     .replace(/\s+/g, '')
 }
 

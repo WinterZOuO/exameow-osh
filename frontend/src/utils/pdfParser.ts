@@ -15,6 +15,37 @@ function renderScaleForViewport(viewport: { width: number; height: number }): nu
   return MAX_PDF_RENDER_SIDE / longSide
 }
 
+// macOS Quartz 生成的 PDF 常把汉字映射到 Kangxi 部首/CJK 兼容字符码点
+//（如 ⼈⼤⽹），视觉相同但码点不同，会严重影响搜题匹配，按 NFKC 归一化回标准汉字
+function normalizeCompatChars(s: string): string {
+  return s.replace(/[\u2E80-\u2EFF\u2F00-\u2FDF\uF900-\uFAFF]/g, (ch) => ch.normalize('NFKC'))
+}
+
+// page.getTextContent() 内部对 ReadableStream 做 for-await 迭代，
+// 旧版 WKWebView 不支持 ReadableStream 异步迭代器（TypeError），
+// 这里改用 streamTextContent() + getReader() 手动消费，兼容性更好。
+async function getPageText(page: any): Promise<string> {
+  const stream = page.streamTextContent()
+  const reader = stream.getReader()
+  const items: any[] = []
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value?.items?.length) items.push(...value.items)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return normalizeCompatChars(
+    items
+      .map((item: any) => item.str)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
+}
+
 export async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer()
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
@@ -25,12 +56,7 @@ export async function extractPdfText(file: File): Promise<string> {
   try {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i)
-      const content = await page.getTextContent()
-      const pageText = content.items
-        .map((item: any) => item.str)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim()
+      const pageText = await getPageText(page)
       if (pageText) texts.push(pageText)
     }
 
@@ -65,12 +91,7 @@ export async function extractPdfTextWithOcr(
       let pageText = ''
       try {
         page = await pdf.getPage(i)
-        const content = await page.getTextContent()
-        pageText = content.items
-          .map((item: any) => item.str)
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim()
+        pageText = await getPageText(page)
       } catch (e: any) {
         if (e?.name === 'AbortError') throw e
         console.warn(`[pdfParser] Failed to extract text for page ${i}:`, e)
