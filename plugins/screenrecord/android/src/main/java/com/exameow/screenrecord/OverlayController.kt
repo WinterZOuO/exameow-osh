@@ -38,7 +38,6 @@ class OverlayController(
   interface Listener {
     fun onBeginClicked()
     fun onAdjustClicked()
-    fun onRefreshClicked()
     fun onExitClicked()
   }
 
@@ -365,7 +364,6 @@ class OverlayController(
     }
     header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
     header.addView(iconButton(R.drawable.ic_adjust) { listener.onAdjustClicked() }.also { adjustButton = it })
-    header.addView(iconButton(R.drawable.ic_refresh) { listener.onRefreshClicked() })
     header.addView(iconButton(R.drawable.ic_close, DANGER) { listener.onExitClicked() })
     root.addView(header)
 

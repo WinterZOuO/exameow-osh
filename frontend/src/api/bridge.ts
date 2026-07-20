@@ -124,4 +124,16 @@ export const tauriApi = {
   async openAppSettings(): Promise<void> {
     return invoke<void>('open_app_settings')
   },
+
+  async checkScreenPermission(): Promise<boolean> {
+    return invoke<boolean>('check_screen_permission')
+  },
+
+  async requestScreenPermission(): Promise<boolean> {
+    return invoke<boolean>('request_screen_permission')
+  },
+
+  async openScreenRecordingSettings(): Promise<void> {
+    return invoke<void>('open_screen_recording_settings')
+  },
 }

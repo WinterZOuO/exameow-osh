@@ -31,7 +31,7 @@ class ScreenRecordService : Service() {
     const val ACTION_STOP = "com.exameow.screenrecord.STOP"
     const val EXTRA_RESULT_CODE = "resultCode"
     const val EXTRA_DATA = "data"
-    private const val CAPTURE_INTERVAL_MS = 1200L
+    private const val CAPTURE_INTERVAL_MS = 1500L
     private const val MAX_OCR_SIDE = 1280
   }
 

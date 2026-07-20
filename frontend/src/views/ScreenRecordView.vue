@@ -28,6 +28,8 @@ async function startRecording() {
       alert(i18n.t('searchScreenRecordOverlayPerm'))
     } else if (msg.includes('projection_denied')) {
       alert(i18n.t('searchScreenRecordProjectionDenied'))
+    } else if (msg.includes('screen_permission_required')) {
+      alert(i18n.t('searchScreenRecordScreenPerm'))
     }
   }
 }

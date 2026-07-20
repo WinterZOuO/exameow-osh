@@ -240,12 +240,12 @@ export interface LocaleMessages {
   searchScreenRecordCollapse: string
   searchScreenRecordAdjust: string
   searchScreenRecordExit: string
-  searchScreenRecordRefresh: string
   searchScreenRecordAdjustHint: string
   searchScreenRecordResume: string
   searchScreenRecordPaused: string
   searchScreenRecordOverlayPerm: string
   searchScreenRecordProjectionDenied: string
+  searchScreenRecordScreenPerm: string
   searchCameraLiveStart: string
   searchCameraLivePause: string
   searchCameraLiveResume: string
@@ -528,12 +528,12 @@ export const zh: LocaleMessages = {
   searchScreenRecordCollapse: '收起',
   searchScreenRecordAdjust: '调整录制区域',
   searchScreenRecordExit: '退出录屏',
-  searchScreenRecordRefresh: '下拉或双击刷新',
   searchScreenRecordAdjustHint: '拖拽移动录制框，框住题目区域',
   searchScreenRecordResume: '完成调整，继续录制',
   searchScreenRecordPaused: '调整录制框中，识别已暂停',
   searchScreenRecordOverlayPerm: '请在系统设置中授予「在其他应用上显示」权限后重试',
   searchScreenRecordProjectionDenied: '屏幕录制权限被拒绝，无法启动录屏搜题',
+  searchScreenRecordScreenPerm: '录屏搜题需要 macOS「屏幕录制」权限。已为你打开系统设置，请在 隐私与安全性 → 屏幕录制 中勾选本应用（开发环境请勾选终端/iTerm），授权后需重启应用再试',
   searchCameraLiveStart: '开始扫描',
   searchCameraLivePause: '暂停',
   searchCameraLiveResume: '继续',
@@ -816,12 +816,12 @@ export const en: LocaleMessages = {
   searchScreenRecordCollapse: 'Collapse',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
-  searchScreenRecordRefresh: 'Pull down or double-tap to refresh',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
   searchScreenRecordResume: 'Done, resume recording',
   searchScreenRecordPaused: 'Adjusting frame, recognition paused',
   searchScreenRecordOverlayPerm: 'Please grant "Display over other apps" permission in Settings and try again',
   searchScreenRecordProjectionDenied: 'Screen capture permission was denied',
+  searchScreenRecordScreenPerm: 'Screen recording search requires the macOS "Screen Recording" permission. System Settings has been opened — enable this app under Privacy & Security → Screen Recording (or your terminal/iTerm in dev), then restart the app and try again',
   searchCameraLiveStart: 'Start Scanning',
   searchCameraLivePause: 'Pause',
   searchCameraLiveResume: 'Resume',

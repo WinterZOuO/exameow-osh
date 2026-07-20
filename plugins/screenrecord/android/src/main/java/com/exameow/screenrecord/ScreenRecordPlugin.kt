@@ -186,10 +186,6 @@ class ScreenRecordPlugin(private val activity: Activity) : Plugin(activity), Ove
     }
   }
 
-  override fun onRefreshClicked() {
-    ScreenRecordRuntime.send("refresh")
-  }
-
   override fun onExitClicked() {
     teardown()
     ScreenRecordRuntime.send("exit")

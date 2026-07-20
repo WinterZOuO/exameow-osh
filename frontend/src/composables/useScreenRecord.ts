@@ -4,7 +4,7 @@ import { recognizeImage, preloadOcr } from '@/utils/ocr'
 import { searchQuestions, decideScanResult } from '@/utils/questionSearch'
 import { getSearchSettings } from '@/composables/useSearchSettings'
 import { usePracticeStore } from '@/stores/practice'
-import { isAndroid } from '@/utils/platform'
+import { isAndroid, isMacOS } from '@/utils/platform'
 
 type TimerHandle = ReturnType<typeof setInterval> | null
 
@@ -13,19 +13,16 @@ let captureBusy = false
 let captureQueued = false
 let floatUnlistenFns: Array<() => void> = []
 
+// 心跳兜底：距上次真正 OCR 超过该时长则强制截屏，防止去重漏检后永久卡住
+const HEARTBEAT_MS = 5000
+let lastFrameAt = 0
+
 function log(...args: unknown[]) {
   console.log('[录屏搜题]', ...args)
   const msg = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')
   import('@tauri-apps/api/core')
     .then(({ invoke }) => invoke('frontend_log', { msg: `[录屏搜题] ${msg}` }).catch(() => {}))
     .catch(() => {})
-}
-
-// 移动端帧去重（桌面端由 Rust 帧变化检测负责，见 capture_screen）
-let lastJpeg = ''
-
-function resetFrameDedup() {
-  lastJpeg = ''
 }
 
 // ---- 帧处理队列：只保留最新待处理帧，过期帧直接丢弃 ----
@@ -75,7 +72,7 @@ async function processFrameBitmap(bitmap: ImageBitmap) {
   const store = useScreenRecordStore()
   if (store.status !== 'recording') return
 
-  const MAX_SIDE = 1600
+  const MAX_SIDE = 1280
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(bitmap.width * scale))
@@ -143,15 +140,21 @@ async function processFrameBitmap(bitmap: ImageBitmap) {
   }
 }
 
-async function captureOnce(force = false) {
+async function captureOnce() {
   const store = useScreenRecordStore()
   if (store.status !== 'recording') return
   try {
     const { x, y, w, h } = store.region
+    const force = performance.now() - lastFrameAt > HEARTBEAT_MS
     const t0 = performance.now()
     const bytes = await api.captureScreen(x, y, w, h, force)
-    log(`截图 ${Math.round(performance.now() - t0)}ms`)
-    if (bytes.byteLength === 0) return
+    const ms = Math.round(performance.now() - t0)
+    if (bytes.byteLength === 0) {
+      log(`画面无变化，跳过 (${ms}ms)`)
+      return
+    }
+    lastFrameAt = performance.now()
+    log(`截图 ${ms}ms${force ? '（心跳强制）' : ''}`)
     const bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: 'image/jpeg' }))
     void enqueueFrame(bitmap)
   } catch (e) {
@@ -159,7 +162,7 @@ async function captureOnce(force = false) {
   }
 }
 
-async function capture(force = false) {
+async function capture() {
   if (captureBusy) {
     captureQueued = true
     return
@@ -168,8 +171,7 @@ async function capture(force = false) {
   try {
     do {
       captureQueued = false
-      await captureOnce(force)
-      force = false
+      await captureOnce()
     } while (captureQueued)
   } finally {
     captureBusy = false
@@ -178,7 +180,7 @@ async function capture(force = false) {
 
 function startTimer() {
   if (timer) clearInterval(timer)
-  timer = setInterval(capture, 900)
+  timer = setInterval(capture, 1500)
 }
 
 function stopTimer() {
@@ -195,8 +197,6 @@ export function useScreenRecord() {
   // receives cropped JPEG frames over a Channel and pushes results back =====
 
   async function processFrameMobile(dataUrl: string) {
-    if (dataUrl === lastJpeg) return
-    lastJpeg = dataUrl
     try {
       log(`移动端帧到达 len=${dataUrl.length}`)
       const img = new Image()
@@ -242,7 +242,6 @@ export function useScreenRecord() {
       switch (msg?.type) {
         case 'begin':
           store.beginRecording()
-          resetFrameDedup()
           void pushAnswerToOverlay()
           break
         case 'frame':
@@ -251,9 +250,6 @@ export function useScreenRecord() {
         case 'adjust':
           store.pauseToAdjust()
           void pushAnswerToOverlay()
-          break
-        case 'refresh':
-          resetFrameDedup()
           break
         case 'exit':
         case 'denied':
@@ -271,6 +267,15 @@ export function useScreenRecord() {
     if (isAndroid()) {
       await startMobile()
       return
+    }
+
+    if (isMacOS()) {
+      let granted = await api.checkScreenPermission()
+      if (!granted) granted = await api.requestScreenPermission()
+      if (!granted) {
+        await api.openScreenRecordingSettings().catch(() => {})
+        throw new Error('screen_permission_required')
+      }
     }
 
     await api.createRecordWindows()
@@ -292,7 +297,7 @@ export function useScreenRecord() {
     floatUnlistenFns.push(await listen<ScreenRegion>('screen-record:begin', (e) => {
       if (e.payload) store.setRegion(e.payload)
       store.beginRecording()
-      resetFrameDedup()
+      lastFrameAt = 0
       startTimer()
       void capture()
     }))

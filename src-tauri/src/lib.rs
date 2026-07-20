@@ -228,6 +228,59 @@ fn open_app_settings() -> Result<(), CommandError> {
 }
 
 
+#[cfg(target_os = "macos")]
+mod screen_capture_access {
+    #[link(name = "CoreGraphics", kind = "framework")]
+    extern "C" {
+        fn CGPreflightScreenCaptureAccess() -> bool;
+        fn CGRequestScreenCaptureAccess() -> bool;
+    }
+
+    pub fn preflight() -> bool {
+        unsafe { CGPreflightScreenCaptureAccess() }
+    }
+
+    pub fn request() -> bool {
+        unsafe { CGRequestScreenCaptureAccess() }
+    }
+}
+
+#[tauri::command]
+fn check_screen_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        screen_capture_access::preflight()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+#[tauri::command]
+fn request_screen_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        screen_capture_access::request()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+#[tauri::command]
+fn open_screen_recording_settings() -> Result<(), CommandError> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+            .spawn()
+            .map_err(|e| CommandError(format!("Failed to open settings: {e}")))?;
+    }
+    Ok(())
+}
+
 #[cfg(desktop)]
 #[tauri::command]
 fn capture_screen(x: i32, y: i32, w: i32, h: i32, force: Option<bool>) -> Result<tauri::ipc::Response, CommandError> {
@@ -245,6 +298,11 @@ fn capture_screen(_x: i32, _y: i32, _w: i32, _h: i32, _force: Option<bool>) -> R
 
 #[cfg(desktop)]
 fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32, force: bool) -> Result<tauri::ipc::Response, CommandError> {
+    #[cfg(target_os = "macos")]
+    if !screen_capture_access::preflight() {
+        return Err(CommandError("screen_recording_permission_denied".to_string()));
+    }
+
     let t0 = std::time::Instant::now();
     let monitors = xcap::Monitor::all()
         .map_err(|e| CommandError(format!("Failed to enumerate monitors: {e}")))?;
@@ -294,40 +352,34 @@ fn capture_screen_inner(x: i32, y: i32, w: i32, h: i32, force: bool) -> Result<t
     Ok(tauri::ipc::Response::new(buf.into_inner()))
 }
 
-// 抽稀采样对比相邻两帧：静态画面直接跳过 JPEG 编码和 IPC 传输。
-// 阈值 1.5%：光标闪烁/动画不计入，切换题目（整片文字变化）必然超过。
+// 降采样整图对比相邻两帧：静态画面直接跳过 JPEG 编码和 IPC 传输。
+// 缩略图全像素比较，阈值 0.5%：光标闪烁不计入，文字变化必然超过。
+// 前端另有 ~5s 心跳强制 OCR 兜底，即使漏检也不会永久卡住。
 #[cfg(desktop)]
-static LAST_FRAME: std::sync::Mutex<Option<(u32, u32, Vec<u8>)>> = std::sync::Mutex::new(None);
+static LAST_FRAME: std::sync::Mutex<Option<Vec<u8>>> = std::sync::Mutex::new(None);
 
 #[cfg(desktop)]
 fn frame_changed(img: &image::DynamicImage) -> bool {
-    let rgba = img.to_rgba8();
-    let (w, h) = (rgba.width(), rgba.height());
-    let data = rgba.as_raw();
-    const STRIDE: usize = 4096;
-    let mut samples = Vec::with_capacity(data.len() / STRIDE * 3 + 3);
-    let mut i = 0;
-    while i + 2 < data.len() {
-        samples.push(data[i]);
-        samples.push(data[i + 1]);
-        samples.push(data[i + 2]);
-        i += STRIDE;
-    }
+    const THUMB_W: u32 = 128;
+    const THUMB_H: u32 = 64;
+    let thumb = image::imageops::resize(img, THUMB_W, THUMB_H, image::imageops::FilterType::Triangle);
+    let gray = image::imageops::grayscale(&thumb);
+    let data = gray.into_raw();
     let mut guard = LAST_FRAME.lock().unwrap();
     let changed = match guard.as_ref() {
-        Some((pw, ph, prev)) if *pw == w && *ph == h && prev.len() == samples.len() => {
+        Some(prev) if prev.len() == data.len() => {
             let mut diff = 0usize;
-            for (a, b) in prev.iter().zip(samples.iter()) {
-                if (*a as i32 - *b as i32).abs() > 24 {
+            for (a, b) in prev.iter().zip(data.iter()) {
+                if (*a as i32 - *b as i32).abs() > 16 {
                     diff += 1;
                 }
             }
-            diff * 1000 / samples.len().max(1) > 15
+            diff * 1000 / data.len().max(1) > 5
         }
         _ => true,
     };
     if changed {
-        *guard = Some((w, h, samples));
+        *guard = Some(data);
     }
     changed
 }
@@ -535,6 +587,9 @@ pub fn run() {
             load_config,
             open_app_settings,
             capture_screen,
+            check_screen_permission,
+            request_screen_permission,
+            open_screen_recording_settings,
             frontend_log,
             create_record_windows,
             close_record_windows,

@@ -168,4 +168,19 @@ export const api = {
     if (!isTauri()) throw new Error('Not available on this platform')
     return tauriApi.resizeRecordOverlay(w, h)
   },
+
+  async checkScreenPermission(): Promise<boolean> {
+    if (!isTauri()) return true
+    return tauriApi.checkScreenPermission()
+  },
+
+  async requestScreenPermission(): Promise<boolean> {
+    if (!isTauri()) return true
+    return tauriApi.requestScreenPermission()
+  },
+
+  async openScreenRecordingSettings(): Promise<void> {
+    if (!isTauri()) return
+    return tauriApi.openScreenRecordingSettings()
+  },
 }
