@@ -1,5 +1,5 @@
-use exameow_core::exam::{Question, QuestionType};
-use exameow_core::export::export_csv;
+use quizseek_core::exam::{Question, QuestionType};
+use quizseek_core::export::export_csv;
 
 fn make_questions() -> Vec<Question> {
     vec![

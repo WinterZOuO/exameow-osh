@@ -1,6 +1,6 @@
 Category,Name,Version,License,License URL,Usage,Notes
 npm,@choochmeque/tauri-plugin-sharekit-api,0.4.0-rc.5,MIT,https://spdx.org/licenses/MIT.html,runtime,Frontend Tauri share plugin
-npm,@exameow/shared,workspace:*,Proprietary,,runtime,Self-developed workspace package
+npm,@quizseek/shared,workspace:*,Proprietary,,runtime,Self-developed workspace package
 npm,@heroicons/vue,^2.2.0,MIT,https://github.com/tailwindlabs/heroicons/blob/master/LICENSE,runtime,SVG icon components (MIT)
 npm,@tauri-apps/api,^2.11.1,Apache-2.0,https://github.com/tauri-apps/tauri/blob/dev/core/tauri/LICENSE.spdx,runtime,Tauri frontend API
 npm,@tauri-apps/plugin-dialog,^2.7.1,MIT,https://github.com/tauri-apps/plugins-workspace/blob/v2/plugins/dialog/LICENSE,runtime,Tauri dialog plugin

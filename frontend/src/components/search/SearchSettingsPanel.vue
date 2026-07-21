@@ -2,7 +2,7 @@
 import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
 import { useSearchSettings } from '@/composables/useSearchSettings'
-import type { QuestionType } from '@exameow/shared'
+import type { QuestionType } from '@quizseek/shared'
 
 const ALL_TYPES = ['single_choice', 'multi_choice', 'true_false', 'fill_blank', 'short_answer'] as QuestionType[]
 

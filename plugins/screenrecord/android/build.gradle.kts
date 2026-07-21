@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.exameow.screenrecord"
+    namespace = "com.quizseek.screenrecord"
     compileSdk = 36
 
     defaultConfig {

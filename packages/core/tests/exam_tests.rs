@@ -1,4 +1,4 @@
-use exameow_core::exam::*;
+use quizseek_core::exam::*;
 
 #[test]
 fn test_build_system_prompt() {

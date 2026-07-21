@@ -22,14 +22,14 @@ COPY packages/server/ packages/server/
 
 RUN sed -i '/src-tauri/d' Cargo.toml
 
-RUN cargo build --release -p exameow-server
+RUN cargo build --release -p quizseek-server
 
 # Stage 2: Runtime
 FROM alpine:3.21
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache ca-certificates
 
-COPY --from=builder /app/target/release/exameow-server /app/server
+COPY --from=builder /app/target/release/quizseek-server /app/server
 COPY frontend/dist /app/static
 WORKDIR /app
 

@@ -11,16 +11,16 @@ node "$PROJECT_DIR/scripts/fetch-ocr-models.mjs"
 
 echo ""
 echo "=== 2/3: Building Docker image (linux/amd64) ==="
-(cd "$PROJECT_DIR" && docker build --platform linux/amd64 -t exameow-server:latest .)
+(cd "$PROJECT_DIR" && docker build --platform linux/amd64 -t quizseek-server:latest .)
 
 echo ""
 echo "=== 3/3: Exporting image ==="
-IMAGE_FILE="$PROJECT_DIR/exameow-server.tar.gz"
-(cd "$PROJECT_DIR" && docker save exameow-server:latest | gzip > "$IMAGE_FILE")
+IMAGE_FILE="$PROJECT_DIR/quizseek-server.tar.gz"
+(cd "$PROJECT_DIR" && docker save quizseek-server:latest | gzip > "$IMAGE_FILE")
 echo "Image exported: $IMAGE_FILE ($(du -h "$IMAGE_FILE" | cut -f1))"
 
 echo ""
 echo "Next steps:"
-echo "  1. Upload exameow-server.tar.gz and docker-compose.prod.yml to your server"
-echo "  2. On server: gunzip -c exameow-server.tar.gz | docker load"
-echo "  3. On server: cd ~/exameow && docker compose up -d"
+echo "  1. Upload quizseek-server.tar.gz and docker-compose.prod.yml to your server"
+echo "  2. On server: gunzip -c quizseek-server.tar.gz | docker load"
+echo "  3. On server: cd ~/quizseek && docker compose up -d"

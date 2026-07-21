@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
-import type { QuestionType, MockExamConfig } from '@exameow/shared'
+import type { QuestionType, MockExamConfig } from '@quizseek/shared'
 
 const props = defineProps<{
   availableTypes: { type: QuestionType; label: string; count: number }[]

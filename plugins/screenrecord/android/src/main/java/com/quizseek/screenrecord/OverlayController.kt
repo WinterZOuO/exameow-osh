@@ -1,4 +1,4 @@
-package com.exameow.screenrecord
+package com.quizseek.screenrecord
 
 import android.annotation.SuppressLint
 import android.app.Activity

@@ -12,7 +12,7 @@ NC='\033[0m'
 
 echo -e "${CYAN}"
 echo "  ╔══════════════════════════════════╗"
-echo "  ║         Exameow v0.1.0           ║"
+echo "  ║         QuizSeek v0.1.0           ║"
 echo "  ║  AI Exam Question Generator      ║"
 echo "  ╚══════════════════════════════════╝"
 echo -e "${NC}"
@@ -71,7 +71,7 @@ case $MODE in
         set +e
         # start Axum server in background
         source ~/.zshrc 2>/dev/null || true
-        cargo run -p exameow-server &
+        cargo run -p quizseek-server &
         SERVER_PID=$!
 
         # start Vite dev server
@@ -97,7 +97,7 @@ case $MODE in
         echo "  Press Ctrl+C to stop"
         echo ""
         set +e
-        cargo run -p exameow-server
+        cargo run -p quizseek-server
         ;;
     *)
         echo -e "${RED}Invalid choice${NC}"

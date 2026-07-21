@@ -1,8 +1,8 @@
-use exameow_core::config::ConfigStore;
+use quizseek_core::config::ConfigStore;
 
 #[test]
 fn test_save_and_load_config() {
-    let store = ConfigStore::new("ExameowTest").unwrap();
+    let store = ConfigStore::new("QuizSeekTest").unwrap();
     store
         .save("https://api.openai.com/v1", "sk-test-key-123", "gpt-4")
         .unwrap();
@@ -15,7 +15,7 @@ fn test_save_and_load_config() {
 
 #[test]
 fn test_load_nonexistent() {
-    let store = ConfigStore::new("ExameowNonExistent").unwrap();
+    let store = ConfigStore::new("QuizSeekNonExistent").unwrap();
     let config = store.load().unwrap();
     assert!(config.is_none());
 }

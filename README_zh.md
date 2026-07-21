@@ -1,4 +1,4 @@
-# 学习喵 Exameow
+# 题索 QuizSeek
 
 AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考题。
 
@@ -15,13 +15,13 @@ AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考�
 
 ## 安装
 
-各平台的预编译安装包可在 [GitHub Releases](https://github.com/heshengtao/exameow/releases) 页面下载。
+各平台的预编译安装包可在 [GitHub Releases](https://github.com/heshengtao/quizseek/releases) 页面下载。
 
 ### Docker 自托管
 
 ```bash
-git clone https://github.com/heshengtao/exameow.git
-cd exameow
+git clone https://github.com/heshengtao/quizseek.git
+cd quizseek
 
 # 构建前端
 cd frontend && pnpm install && pnpm build && cd ..
@@ -40,12 +40,12 @@ docker compose up -d --build
 ### Docker 预构建镜像
 
 ```bash
-docker pull ghcr.io/heshengtao/exameow:latest
+docker pull ghcr.io/heshengtao/quizseek:latest
 docker run -d -p 3000:3000 \
   -e AI_ENDPOINT=https://api.openai.com/v1 \
   -e AI_API_KEY=sk-your-key-here \
   -e AI_MODEL=gpt-4o \
-  ghcr.io/heshengtao/exameow:latest
+  ghcr.io/heshengtao/quizseek:latest
 ```
 
 ## 环境变量
@@ -103,7 +103,7 @@ curl -X POST http://localhost:3000/api/generate \
 
 ```bash
 # Rust 服务端
-cargo run -p exameow-server
+cargo run -p quizseek-server
 
 # 前端开发服务器
 cd frontend && pnpm dev
@@ -115,7 +115,7 @@ pnpm tauri dev
 ### 项目结构
 
 ```
-exameow/
+quizseek/
 ├── frontend/          # Vue 3 前端
 ├── packages/
 │   ├── core/          # Rust 核心库（AI、解析、导出、配置）

@@ -1,4 +1,4 @@
-package com.exameow.screenrecord
+package com.quizseek.screenrecord
 
 import android.app.Activity
 import android.content.Context

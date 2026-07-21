@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo } from '@quizseek/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
 import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
 import { cfApi } from './cf'
@@ -39,7 +39,7 @@ export const api = {
     params: ExamParams,
     config: AIConfig,
     signal?: AbortSignal,
-  ): Promise<{ questions: import('@exameow/shared').Question[] }> {
+  ): Promise<{ questions: import('@quizseek/shared').Question[] }> {
     if (isTauri()) {
       return tauriApi.generateExam(
         fileOrPath as string,
@@ -89,7 +89,7 @@ export const api = {
   },
 
   async exportCsv(
-    questions: import('@exameow/shared').Question[],
+    questions: import('@quizseek/shared').Question[],
     savePath?: string,
     filename?: string,
   ): Promise<void> {
@@ -103,7 +103,7 @@ export const api = {
   },
 
   async exportXlsx(
-    questions: import('@exameow/shared').Question[],
+    questions: import('@quizseek/shared').Question[],
     savePath?: string,
     filename?: string,
   ): Promise<void> {
@@ -117,7 +117,7 @@ export const api = {
   },
 
   async exportXlsxData(
-    questions: import('@exameow/shared').Question[],
+    questions: import('@quizseek/shared').Question[],
   ): Promise<string> {
     return tauriApi.exportXlsxData(questions)
   },

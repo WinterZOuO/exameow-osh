@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { WrongQuestionEntry, WrongSort, Question, PracticeSession } from '@exameow/shared'
+import type { WrongQuestionEntry, WrongSort, Question, PracticeSession } from '@quizseek/shared'
 import { usePracticeStore } from './practice'
 
-const STORAGE_KEY = 'exameow-wrong-questions'
+const STORAGE_KEY = 'quizseek-wrong-questions'
 
 function loadData(): Record<string, Record<string, WrongQuestionEntry>> {
   try {

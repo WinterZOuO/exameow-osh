@@ -1,8 +1,8 @@
 # AGENTS.md
 
-Architecture reference for AI agents working on **Exameow**. Read this before exploring the codebase.
+Architecture reference for AI agents working on **QuizSeek**. Read this before exploring the codebase.
 
-## What Exameow Is
+## What QuizSeek Is
 
 AI-powered exam question generator. Users upload study materials (PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML) and get exam questions generated via any OpenAI-compatible API. Includes a built-in practice/quiz mode with wrong-question tracking. Exports to XLSX/CSV.
 
@@ -14,7 +14,7 @@ Version `1.0.0` (kept in sync across root `package.json`, `src-tauri/Cargo.toml`
 - **Desktop/Mobile**: Tauri v2 (Rust shell)
 - **Self-hosted backend**: Rust / Axum 0.8
 - **Serverless backend**: Cloudflare Workers (Hono 4.7)
-- **Shared core logic**: Rust crate `exameow-core` (parsing, AI client, exam gen, export, encrypted config)
+- **Shared core logic**: Rust crate `quizseek-core` (parsing, AI client, exam gen, export, encrypted config)
 - **Package mgmt**: pnpm workspace + Cargo workspace (monorepo)
 
 ## Three-Backend Architecture (KEY CONCEPT)
@@ -44,14 +44,14 @@ frontend/              Vue 3 SPA (hash routing)
   dist/                Build output (served by Axum or copied to workers/public)
 
 packages/
-  core/                Rust crate `exameow-core` (shared server logic)
+  core/                Rust crate `quizseek-core` (shared server logic)
     src/parser/        parse_file() dispatch → pdf/docx/pptx/excel/csv/epub/odt/html/txt
     src/ai/            OpenAI-compatible HTTP client (client.rs)
     src/exam/          types.rs (Question/ExamParams), prompt.rs (generate_exam + prompts)
     src/export/        writer.rs (CSV), xlsx.rs (manual ZIP+XML, no lib)
     src/config/        store.rs (AES-256-GCM encrypted config persistence)
   server/              Axum HTTP server; routes.rs has 6 handlers
-  shared/              TS shared types (@exameow/shared) src/types.ts
+  shared/              TS shared types (@quizseek/shared) src/types.ts
 
 src-tauri/             Tauri app; src/lib.rs = all Tauri commands; tauri.conf.json; capabilities/
 workers/               Cloudflare Worker; src/{index,ai,exam,parser,export,types}.ts; wrangler.toml
@@ -67,7 +67,7 @@ scripts/               deploy-cf.sh, docker-build.sh, start-android-emulator.sh
 | Frontend dev | `cd frontend && pnpm dev` (port 5273) |
 | Frontend build | `cd frontend && pnpm build` |
 | Frontend typecheck | `cd frontend && pnpm run type-check` |
-| Axum server | `cargo run -p exameow-server` (port 3000) |
+| Axum server | `cargo run -p quizseek-server` (port 3000) |
 | Tauri dev | `pnpm tauri dev` |
 | Tauri build | `pnpm tauri build` |
 | CF Worker dev | `cd workers && pnpm dev` |
@@ -93,8 +93,8 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 
 ## Storage (no database)
 
-- **Browser `localStorage`**: question banks, practice sessions, wrong questions, config. Keys: `exameow-banks`, `exameow-practice-session`, `exameow-wrong`, `exameow-questions`, `exameow-sourcefile`.
-- **Native (Tauri/Axum)**: AI credentials encrypted with AES-256-GCM via `ConfigStore` in OS config dir (macOS `~/Library/Application Support/Exameow/`, Linux `~/.config/Exameow/`, Windows `%APPDATA%/Exameow/`).
+- **Browser `localStorage`**: question banks, practice sessions, wrong questions, config. Keys: `quizseek-banks`, `quizseek-practice-session`, `quizseek-wrong`, `quizseek-questions`, `quizseek-sourcefile`.
+- **Native (Tauri/Axum)**: AI credentials encrypted with AES-256-GCM via `ConfigStore` in OS config dir (macOS `~/Library/Application Support/QuizSeek/`, Linux `~/.config/QuizSeek/`, Windows `%APPDATA%/QuizSeek/`).
 - **Server is stateless** — only handles file parsing + AI calls.
 
 ## Environment Variables
@@ -126,4 +126,4 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 - **Hash-based SPA routing** (`createWebHashHistory`); CF Worker + Axum both serve SPA fallback.
 - **Material You theme** in `frontend/tailwind.config.js` (full tonal palette + custom animations).
 - Docs: `README.md` (EN), `README_zh.md` (ZH). `frontend/README.md` is boilerplate.
-- CI releases on `v*` tags: Tauri (linux/windows/macOS, x86_64+aarch64) + Docker to `ghcr.io/heshengtao/exameow`.
+- CI releases on `v*` tags: Tauri (linux/windows/macOS, x86_64+aarch64) + Docker to `ghcr.io/heshengtao/quizseek`.

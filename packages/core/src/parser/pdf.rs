@@ -44,7 +44,7 @@ fn extract_via_lopdf(path: &str) -> Result<String, ParserError> {
                 }
             }
             Err(e) => {
-                eprintln!("[Exameow] lopdf page {}/{} failed: {e}", page_num, total);
+                eprintln!("[QuizSeek] lopdf page {}/{} failed: {e}", page_num, total);
             }
         }
     }

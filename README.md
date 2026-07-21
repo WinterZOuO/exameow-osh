@@ -1,4 +1,4 @@
-# Exameow
+# QuizSeek
 
 AI-powered exam question generator. Upload study materials, generate professional exam questions in seconds.
 
@@ -15,13 +15,13 @@ AI-powered exam question generator. Upload study materials, generate professiona
 
 ## Installation
 
-Pre-built binaries for all platforms are available on the [GitHub Releases](https://github.com/heshengtao/exameow/releases) page.
+Pre-built binaries for all platforms are available on the [GitHub Releases](https://github.com/heshengtao/quizseek/releases) page.
 
 ### Docker (Self-Hosted)
 
 ```bash
-git clone https://github.com/heshengtao/exameow.git
-cd exameow
+git clone https://github.com/heshengtao/quizseek.git
+cd quizseek
 
 # Build frontend
 cd frontend && pnpm install && pnpm build && cd ..
@@ -40,12 +40,12 @@ Open `http://localhost:3000`.
 ### Docker (Pre-Built Image)
 
 ```bash
-docker pull ghcr.io/heshengtao/exameow:latest
+docker pull ghcr.io/heshengtao/quizseek:latest
 docker run -d -p 3000:3000 \
   -e AI_ENDPOINT=https://api.openai.com/v1 \
   -e AI_API_KEY=sk-your-key-here \
   -e AI_MODEL=gpt-4o \
-  ghcr.io/heshengtao/exameow:latest
+  ghcr.io/heshengtao/quizseek:latest
 ```
 
 ## Environment Variables
@@ -103,7 +103,7 @@ curl -X POST http://localhost:3000/api/generate \
 
 ```bash
 # Rust server
-cargo run -p exameow-server
+cargo run -p quizseek-server
 
 # Frontend dev server
 cd frontend && pnpm dev
@@ -115,7 +115,7 @@ pnpm tauri dev
 ### Project Structure
 
 ```
-exameow/
+quizseek/
 ├── frontend/          # Vue 3 SPA
 ├── packages/
 │   ├── core/          # Rust shared library (AI, parser, export, config)

@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo === Exameow Cloudflare Deploy ===
+echo === QuizSeek Cloudflare Deploy ===
 echo.
 
 set SCRIPT_DIR=%~dp0

@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@quizseek/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -36,7 +36,7 @@ export const httpApi = {
     return res.json()
   },
 
-  async exportCsv(questions: Question[], filename: string = 'exameow_questions.csv'): Promise<void> {
+  async exportCsv(questions: Question[], filename: string = 'quizseek_questions.csv'): Promise<void> {
     const csvContent = generateCsvContent(questions)
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -47,7 +47,7 @@ export const httpApi = {
     URL.revokeObjectURL(url)
   },
 
-  async exportXlsx(questions: Question[], filename: string = 'exameow_questions.xlsx'): Promise<void> {
+  async exportXlsx(questions: Question[], filename: string = 'quizseek_questions.xlsx'): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/export/xlsx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,7 +117,7 @@ export const httpApi = {
       body: JSON.stringify(config),
     })
     if (!res.ok) {
-      localStorage.setItem('exameow_config', JSON.stringify(config))
+      localStorage.setItem('quizseek_config', JSON.stringify(config))
     }
   },
 
@@ -129,7 +129,7 @@ export const httpApi = {
         return data
       }
     } catch {}
-    const stored = localStorage.getItem('exameow_config')
+    const stored = localStorage.getItem('quizseek_config')
     return stored ? JSON.parse(stored) : null
   },
 };

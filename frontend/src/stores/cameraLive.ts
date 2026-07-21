@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Question } from '@exameow/shared'
+import type { Question } from '@quizseek/shared'
 
 export interface MatchResult {
   question: Question

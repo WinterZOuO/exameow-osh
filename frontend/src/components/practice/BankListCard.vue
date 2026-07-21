@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
-import type { QuestionBank } from '@exameow/shared'
+import type { QuestionBank } from '@quizseek/shared'
 import {
   ClockIcon,
   DocumentTextIcon,
@@ -70,7 +70,7 @@ async function handleDownloadTemplate() {
     }
     const sample = {
       '题型 （必填）': typeLabel('single_choice'),
-      '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
+      '题干（必填）': 'QuizSeek 的 AI 接口协议是什么类型？',
       '选项 A': 'OpenAI 兼容 API',
       '选项 B': 'WebSocket',
       '选项 C': 'gRPC',
@@ -80,7 +80,7 @@ async function handleDownloadTemplate() {
       '选项 G': '',
       '选项 H': '',
       '正确答案': 'A',
-      '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
+      '解析': 'QuizSeek 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
       '章节': '',
       '难度': '',
     }
@@ -90,7 +90,7 @@ async function handleDownloadTemplate() {
     const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
 
     const isTauriPlatform = '__TAURI__' in window || '__TAURI_INTERNALS__' in window
-    const filename = 'exameow_template.xlsx'
+    const filename = 'quizseek_template.xlsx'
 
     if (isTauriPlatform) {
       try {
@@ -138,7 +138,7 @@ async function handleShareTemplate() {
     const { shareFile } = await import('@choochmeque/tauri-plugin-sharekit-api')
     await shareFile('file://' + templateExportFilePath.value!, {
       mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      title: templateExportFilePath.value!.split('/').pop() || 'exameow_template.xlsx',
+      title: templateExportFilePath.value!.split('/').pop() || 'quizseek_template.xlsx',
     })
   } catch (_e) {}
 }

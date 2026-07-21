@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
-import type { WrongSort } from '@exameow/shared'
+import type { WrongSort } from '@quizseek/shared'
 import {
   ArrowDownIcon,
   ArrowUpIcon,

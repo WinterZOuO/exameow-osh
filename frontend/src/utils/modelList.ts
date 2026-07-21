@@ -1,4 +1,4 @@
-import type { ModelInfo } from '@exameow/shared'
+import type { ModelInfo } from '@quizseek/shared'
 
 export async function fetchModelsFromEndpoint(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
   const url = `${endpoint.replace(/\/+$/, '')}/models`

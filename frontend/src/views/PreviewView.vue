@@ -22,7 +22,7 @@ const exportingXlsx = ref(false)
 const baseFileName = computed(() => {
   const name = examStore.sourceFileName
   if (name) return name
-  return 'exameow_questions'
+  return 'quizseek_questions'
 })
 
 async function saveFile(filename: string, content: string | Uint8Array): Promise<string | null> {

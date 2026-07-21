@@ -8,7 +8,7 @@ import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
 import { searchQuestions, type MatchScope, type SearchHit } from '@/utils/questionSearch'
 import { useSearchSettings, getSearchSettings } from '@/composables/useSearchSettings'
-import type { AnswerResult, QuestionType } from '@exameow/shared'
+import type { AnswerResult, QuestionType } from '@quizseek/shared'
 import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,

@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  APP_NAME: Exameow
+  APP_NAME: QuizSeek
   PNPM_VERSION: '10'
   NODE_VERSION: '22'
   JAVA_VERSION: '17'
@@ -59,27 +59,27 @@ jobs:
           keytool -genkey \
             -v \
             -keystore release.keystore \
-            -alias exameow \
+            -alias quizseek \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -storepass exameow \
-            -keypass exameow \
-            -dname "CN=Exameow"
+            -storepass quizseek \
+            -keypass quizseek \
+            -dname "CN=QuizSeek"
 
       - name: Sign and align APK
         run: |
           mkdir -p dist
           UNSIGNED_APK=$(find src-tauri/gen/android/app/build/outputs/apk/aarch64/release -name "*.apk" | head -n 1)
-          ALIGNED_APK="dist/Exameow-${{ github.ref_name }}-android_arm64.apk"
+          ALIGNED_APK="dist/QuizSeek-${{ github.ref_name }}-android_arm64.apk"
           BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -type d | sort -V | tail -n 1)
           jarsigner -verbose \
             -sigalg SHA256withRSA \
             -digestalg SHA-256 \
             -keystore release.keystore \
-            -storepass exameow \
-            -keypass exameow \
-            "$UNSIGNED_APK" exameow
+            -storepass quizseek \
+            -keypass quizseek \
+            "$UNSIGNED_APK" quizseek
           "$BUILD_TOOLS/zipalign" -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}

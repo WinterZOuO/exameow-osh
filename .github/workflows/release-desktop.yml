@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  APP_NAME: Exameow
+  APP_NAME: QuizSeek
   PNPM_VERSION: '10'
   NODE_VERSION: '22'
 
@@ -92,27 +92,27 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
           mkdir -p dist
-          cp src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.deb
-          cp src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.AppImage
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}.deb
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}.AppImage
         shell: bash
 
       - name: Collect Windows artifacts
         if: matrix.platform == 'windows-latest'
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          Copy-Item src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.msi
-          Copy-Item src-tauri/target/${{ matrix.target }}/release/exameow.exe dist/Exameow.exe
-          Compress-Archive -Path dist/Exameow.exe -DestinationPath dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
-          Remove-Item dist/Exameow.exe
+          Copy-Item src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}.msi
+          Copy-Item src-tauri/target/${{ matrix.target }}/release/quizseek.exe dist/QuizSeek.exe
+          Compress-Archive -Path dist/QuizSeek.exe -DestinationPath dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
+          Remove-Item dist/QuizSeek.exe
         shell: pwsh
 
       - name: Collect macOS artifacts
         if: matrix.platform == 'macos-latest'
         run: |
           mkdir -p dist
-          cp src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}.dmg
           APP_DIR=$(find src-tauri/target/${{ matrix.target }}/release/bundle/macos -maxdepth 1 -name "*.app" -type d | head -n 1)
-          zip -r dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip "$APP_DIR"
+          zip -r dist/QuizSeek-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip "$APP_DIR"
         shell: bash
 
       - uses: actions/upload-artifact@v4
@@ -137,7 +137,7 @@ jobs:
           name: ${{ env.APP_NAME }} ${{ github.ref_name }}
           body: |
             ## 🔗 Quick Links
-            - [Docker Image](https://github.com/${{ github.repository }}/pkgs/container/exameow)
+            - [Docker Image](https://github.com/${{ github.repository }}/pkgs/container/quizseek)
             - [Documentation](https://github.com/${{ github.repository }}#readme)
 
             ## 📦 Downloads
