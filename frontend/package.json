@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@choochmeque/tauri-plugin-sharekit-api": "0.4.0-rc.5",
-    "@quizseek/shared": "workspace:*",
+    "@exameow/shared": "workspace:*",
     "@heroicons/vue": "^2.2.0",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-dialog": "^2.7.1",

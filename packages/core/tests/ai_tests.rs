@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use quizseek_core::ai::AIClient;
+    use exameow_core::ai::AIClient;
 
     #[test]
     fn test_client_creation() {

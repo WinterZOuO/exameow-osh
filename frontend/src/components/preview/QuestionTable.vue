@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Question } from '@quizseek/shared'
+import type { Question } from '@exameow/shared'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()

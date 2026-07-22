@@ -1,5 +1,5 @@
-import type { Question } from '@quizseek/shared'
-import { QuestionType as QT } from '@quizseek/shared'
+import type { Question } from '@exameow/shared'
+import { QuestionType as QT } from '@exameow/shared'
 import * as XLSX from 'xlsx'
 
 type QuestionType = typeof QT[keyof typeof QT]

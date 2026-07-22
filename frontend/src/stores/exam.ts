@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, reactive, computed } from 'vue'
-import type { ExamParams, Question, QuestionType, Difficulty } from '@quizseek/shared'
+import type { ExamParams, Question, QuestionType, Difficulty } from '@exameow/shared'
 import { api } from '@/api'
 import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
@@ -125,9 +125,9 @@ export const useExamStore = defineStore('exam', () => {
     if (chunkCount <= 1) return [{ ...baseParams }]
 
     const fileSections = splitByFileSections(fullText)
-    console.log('[QuizSeek] File sections:', fileSections.length, '| sizes:', fileSections.map(s => s.label + ':' + s.text.length).join(', '))
+    console.log('[Exameow] File sections:', fileSections.length, '| sizes:', fileSections.map(s => s.label + ':' + s.text.length).join(', '))
     const textChunks = chunkByFileProportion(fileSections, chunkCount, fullText)
-    console.log('[QuizSeek] Chunks (should = chunkCount =', chunkCount, '):', textChunks.length, '| labels:', textChunks.map(c => c.substring(0, 50).replace(/\n/g, '\\n')).join(' | '))
+    console.log('[Exameow] Chunks (should = chunkCount =', chunkCount, '):', textChunks.length, '| labels:', textChunks.map(c => c.substring(0, 50).replace(/\n/g, '\\n')).join(' | '))
     const remaining: Record<string, number> = {}
     for (const [k, v] of typeEntries) remaining[k] = v
 
@@ -267,20 +267,20 @@ export const useExamStore = defineStore('exam', () => {
 
   function loadCachedQuestions(): Question[] {
     try {
-      const cached = localStorage.getItem('quizseek-questions')
+      const cached = localStorage.getItem('exameow-questions')
       if (cached) return JSON.parse(cached)
     } catch {}
     return []
   }
 
   function loadCachedSourceFile(): string {
-    return localStorage.getItem('quizseek-sourcefile') || ''
+    return localStorage.getItem('exameow-sourcefile') || ''
   }
 
   function saveCachedQuestions() {
     try {
-      localStorage.setItem('quizseek-questions', JSON.stringify(questions.value))
-      localStorage.setItem('quizseek-sourcefile', sourceFileName.value)
+      localStorage.setItem('exameow-questions', JSON.stringify(questions.value))
+      localStorage.setItem('exameow-sourcefile', sourceFileName.value)
     } catch {}
   }
 
@@ -514,7 +514,7 @@ export const useExamStore = defineStore('exam', () => {
       }
       const batches = buildBatches(baseParams)
       const firstInput = inputs[0]!
-      console.log('[QuizSeek] fileRef debug:', { isTauri: isTauri(), firstInputType: typeof firstInput, firstInputVal: firstInput })
+      console.log('[Exameow] fileRef debug:', { isTauri: isTauri(), firstInputType: typeof firstInput, firstInputVal: firstInput })
       const fileRef = isTauri()
         ? (typeof firstInput === 'string' ? firstInput : (firstInput as File).name || 'file')
         : (firstInput as File)
@@ -526,7 +526,7 @@ export const useExamStore = defineStore('exam', () => {
       const uniqueTexts = new Set(batches.map(b => b.text)).size
       const chunkSizes = [...new Set(batches.map(b => b.text || ''))].map(t => t.length)
       console.log(
-        `[QuizSeek] ${batches.length} batches, ${uniqueTexts} unique text chunks, sizes: ${JSON.stringify(chunkSizes)}`,
+        `[Exameow] ${batches.length} batches, ${uniqueTexts} unique text chunks, sizes: ${JSON.stringify(chunkSizes)}`,
       )
 
       for (let i = 0; i < batches.length; i++) {
@@ -538,7 +538,7 @@ export const useExamStore = defineStore('exam', () => {
         const textLen = (batch.text || '').length
         const textPreview = (batch.text || '').slice(0, 80).replace(/\n/g, '\\n')
         console.log(
-          `[QuizSeek] Batch ${batch.batch_index}/${batch.batch_total}: ` +
+          `[Exameow] Batch ${batch.batch_index}/${batch.batch_total}: ` +
           `${JSON.stringify(batch.type_counts)} | ${textLen} chars | "${textPreview}..."`,
         )
 
@@ -550,7 +550,7 @@ export const useExamStore = defineStore('exam', () => {
           const result = await api.generateExam(fileRef, batch, config, signal)
           questions.value.push(...result.questions)
         }
-        console.log(`[QuizSeek] Batch ${batch.batch_index} done: ${questions.value.length} questions total`)
+        console.log(`[Exameow] Batch ${batch.batch_index} done: ${questions.value.length} questions total`)
       }
 
       progress.value = { current: batches.length, total: batches.length, phase: 'complete', message: i18n.t('genProgressComplete') }
@@ -580,7 +580,7 @@ export const useExamStore = defineStore('exam', () => {
   function reset() {
     questions.value = []
     sourceFileName.value = ''
-    try { localStorage.removeItem('quizseek-questions'); localStorage.removeItem('quizseek-sourcefile') } catch {}
+    try { localStorage.removeItem('exameow-questions'); localStorage.removeItem('exameow-sourcefile') } catch {}
   }
 
   return {

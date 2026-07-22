@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
-import type { PracticeMode } from '@quizseek/shared'
+import type { PracticeMode } from '@exameow/shared'
 import {
   QueueListIcon,
   ArrowPathRoundedSquareIcon,

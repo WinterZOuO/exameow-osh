@@ -1,7 +1,7 @@
 import { isTauri } from './platform'
 
 type Theme = 'system' | 'light' | 'dark'
-const THEME_KEY = 'quizseek-theme'
+const THEME_KEY = 'exameow-theme'
 
 function readTheme(): Theme {
   const saved = localStorage.getItem(THEME_KEY)

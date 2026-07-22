@@ -1,7 +1,7 @@
 services:
-  quizseek:
-    image: quizseek-server:latest
-    container_name: quizseek-server
+  exameow:
+    image: exameow-server:latest
+    container_name: exameow-server
     ports:
       - "3000:3000"
     environment:

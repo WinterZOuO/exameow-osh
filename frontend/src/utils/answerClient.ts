@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, JudgeParams, JudgeResult } from '@quizseek/shared'
+import type { AIConfig, AnswerResult, JudgeParams, JudgeResult } from '@exameow/shared'
 
 const SYSTEM_PROMPT = `You are an expert exam-solving assistant. The user will give you an exam question (it may include options). Solve it.
 

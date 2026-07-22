@@ -1,10 +1,10 @@
 [package]
-name = "quizseek-server"
+name = "exameow-server"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-quizseek-core = { path = "../core" }
+exameow-core = { path = "../core" }
 axum = { version = "0.8", features = ["multipart"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }

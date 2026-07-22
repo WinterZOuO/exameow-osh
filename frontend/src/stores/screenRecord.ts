@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Question } from '@quizseek/shared'
+import type { Question } from '@exameow/shared'
 
 export interface ScreenRegion {
   x: number

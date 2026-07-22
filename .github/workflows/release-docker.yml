@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  APP_NAME: QuizSeek
+  APP_NAME: Exameow
   PNPM_VERSION: '10'
   NODE_VERSION: '22'
 
@@ -66,7 +66,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/quizseek
+          images: ghcr.io/${{ github.repository_owner }}/exameow
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

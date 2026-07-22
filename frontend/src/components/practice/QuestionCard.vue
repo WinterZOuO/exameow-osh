@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
-import type { Question, PracticeMode } from '@quizseek/shared'
+import type { Question, PracticeMode } from '@exameow/shared'
 import {
   CheckCircleIcon,
   XCircleIcon,

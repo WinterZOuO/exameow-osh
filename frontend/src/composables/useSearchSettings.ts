@@ -1,8 +1,8 @@
 import { ref, watch } from 'vue'
 import type { MatchScope } from '@/utils/questionSearch'
-import type { QuestionType } from '@quizseek/shared'
+import type { QuestionType } from '@exameow/shared'
 
-const SETTINGS_KEY = 'quizseek-search-settings'
+const SETTINGS_KEY = 'exameow-search-settings'
 
 export interface SearchSettings {
   bankIds: string[] | null

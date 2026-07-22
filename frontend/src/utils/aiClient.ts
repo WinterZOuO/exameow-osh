@@ -1,4 +1,4 @@
-import type { ExamParams, Question, QuestionType, Difficulty } from '@quizseek/shared'
+import type { ExamParams, Question, QuestionType, Difficulty } from '@exameow/shared'
 
 interface AIConfig {
   endpoint: string

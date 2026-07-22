@@ -1,10 +1,10 @@
 [package]
-name = "quizseek"
+name = "exameow"
 version = "1.0.0"
 edition = "2021"
 
 [lib]
-name = "quizseek_lib"
+name = "exameow_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -17,7 +17,7 @@ tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-sharekit = "0.3"
 tauri-plugin-screenrecord = { path = "../plugins/screenrecord" }
-quizseek-core = { path = "../packages/core" }
+exameow-core = { path = "../packages/core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"

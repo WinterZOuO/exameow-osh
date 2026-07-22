@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QuizSeek</title>
+    <title>Exameow</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <script>
       (function () {
         try {
-          var t = localStorage.getItem('quizseek-theme');
+          var t = localStorage.getItem('exameow-theme');
           if (t !== 'system' && t !== 'light' && t !== 'dark') {
-            var legacy = localStorage.getItem('quizseek-dark');
+            var legacy = localStorage.getItem('exameow-dark');
             t = legacy === '1' ? 'dark' : legacy === '0' ? 'light' : 'system';
           }
           var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);

@@ -7,7 +7,7 @@
 
     <application>
         <service
-            android:name="com.quizseek.screenrecord.ScreenRecordService"
+            android:name="com.exameow.screenrecord.ScreenRecordService"
             android:foregroundServiceType="mediaProjection"
             android:exported="false" />
     </application>

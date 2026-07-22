@@ -51,7 +51,7 @@ async function openSettings() {
   if (isAndroid()) {
     try {
       const { openUrl } = await import('@tauri-apps/plugin-opener')
-      await openUrl('package:com.quizseek.app')
+      await openUrl('package:com.exameow.app')
     } catch {}
   }
 }

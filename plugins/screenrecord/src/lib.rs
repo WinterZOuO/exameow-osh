@@ -18,7 +18,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             {
                 use tauri::plugin::PluginHandle;
                 let _handle: PluginHandle<R> =
-                    _api.register_android_plugin("com.quizseek.screenrecord", "ScreenRecordPlugin")?;
+                    _api.register_android_plugin("com.exameow.screenrecord", "ScreenRecordPlugin")?;
             }
             Ok(())
         })

@@ -1,4 +1,4 @@
-package com.quizseek.screenrecord
+package com.exameow.screenrecord
 
 import android.app.Activity
 import android.app.Notification
@@ -27,8 +27,8 @@ import java.io.ByteArrayOutputStream
 
 class ScreenRecordService : Service() {
   companion object {
-    const val ACTION_START = "com.quizseek.screenrecord.START"
-    const val ACTION_STOP = "com.quizseek.screenrecord.STOP"
+    const val ACTION_START = "com.exameow.screenrecord.START"
+    const val ACTION_STOP = "com.exameow.screenrecord.STOP"
     const val EXTRA_RESULT_CODE = "resultCode"
     const val EXTRA_DATA = "data"
     private const val CAPTURE_INTERVAL_MS = 1500L

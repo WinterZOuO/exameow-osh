@@ -1,7 +1,7 @@
 services:
-  quizseek:
+  exameow:
     build: .
-    container_name: quizseek-server
+    container_name: exameow-server
     ports:
       - "3000:3000"
     environment:

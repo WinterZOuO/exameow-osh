@@ -17,7 +17,7 @@ importers:
       '@choochmeque/tauri-plugin-sharekit-api':
         specifier: 0.4.0-rc.5
         version: 0.4.0-rc.5
-      '@quizseek/shared':
+      '@exameow/shared':
         specifier: workspace:*
         version: link:../packages/shared
       '@heroicons/vue':
