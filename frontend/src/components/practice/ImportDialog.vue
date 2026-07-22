@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
+import ColumnMapper from '@/components/practice/ColumnMapper.vue'
+import type { ColumnMapping } from '@/utils/importParser'
 import {
   XMarkIcon,
   DocumentArrowUpIcon,
@@ -92,6 +94,10 @@ function removeFile() {
   if (fileInput.value) fileInput.value.value = ''
 }
 
+function handleMappingApply(mapping: ColumnMapping) {
+  practiceStore.applyImportMapping(mapping)
+}
+
 function handleConfirm() {
   const count = practiceStore.importPreview?.length ?? 0
   practiceStore.confirmImport()
@@ -125,8 +131,7 @@ function handleConfirm() {
       v-if="!selectedFile"
       class="card-outlined p-6 text-center cursor-pointer hover:border-[rgb(var(--md-primary))] transition-colors"
       @click="fileInput?.click()"
-    >
-      <DocumentArrowUpIcon class="w-10 h-10 mx-auto mb-3" :style="{ color: 'rgb(var(--md-on-surface-muted))' }" />
+    >      <DocumentArrowUpIcon class="w-10 h-10 mx-auto mb-3" :style="{ color: 'rgb(var(--md-on-surface-muted))' }" />
       <div class="text-title-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface))' }">
         {{ i18n.t('practiceChooseFile') }}
       </div>
@@ -144,6 +149,21 @@ function handleConfirm() {
 
     <div v-if="parseError" class="card-outlined p-3 text-center" :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }">
       {{ parseError }}
+    </div>
+
+    <ColumnMapper
+      v-if="practiceStore.importAnalysis && !parsing"
+      :analysis="practiceStore.importAnalysis"
+      @apply="handleMappingApply"
+      @cancel="removeFile"
+    />
+
+    <div
+      v-else-if="selectedFile && !parsing && practiceStore.importPreview && practiceStore.importPreview.length === 0"
+      class="card-outlined p-3 text-center"
+      :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
+    >
+      {{ i18n.t('practiceImportFail') }}
     </div>
 
     <template v-if="practiceStore.importPreview && practiceStore.importPreview.length > 0 && !parsing">

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
+import { exportBank, type BankExportFormat } from '@/composables/useBankExport'
 import type { QuestionBank } from '@exameow/shared'
 import {
   ClockIcon,
@@ -34,6 +35,59 @@ const templateExportSuccess = ref('')
 const templateExportFilePath = ref('')
 const templateExportError = ref('')
 const downloadingTemplate = ref(false)
+
+const exportMenuFor = ref<string | null>(null)
+const exportingBank = ref(false)
+let menuPinned = false
+
+function openExportMenu(id: string) {
+  exportMenuFor.value = id
+}
+
+function closeExportMenu() {
+  if (!menuPinned) exportMenuFor.value = null
+}
+
+function toggleExportMenu(id: string) {
+  if (exportMenuFor.value === id && menuPinned) {
+    exportMenuFor.value = null
+    menuPinned = false
+  } else {
+    exportMenuFor.value = id
+    menuPinned = true
+  }
+}
+
+function handleDocClick() {
+  if (menuPinned) {
+    exportMenuFor.value = null
+    menuPinned = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleDocClick))
+onBeforeUnmount(() => document.removeEventListener('click', handleDocClick))
+
+async function handleExportBank(bank: QuestionBank, format: BankExportFormat) {
+  exportMenuFor.value = null
+  menuPinned = false
+  if (exportingBank.value) return
+  exportingBank.value = true
+  templateExportSuccess.value = ''
+  templateExportError.value = ''
+  templateExportFilePath.value = ''
+  try {
+    const result = await exportBank(bank, format)
+    if (result.ok && result.path) {
+      templateExportSuccess.value = i18n.t('previewExportSaved') + result.path
+      templateExportFilePath.value = result.path
+    } else if (!result.cancelled) {
+      templateExportError.value = 'Export failed: ' + (result.error ?? 'unknown')
+    }
+  } finally {
+    exportingBank.value = false
+  }
+}
 
 const sourceLabel = (source: string): string => {
   if (source === 'ai-generated') return i18n.t('practiceSourceAI')
@@ -243,6 +297,42 @@ const hasExportMessage = computed(() => templateExportSuccess.value || templateE
       </div>
 
       <div class="flex items-center gap-2 mt-3">
+        <div
+          class="relative shrink-0"
+          @mouseenter="openExportMenu(bank.id)"
+          @mouseleave="closeExportMenu"
+        >
+          <button
+            class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8"
+            :disabled="exportingBank"
+            :title="i18n.t('practiceExportBank')"
+            @click.stop="toggleExportMenu(bank.id)"
+          >
+            <ArrowDownTrayIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+          <Transition name="scale">
+            <div
+              v-if="exportMenuFor === bank.id"
+              class="absolute left-0 bottom-full mb-1 z-20 rounded-xl overflow-hidden elevation-2 min-w-[96px]"
+              :style="{ backgroundColor: 'rgb(var(--md-surface-container-high))' }"
+            >
+              <button
+                class="w-full px-4 py-2 text-left text-sm hover:bg-[rgb(var(--md-primary)/0.08)] transition-colors"
+                :style="{ color: 'rgb(var(--md-on-surface))' }"
+                @click.stop="handleExportBank(bank, 'xlsx')"
+              >
+                XLSX
+              </button>
+              <button
+                class="w-full px-4 py-2 text-left text-sm hover:bg-[rgb(var(--md-primary)/0.08)] transition-colors"
+                :style="{ color: 'rgb(var(--md-on-surface))' }"
+                @click.stop="handleExportBank(bank, 'csv')"
+              >
+                CSV
+              </button>
+            </div>
+          </Transition>
+        </div>
         <button
           class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8 shrink-0"
           :style="{ color: 'rgb(var(--md-error))' }"

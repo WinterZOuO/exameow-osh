@@ -10,12 +10,24 @@ const TF: QuestionType = 'true_false' as QuestionType
 const FB: QuestionType = 'fill_blank' as QuestionType
 const SA: QuestionType = 'short_answer' as QuestionType
 
-interface ColumnMap {
+export interface ColumnMapping {
   stem: number | null
   type: number | null
   options: number[]
+  combinedOptions: number | null
+  optionsDelimiter: string
   answer: number | null
   analysis: number | null
+}
+
+export type MissingField = 'stem' | 'answer' | 'options'
+
+export interface ImportAnalysis {
+  headers: string[]
+  rows: string[][]
+  hasHeader: boolean
+  mapping: ColumnMapping
+  missing: MissingField[]
 }
 
 function normalize(s: string): string {
@@ -76,8 +88,16 @@ function detectColumnTypeFromQA(stem: string, answer: string, hasOptions: boolea
   return FB
 }
 
-function buildColumnMap(headers: string[]): ColumnMap {
-  const map: ColumnMap = { stem: null, type: null, options: [], answer: null, analysis: null }
+function isCombinedOptionsHeader(n: string): boolean {
+  return n === '选项' || n === 'options' || n === 'option' || n === '所有选项' || n === '全部选项'
+    || n === '选项内容' || n === 'optionscontent' || n === 'choices' || n === 'choice'
+}
+
+function buildColumnMap(headers: string[]): ColumnMapping {
+  const map: ColumnMapping = {
+    stem: null, type: null, options: [], combinedOptions: null,
+    optionsDelimiter: '', answer: null, analysis: null,
+  }
 
   for (let i = 0; i < headers.length; i++) {
     const h = headers[i]
@@ -112,8 +132,14 @@ function buildColumnMap(headers: string[]): ColumnMap {
       continue
     }
 
+    if (isCombinedOptionsHeader(n)) {
+      if (map.combinedOptions === null) map.combinedOptions = i
+      continue
+    }
+
     if (/^[a-h]$/i.test(n) || n.includes('选项') || n.includes('option')) {
       map.options.push(i)
+      continue
     }
 
     if (/^选项\s*[a-h]$/i.test(n) || /^option\s*[a-h]$/i.test(n)) {
@@ -121,25 +147,27 @@ function buildColumnMap(headers: string[]): ColumnMap {
     }
   }
 
-  if (map.stem === null && map.type === null && map.answer === null) {
-    if (headers.length >= 3) {
-      map.stem = 0
-      map.answer = headers.length - 2
-      if (headers.length >= 4) map.analysis = headers.length - 1
-      for (let i = 1; i < Math.min(headers.length - 2, 9); i++) {
-        map.options.push(i)
-      }
-    }
-  }
-
   return map
 }
 
-function buildXlsxColumnMap(): ColumnMap {
+function applyPositionalFallback(map: ColumnMapping, columnCount: number): void {
+  if (columnCount >= 3) {
+    map.stem = 0
+    map.answer = columnCount - 2
+    if (columnCount >= 4) map.analysis = columnCount - 1
+    for (let i = 1; i < Math.min(columnCount - 2, 9); i++) {
+      map.options.push(i)
+    }
+  }
+}
+
+function buildXlsxColumnMap(): ColumnMapping {
   return {
     stem: 0,
     type: 1,
     options: [2, 3, 4, 5, 6, 7, 8, 9],
+    combinedOptions: null,
+    optionsDelimiter: '',
     answer: 10,
     analysis: 11,
   }
@@ -155,8 +183,155 @@ function typeLabelToEnum(label: string): QuestionType {
   return SA
 }
 
-function parseRawData(rows: string[][], columnMap: ColumnMap, source: string): Question[] {
+const OPTION_PREFIX_SPLIT = /\s*[A-Ha-h][.、．:：)）]\s*/
+const OPTION_PREFIX_STRIP = /^\s*[A-Ha-h][.、．:：)）]\s*/
+
+function stripOptionPrefix(s: string): string {
+  return s.replace(OPTION_PREFIX_STRIP, '').replace(/[;；|、]\s*$/, '').trim()
+}
+
+function splitWithDelimiter(cell: string, delimiter: string): string[] {
+  return cell
+    .split(delimiter)
+    .map(p => stripOptionPrefix(p))
+    .filter(p => p.length > 0)
+}
+
+export function splitOptionsCell(cell: string, delimiter?: string): string[] {
+  const text = (cell ?? '').trim()
+  if (!text) return []
+
+  if (delimiter === 'prefix') {
+    const parts = text.split(OPTION_PREFIX_SPLIT).map(p => p.trim()).filter(p => p.length > 0)
+    return parts.length > 0 ? parts : [text]
+  }
+  if (delimiter) {
+    return splitWithDelimiter(text, delimiter === '\\n' ? '\n' : delimiter)
+  }
+
+  const candidates: Array<{ name: string; test: () => string[] | null }> = [
+    {
+      name: '\\n',
+      test: () => {
+        if (!/\r?\n/.test(text)) return null
+        return splitWithDelimiter(text, '\n')
+      },
+    },
+    { name: '；', test: () => (text.includes('；') ? splitWithDelimiter(text, '；') : null) },
+    { name: ';', test: () => (text.includes(';') ? splitWithDelimiter(text, ';') : null) },
+    { name: '|', test: () => (text.includes('|') ? splitWithDelimiter(text, '|') : null) },
+    { name: '、', test: () => (text.includes('、') ? splitWithDelimiter(text, '、') : null) },
+    {
+      name: 'prefix',
+      test: () => {
+        if (!OPTION_PREFIX_STRIP.test(text)) return null
+        const parts = text.split(OPTION_PREFIX_SPLIT).map(p => p.trim()).filter(p => p.length > 0)
+        return parts.length >= 2 ? parts : null
+      },
+    },
+  ]
+
+  for (const c of candidates) {
+    const parts = c.test()
+    if (parts && parts.length >= 2) return parts
+  }
+  return [text]
+}
+
+export function detectOptionsDelimiter(cells: string[]): string {
+  for (const cell of cells) {
+    const text = (cell ?? '').trim()
+    if (!text) continue
+    if (/\r?\n/.test(text) && splitWithDelimiter(text, '\n').length >= 2) return '\\n'
+    for (const d of ['；', ';', '|', '、']) {
+      if (text.includes(d) && splitWithDelimiter(text, d).length >= 2) return d
+    }
+    if (OPTION_PREFIX_STRIP.test(text)) {
+      const parts = text.split(OPTION_PREFIX_SPLIT).filter(p => p.trim().length > 0)
+      if (parts.length >= 2) return 'prefix'
+    }
+  }
+  return ''
+}
+
+function rowsHaveChoiceQuestions(rows: string[][], map: ColumnMapping): boolean {
+  if (map.type !== null) {
+    for (const row of rows.slice(0, 50)) {
+      const t = (row[map.type] ?? '').trim()
+      const qt = detectColumnType(t)
+      if (qt === ST || qt === MT) return true
+    }
+    return false
+  }
+  if (map.answer !== null) {
+    let letterAnswers = 0
+    let total = 0
+    for (const row of rows.slice(0, 50)) {
+      const a = (row[map.answer] ?? '').trim()
+      if (!a) continue
+      total++
+      if (/^[A-Ha-h]{1,4}$/.test(a)) letterAnswers++
+    }
+    return total > 0 && letterAnswers / total >= 0.3
+  }
+  return false
+}
+
+function computeMissing(rows: string[][], map: ColumnMapping, strict: boolean): MissingField[] {
+  const missing: MissingField[] = []
+  if (map.stem === null) missing.push('stem')
+  if (map.answer === null) missing.push('answer')
+  if (strict && map.options.length === 0 && map.combinedOptions === null) {
+    if (rowsHaveChoiceQuestions(rows, map)) missing.push('options')
+  }
+  return missing
+}
+
+function analyzeRows(rawRows: string[][], forceNativeXlsx: boolean): ImportAnalysis | null {
+  if (rawRows.length === 0) return null
+
+  const firstRow = (rawRows[0] ?? []).map(c => String(c ?? ''))
+
+  if (forceNativeXlsx) {
+    return {
+      headers: firstRow,
+      rows: rawRows.slice(1),
+      hasHeader: true,
+      mapping: buildXlsxColumnMap(),
+      missing: [],
+    }
+  }
+
+  const hasHeader = isHeaderRow(firstRow)
+  let headers: string[]
+  let rows: string[][]
+  let mapping: ColumnMapping
+
+  if (hasHeader) {
+    headers = firstRow
+    rows = rawRows.slice(1)
+    mapping = buildColumnMap(headers)
+  } else {
+    const columnCount = Math.max(...rawRows.map(r => r.length), 0)
+    headers = Array.from({ length: columnCount }, (_, i) => `Column ${i + 1}`)
+    rows = rawRows
+    mapping = buildColumnMap([])
+    applyPositionalFallback(mapping, columnCount)
+  }
+
+  if (mapping.combinedOptions !== null) {
+    const ci = mapping.combinedOptions
+    const samples = rows.slice(0, 20).map(r => r[ci] ?? '')
+    mapping.optionsDelimiter = detectOptionsDelimiter(samples)
+  }
+
+  const missing = hasHeader ? computeMissing(rows, mapping, true) : []
+  return { headers, rows, hasHeader, mapping, missing }
+}
+
+export function parseWithMapping(analysis: ImportAnalysis, mapping: ColumnMapping, source: string): Question[] {
   const questions: Question[] = []
+  const rows = analysis.rows
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
@@ -164,23 +339,30 @@ function parseRawData(rows: string[][], columnMap: ColumnMap, source: string): Q
     const allBlank = row.every(c => !c || c.trim() === '')
     if (allBlank) continue
 
-    const stem = columnMap.stem !== null ? (row[columnMap.stem] ?? '').trim() : ''
+    const stem = mapping.stem !== null ? (row[mapping.stem] ?? '').trim() : ''
     if (!stem) continue
 
     let qtype: QuestionType = SA
-    if (columnMap.type !== null) {
-      const t = (row[columnMap.type] ?? '').trim()
+    if (mapping.type !== null) {
+      const t = (row[mapping.type] ?? '').trim()
       qtype = typeLabelToEnum(t)
     }
 
     const options: string[] = []
-    for (const oi of columnMap.options) {
-      const o = (row[oi] ?? '').trim()
-      if (o) options.push(o)
+    if (mapping.combinedOptions !== null) {
+      const cell = (row[mapping.combinedOptions] ?? '').trim()
+      if (cell) {
+        options.push(...splitOptionsCell(cell, mapping.optionsDelimiter || undefined))
+      }
+    } else {
+      for (const oi of mapping.options) {
+        const o = (row[oi] ?? '').trim()
+        if (o) options.push(o)
+      }
     }
 
-    const answer = columnMap.answer !== null ? (row[columnMap.answer] ?? '').trim() : ''
-    const analysis = columnMap.analysis !== null ? (row[columnMap.analysis] ?? '').trim() : ''
+    const answer = mapping.answer !== null ? (row[mapping.answer] ?? '').trim() : ''
+    const analysis = mapping.analysis !== null ? (row[mapping.analysis] ?? '').trim() : ''
 
     if (!qtype || qtype === SA) {
       const inferred = detectColumnTypeFromQA(stem, answer, options.length > 0)
@@ -210,90 +392,52 @@ function detectXlsxFormat(headers: string[]): boolean {
   return checks.filter(Boolean).length >= 2
 }
 
+export function analyzeCSV(text: string): ImportAnalysis | null {
+  const rows = parseCSVText(text).filter(r => r.some(c => c.trim() !== ''))
+  if (rows.length < 2) return null
+  return analyzeRows(rows, false)
+}
+
+export function analyzeExcel(buffer: ArrayBuffer): ImportAnalysis | null {
+  const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' })
+  const sheetName = workbook.SheetNames[0]
+  if (!sheetName) return null
+
+  const sheet = workbook.Sheets[sheetName]
+  if (!sheet) return null
+
+  const rawRows: (string[] | undefined)[] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false })
+  const rows = rawRows.filter((r): r is string[] => r !== undefined).map(r => r.map(c => String(c ?? '')))
+  if (rows.length === 0) return null
+
+  const headers = rows[0] ?? []
+  return analyzeRows(rows, detectXlsxFormat(headers))
+}
+
 export function parseCSV(text: string): { questions: Question[]; source: string } {
-  const lines = text.split(/\r?\n/).filter(l => l.trim())
-  if (lines.length === 0) return { questions: [], source: 'csv' }
-
-  const rows: string[][] = []
-  for (const line of lines) {
-    const cells = parseCSVLine(line)
-    if (cells.length > 0) rows.push(cells)
-  }
-
-  if (rows.length < 2) return { questions: [], source: 'csv' }
-
-  let headerIndex = 0
-  if (isHeaderRow(rows[0]!)) {
-    headerIndex = 0
-  } else {
-    headerIndex = -1
-  }
-
-  let columnMap: ColumnMap
-  if (headerIndex >= 0) {
-    columnMap = buildColumnMap(rows[headerIndex]!)
-  } else {
-    if (rows.length > 0) {
-      columnMap = buildColumnMap([])
-    } else {
-      return { questions: [], source: 'csv' }
-    }
-  }
-
-  const dataRows = rows.slice(headerIndex >= 0 ? headerIndex + 1 : 0)
-  const questions = parseRawData(dataRows, columnMap, 'csv')
-  return { questions, source: 'csv' }
+  const analysis = analyzeCSV(text)
+  if (!analysis) return { questions: [], source: 'csv' }
+  return { questions: parseWithMapping(analysis, analysis.mapping, 'csv'), source: 'csv' }
 }
 
 export function parseExcel(buffer: ArrayBuffer, fileName: string): { questions: Question[]; source: string } {
-  const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' })
-  const sheetName = workbook.SheetNames[0]
-  if (!sheetName) return { questions: [], source: 'excel' }
-
-  const sheet = workbook.Sheets[sheetName]
-  if (!sheet) return { questions: [], source: 'excel' }
-
-  const rows: (string[] | undefined)[] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false })
-
-  if (rows.length === 0) return { questions: [], source: 'excel' }
-
-  let columnMap: ColumnMap
-  const headers = (rows[0] ?? []).map(c => String(c ?? ''))
-
-  if (detectXlsxFormat(headers)) {
-    columnMap = buildXlsxColumnMap()
-    const dataRows = rows.slice(1).filter((r): r is string[] => r !== undefined)
-    const questions = parseRawData(dataRows, columnMap, 'xlsx')
-    return { questions, source: 'xlsx' }
-  }
-
-  let headerIndex = 0
-  if (isHeaderRow((rows[0] ?? []).map(c => String(c ?? '')))) {
-    columnMap = buildColumnMap(headers)
-  } else {
-    if (rows.length > 0) {
-      columnMap = buildColumnMap([])
-    } else {
-      return { questions: [], source: 'excel' }
-    }
-    headerIndex = -1
-  }
-
-  const dataRows = rows.slice(headerIndex >= 0 ? headerIndex + 1 : 0).filter((r): r is string[] => r !== undefined)
-  const questions = parseRawData(dataRows, columnMap, 'excel')
-  return { questions, source: 'excel' }
+  const analysis = analyzeExcel(buffer)
+  if (!analysis) return { questions: [], source: 'excel' }
+  const source = fileName.toLowerCase().endsWith('.xlsx') ? 'xlsx' : 'excel'
+  return { questions: parseWithMapping(analysis, analysis.mapping, source), source }
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = []
+function parseCSVText(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
   let current = ''
   let inQuotes = false
 
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
     if (inQuotes) {
       if (ch === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
           current += '"'
           i++
         } else {
@@ -306,13 +450,20 @@ function parseCSVLine(line: string): string[] {
       if (ch === '"') {
         inQuotes = true
       } else if (ch === ',') {
-        result.push(current.trim())
+        row.push(current.trim())
         current = ''
+      } else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++
+        row.push(current.trim())
+        current = ''
+        if (row.some(c => c !== '')) rows.push(row)
+        row = []
       } else {
         current += ch
       }
     }
   }
-  result.push(current.trim())
-  return result
+  row.push(current.trim())
+  if (row.some(c => c !== '')) rows.push(row)
+  return rows
 }

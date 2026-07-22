@@ -784,7 +784,7 @@ function handleBack() {
     <Transition name="scale">
       <div
         v-if="wrongToast"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm font-medium z-50 shadow-lg"
+        class="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] sm:bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm font-medium z-50 shadow-lg"
         :style="{
           backgroundColor: 'rgb(var(--md-inverse-surface))',
           color: 'rgb(var(--md-inverse-on-surface))',

@@ -189,6 +189,19 @@ export interface LocaleMessages {
   practiceImportColAnswer: string
   practiceImportColAnalysis: string
   practiceDownloadTemplate: string
+  practiceExportBank: string
+  practiceMapTitle: string
+  practiceMapHint: string
+  practiceMapFieldOptions: string
+  practiceMapFieldCombined: string
+  practiceMapNone: string
+  practiceMapMultiColumn: string
+  practiceMapCombinedColumn: string
+  practiceMapDelimiter: string
+  practiceMapDelimiterAuto: string
+  practiceMapApply: string
+  practiceMapSplitPreview: string
+  practiceMapRequired: string
   // Language
   practiceLangZh: string
   practiceLangEn: string
@@ -480,7 +493,20 @@ export const zh: LocaleMessages = {
   practiceImportColStem: '题干',
   practiceImportColAnswer: '答案',
   practiceImportColAnalysis: '解析',
-  practiceDownloadTemplate: '下载题库模板',
+    practiceDownloadTemplate: '下载题库模板',
+    practiceExportBank: '导出',
+    practiceMapTitle: '匹配表格列',
+    practiceMapHint: '部分必填列未能自动识别，请手动选择对应的列',
+    practiceMapFieldOptions: '选项列',
+    practiceMapFieldCombined: '合并选项列',
+    practiceMapNone: '无',
+    practiceMapMultiColumn: '多列选项',
+    practiceMapCombinedColumn: '单列包含所有选项',
+    practiceMapDelimiter: '分列符',
+    practiceMapDelimiterAuto: '自动检测',
+    practiceMapApply: '应用并预览',
+    practiceMapSplitPreview: '分列预览',
+    practiceMapRequired: '必填',
   practiceLangZh: '中文',
   practiceLangEn: 'English',
 
@@ -769,7 +795,20 @@ export const en: LocaleMessages = {
   practiceImportColStem: 'Stem',
   practiceImportColAnswer: 'Answer',
   practiceImportColAnalysis: 'Analysis',
-  practiceDownloadTemplate: 'Download Template',
+    practiceDownloadTemplate: 'Download Template',
+    practiceExportBank: 'Export',
+    practiceMapTitle: 'Map Columns',
+    practiceMapHint: 'Some required columns could not be detected. Please map them manually.',
+    practiceMapFieldOptions: 'Option columns',
+    practiceMapFieldCombined: 'Combined options column',
+    practiceMapNone: 'None',
+    practiceMapMultiColumn: 'Multiple option columns',
+    practiceMapCombinedColumn: 'Single combined column',
+    practiceMapDelimiter: 'Delimiter',
+    practiceMapDelimiterAuto: 'Auto detect',
+    practiceMapApply: 'Apply & Preview',
+    practiceMapSplitPreview: 'Split preview',
+    practiceMapRequired: 'Required',
   practiceLangZh: 'Chinese',
   practiceLangEn: 'English',
 

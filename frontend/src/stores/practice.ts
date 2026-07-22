@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { QuestionBank, PracticeSession, PracticeMode, MockExamConfig, Question } from '@exameow/shared'
-import { parseCSV, parseExcel } from '@/utils/importParser'
+import { analyzeCSV, analyzeExcel, parseWithMapping } from '@/utils/importParser'
+import type { ColumnMapping, ImportAnalysis } from '@/utils/importParser'
 
 const STORAGE_KEY = 'exameow-banks'
 const SESSION_KEY = 'exameow-practice-session'
@@ -97,6 +98,8 @@ export const usePracticeStore = defineStore('practice', () => {
   const importing = ref(false)
   const importPreview = ref<Question[] | null>(null)
   const importFileName = ref('')
+  const importAnalysis = ref<ImportAnalysis | null>(null)
+  const importSource = ref('csv')
 
   const hasSession = computed(() => session.value !== null)
   const currentQuestion = computed(() => {
@@ -323,13 +326,29 @@ export const usePracticeStore = defineStore('practice', () => {
     return `${s}s`
   }
 
+  function handleAnalysis(analysis: ImportAnalysis | null, fileName: string, source: string): number {
+    importFileName.value = fileName
+    importSource.value = source
+    if (!analysis) {
+      importAnalysis.value = null
+      importPreview.value = []
+      return 0
+    }
+    if (analysis.missing.length > 0) {
+      importAnalysis.value = analysis
+      importPreview.value = null
+      return 0
+    }
+    importAnalysis.value = null
+    const questions = parseWithMapping(analysis, analysis.mapping, source)
+    importPreview.value = questions
+    return questions.length
+  }
+
   async function importCSV(text: string, fileName: string): Promise<number> {
     importing.value = true
     try {
-      const { questions, source } = parseCSV(text)
-      importPreview.value = questions
-      importFileName.value = fileName
-      return questions.length
+      return handleAnalysis(analyzeCSV(text), fileName, 'csv')
     } finally {
       importing.value = false
     }
@@ -338,18 +357,24 @@ export const usePracticeStore = defineStore('practice', () => {
   async function importExcelFile(buffer: ArrayBuffer, fileName: string): Promise<number> {
     importing.value = true
     try {
-      const { questions, source } = parseExcel(buffer, fileName)
-      importPreview.value = questions
-      importFileName.value = fileName
-      return questions.length
+      const source = fileName.toLowerCase().endsWith('.xlsx') ? 'xlsx' : 'excel'
+      return handleAnalysis(analyzeExcel(buffer), fileName, source)
     } finally {
       importing.value = false
     }
   }
 
+  function applyImportMapping(mapping: ColumnMapping): number {
+    if (!importAnalysis.value) return 0
+    const questions = parseWithMapping(importAnalysis.value, mapping, importSource.value)
+    importPreview.value = questions
+    importAnalysis.value = null
+    return questions.length
+  }
+
   function confirmImport(): string {
     if (!importPreview.value || importPreview.value.length === 0) return ''
-    const source = importPreview.value[0]?.id.startsWith('xlsx') ? 'xlsx-import' as const : 'csv-import' as const
+    const source = importSource.value === 'csv' ? 'csv-import' as const : 'xlsx-import' as const
     const nameBase = importFileName.value.replace(/\.[^/.]+$/, '')
     const bank: QuestionBank = {
       id: generateId(),
@@ -361,12 +386,14 @@ export const usePracticeStore = defineStore('practice', () => {
     addBank(bank)
     importPreview.value = null
     importFileName.value = ''
+    importAnalysis.value = null
     return bank.id
   }
 
   function cancelImport() {
     importPreview.value = null
     importFileName.value = ''
+    importAnalysis.value = null
   }
 
   return {
@@ -403,6 +430,8 @@ export const usePracticeStore = defineStore('practice', () => {
     formatTime,
     importCSV,
     importExcelFile,
+    applyImportMapping,
+    importAnalysis,
     confirmImport,
     cancelImport,
   }
