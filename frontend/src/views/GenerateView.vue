@@ -10,6 +10,8 @@ import { getFileInputs, fileInputsRef } from '@/stores/fileInput'
 import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import { isAndroid } from '@/utils/platform'
+import PublishExamDialog from '@/components/exam/PublishExamDialog.vue'
+import JoinExamDialog from '@/components/exam/JoinExamDialog.vue'
 import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
 const examStore = useExamStore()
@@ -22,6 +24,8 @@ const exportSuccess = ref('')
 const exportFilePath = ref('')
 const exporting = ref(false)
 const exportingXlsx = ref(false)
+const showPublish = ref(false)
+const showJoin = ref(false)
 
 const baseFileName = computed(() => examStore.sourceFileName || 'exameow_questions')
 
@@ -115,6 +119,9 @@ async function handleShare() {
   <div>
     <h1 class="text-display-sm mb-1">{{ i18n.t('genTitle') }}</h1>
     <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genSubtitle') }}</p>
+    <div class="mb-6 flex justify-end">
+      <button class="btn-tonal text-sm" @click="showJoin = true">{{ i18n.t('pubJoin') }}</button>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-6">
       <!-- File Upload Card -->
@@ -193,6 +200,9 @@ async function handleShare() {
           <button class="btn-filled text-sm" :disabled="exportingXlsx" @click="handleExportXlsx">
             <ArrowDownTrayIcon class="w-4 h-4" /> {{ exportingXlsx ? '...' : 'XLSX' }}
           </button>
+          <button class="btn-tonal text-sm" @click="showPublish = true">
+            {{ i18n.t('pubPublish') }}
+          </button>
         </div>
       </div>
 
@@ -211,5 +221,7 @@ async function handleShare() {
 
       <QuestionTable :questions="examStore.questions" />
     </template>
+    <PublishExamDialog v-if="showPublish" :questions="examStore.questions" @close="showPublish = false" />
+    <JoinExamDialog v-if="showJoin" @close="showJoin = false" />
   </div>
 </template>

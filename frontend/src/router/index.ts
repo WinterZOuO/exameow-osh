@@ -58,6 +58,18 @@ const router = createRouter({
       component: () => import('@/components/search/AnswerFloat.vue'),
     },
     {
+      path: '/take/:code',
+      name: 'take-exam',
+      component: () => import('@/views/TakeExamView.vue'),
+      meta: { title: 'Take Exam' },
+    },
+    {
+      path: '/manage/:code',
+      name: 'manage-exam',
+      component: () => import('@/views/ManageResultsView.vue'),
+      meta: { title: 'Exam Results' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),

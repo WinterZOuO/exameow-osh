@@ -2,6 +2,10 @@ name = "exameow"
 main = "src/index.ts"
 compatibility_date = "2025-07-16"
 compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+routes = [
+  { pattern = "exam.superagentparty.com", custom_domain = true },
+]
 
 [vars]
 CF_ACCOUNT_ID = "25fcdd133593b796985d219a18c94732"
@@ -12,6 +16,10 @@ binding = "AI"
 [assets]
 directory = "./public"
 binding = "ASSETS"
+
+[[r2_buckets]]
+binding = "EXAM_BUCKET"
+bucket_name = "exameow-exams"
 
 [observability]
 enabled = true

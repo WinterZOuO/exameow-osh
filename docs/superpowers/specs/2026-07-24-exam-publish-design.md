@@ -31,8 +31,9 @@ Exameow 目前生成题目后只能本地练习或导出。本功能让教师可
 ## R2 数据结构
 
 ```
-exams/{code}.json                    # 考试主体
-results/{code}/{submissionId}.json   # 每条成绩
+exams/{code}.json      # 考试主体
+results/{code}.json    # 成绩聚合索引 { results: ExamResultEntry[] }（实现修订：由每生一对象改为单聚合对象，
+                       # 解决 R2 子请求上限与孤儿对象泄漏；提交时 CAS(onlyIf etag)重试 3 次合并写入）
 ```
 
 ### exams/{code}.json
@@ -74,11 +75,11 @@ results/{code}/{submissionId}.json   # 每条成绩
 - 生成 128-bit 随机管理 token，仅存 SHA-256 哈希到考试对象
 - 返回：`{ code, adminToken, manageUrl }`
 
-### GET /api/exam/{code}
+### GET /api/exam/code/{code}
 - 校验考试存在、当前时间在 [startAt, endAt] 窗口内（窗口外返回 403 及明确提示）
 - **剥离每题的 answer/analysis 字段**后返回：`{ title, questions, startAt, endAt, durationMinutes }`
 
-### POST /api/exam/{code}/submit
+### POST /api/exam/code/{code}/submit
 - 入参：`{ name, answers, durationSec }`
 - 校验窗口：仅当提交时间 ≤ endAt 时接受交卷，逾期返回 403（学生在 endAt 前开始但未答完的，以 endAt 为硬性截止，前端应在接近 endAt 时提示并提前自动交卷）
 - 服务端判分：
@@ -89,7 +90,7 @@ results/{code}/{submissionId}.json   # 每条成绩
 - 写 `results/{code}/{uuid}.json`
 - 返回：`{ score, totalScore, correctCount, totalCount, questions }`（含完整答案解析）
 
-### GET /api/exam/{code}/results?token=
+### GET /api/exam/code/{code}/results?token=
 - SHA-256(token) 与 adminTokenHash 比对，失败返回 403
 - list `results/{code}/` 前缀 + 逐个 GET，返回成绩列表（含每题作答明细）
 

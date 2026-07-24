@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { Ai, Fetcher } from '@cloudflare/workers-types'
+import type { Ai, Fetcher, R2Bucket } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
+import { handlePublish, handleGetExam, handleSubmit, handleResults } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
@@ -11,6 +12,7 @@ import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
 type Bindings = {
   AI: Ai
   ASSETS: Fetcher
+  EXAM_BUCKET: R2Bucket
   CF_ACCOUNT_ID?: string
   CF_API_TOKEN?: string
 }
@@ -267,9 +269,36 @@ app.get('/api/config/load', (c) => {
   return c.json(null)
 })
 
+app.post('/api/exam/publish', async (c) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  const origin = new URL(c.req.url).origin
+  return handlePublish(c.env.EXAM_BUCKET, body, origin)
+})
+
+app.get('/api/exam/code/:code', (c) => handleGetExam(c.env.EXAM_BUCKET, c.req.param('code')))
+
+app.post('/api/exam/code/:code/submit', async (c) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  return handleSubmit(c.env.EXAM_BUCKET, c.req.param('code'), body)
+})
+
+app.get('/api/exam/code/:code/results', (c) =>
+  handleResults(c.env.EXAM_BUCKET, c.req.param('code'), c.req.query('token') || ''),
+)
+
 // GET /api/health - health check
 app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', version: '1.0.0', runtime: 'cloudflare-worker' })
+  return c.json({ status: 'ok', version: '1.1.0', runtime: 'cloudflare-worker' })
 })
 
 // SPA fallback: serve index.html for all non-API, non-asset routes

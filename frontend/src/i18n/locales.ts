@@ -326,6 +326,54 @@ export interface LocaleMessages {
   updateReady: string
   updateRestart: string
   updateFailed: string
+
+  pubPublish: string
+  pubJoin: string
+  pubDialogTitle: string
+  pubFieldTitle: string
+  pubFieldTitlePlaceholder: string
+  pubFieldStart: string
+  pubFieldEnd: string
+  pubFieldDuration: string
+  pubConfirm: string
+  pubPublishing: string
+  pubCancel: string
+  pubSuccessTitle: string
+  pubCodeLabel: string
+  pubManageLinkLabel: string
+  pubCopy: string
+  pubCopied: string
+  pubClose: string
+  pubErrorInvalid: string
+  pubMyPublished: string
+  joinDialogTitle: string
+  joinCodeLabel: string
+  joinNameLabel: string
+  joinConfirm: string
+  takeLoading: string
+  takeNotFound: string
+  takeNotStarted: string
+  takeEnded: string
+  takeTimeLeft: string
+   takeSubmit: string
+   takeSubmitConfirm: string
+   takeSubmitting: string
+   takeSubmitFailed: string
+  takeScore: string
+  takePendingReview: string
+  takeYourAnswer: string
+  takeCorrectAnswer: string
+  takeUnanswered: string
+  takePendingShort: string
+  takeBackHome: string
+  manageTitle: string
+  manageUnauthorized: string
+  manageNoResults: string
+  manageColName: string
+  manageColScore: string
+  manageColCorrect: string
+  manageColDuration: string
+  manageColTime: string
 }
 
 export const zh: LocaleMessages = {
@@ -642,6 +690,54 @@ export const zh: LocaleMessages = {
   updateReady: '更新已就绪，重启应用后生效',
   updateRestart: '重启应用',
   updateFailed: '更新失败，请稍后在 GitHub Release 页手动下载',
+
+  pubPublish: '发布考试',
+  pubJoin: '参加考试',
+  pubDialogTitle: '发布考试',
+  pubFieldTitle: '考试名称',
+  pubFieldTitlePlaceholder: '例如：高三数学期末模拟',
+  pubFieldStart: '开始时间',
+  pubFieldEnd: '结束时间',
+  pubFieldDuration: '考试时长（分钟）',
+  pubConfirm: '发布',
+  pubPublishing: '发布中...',
+  pubCancel: '取消',
+  pubSuccessTitle: '发布成功！',
+  pubCodeLabel: '学生校验码',
+  pubManageLinkLabel: '成绩管理链接（仅你可见，请保存）',
+  pubCopy: '复制',
+  pubCopied: '已复制',
+  pubClose: '完成',
+  pubErrorInvalid: '请完整填写所有字段，且结束时间必须晚于开始时间',
+  pubMyPublished: '我发布的考试',
+  joinDialogTitle: '参加考试',
+  joinCodeLabel: '6 位校验码',
+  joinNameLabel: '你的姓名',
+  joinConfirm: '进入考试',
+  takeLoading: '加载考试中...',
+  takeNotFound: '考试不存在或已过期',
+  takeNotStarted: '考试尚未开始，开始时间：{time}',
+  takeEnded: '考试已结束',
+  takeTimeLeft: '剩余时间',
+   takeSubmit: '交卷',
+   takeSubmitConfirm: '确定交卷吗？还有 {n} 题未作答。',
+   takeSubmitting: '交卷中...',
+   takeSubmitFailed: '交卷失败，请重试',
+  takeScore: '得分',
+  takePendingReview: '{n} 道简答题待教师评阅，未计入得分',
+  takeYourAnswer: '你的作答',
+  takeCorrectAnswer: '参考答案',
+  takeUnanswered: '未作答',
+  takePendingShort: '待评阅',
+  takeBackHome: '返回首页',
+  manageTitle: '成绩管理',
+  manageUnauthorized: '管理链接无效',
+  manageNoResults: '暂无学生交卷',
+  manageColName: '姓名',
+  manageColScore: '得分',
+  manageColCorrect: '答对',
+  manageColDuration: '用时',
+  manageColTime: '交卷时间',
 }
 
 export const en: LocaleMessages = {
@@ -958,4 +1054,52 @@ export const en: LocaleMessages = {
   updateReady: 'Update ready. Restart the app to apply.',
   updateRestart: 'Restart',
   updateFailed: 'Update failed. Please download manually from GitHub Releases later.',
+
+  pubPublish: 'Publish Exam',
+  pubJoin: 'Join Exam',
+  pubDialogTitle: 'Publish Exam',
+  pubFieldTitle: 'Exam Title',
+  pubFieldTitlePlaceholder: 'e.g. Final Math Mock',
+  pubFieldStart: 'Start Time',
+  pubFieldEnd: 'End Time',
+  pubFieldDuration: 'Duration (minutes)',
+  pubConfirm: 'Publish',
+  pubPublishing: 'Publishing...',
+  pubCancel: 'Cancel',
+  pubSuccessTitle: 'Published!',
+  pubCodeLabel: 'Access Code',
+  pubManageLinkLabel: 'Results link (keep it private)',
+  pubCopy: 'Copy',
+  pubCopied: 'Copied',
+  pubClose: 'Done',
+  pubErrorInvalid: 'Fill in all fields; end time must be after start time',
+  pubMyPublished: 'My Published Exams',
+  joinDialogTitle: 'Join Exam',
+  joinCodeLabel: '6-digit Code',
+  joinNameLabel: 'Your Name',
+  joinConfirm: 'Start',
+  takeLoading: 'Loading exam...',
+  takeNotFound: 'Exam not found or expired',
+  takeNotStarted: 'Exam has not started. Starts at {time}',
+  takeEnded: 'Exam has ended',
+  takeTimeLeft: 'Time Left',
+   takeSubmit: 'Submit',
+   takeSubmitConfirm: 'Submit now? {n} question(s) unanswered.',
+   takeSubmitting: 'Submitting...',
+   takeSubmitFailed: 'Submission failed, please retry',
+  takeScore: 'Score',
+  takePendingReview: '{n} short-answer question(s) pending teacher review, not scored',
+  takeYourAnswer: 'Your Answer',
+  takeCorrectAnswer: 'Correct Answer',
+  takeUnanswered: 'Unanswered',
+  takePendingShort: 'Pending',
+  takeBackHome: 'Back Home',
+  manageTitle: 'Exam Results',
+  manageUnauthorized: 'Invalid management link',
+  manageNoResults: 'No submissions yet',
+  manageColName: 'Name',
+  manageColScore: 'Score',
+  manageColCorrect: 'Correct',
+  manageColDuration: 'Time Used',
+  manageColTime: 'Submitted At',
 }

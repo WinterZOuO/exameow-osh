@@ -2,6 +2,7 @@ node_modules/
 target/
 frontend/dist/
 workers/public/
+workers/.wrangler/
 .DS_Store
 *.log
 *.jks
