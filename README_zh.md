@@ -17,6 +17,19 @@ AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考�
 
 各平台的预编译安装包可在 [GitHub Releases](https://github.com/heshengtao/exameow/releases) 页面下载。
 
+### 平台支持
+
+| 平台 | 状态 | 下载格式 |
+|------|------|----------|
+| Windows | ✅ 已支持 | `.msi` 安装包 / 免安装 `.zip` |
+| macOS（Apple 芯片） | ✅ 已支持 | `.dmg`（去除隔离属性见 Release 说明） |
+| Linux（x86_64 / ARM64） | ✅ 已支持 | `.AppImage` / `.deb` |
+| Android（ARM64） | ✅ 已支持 | `.apk` |
+| iOS | ⚠️ 需自行打包 | 见下方说明 |
+| Web / Docker（自托管） | ✅ 已支持 | Docker 镜像 |
+
+> **关于 iOS：** 苹果开发者证书需要付费（$99/年），因此暂不提供预编译的 iOS 安装包，需要使用 Xcode 自行打包（`pnpm tauri ios build`）。未来如果打赏收入足够支付证书费用，会在 GitHub Releases 上提供带证书的官方打包版本。
+
 ### Docker 自托管
 
 ```bash

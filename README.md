@@ -17,6 +17,19 @@ AI-powered exam question generator. Upload study materials, generate professiona
 
 Pre-built binaries for all platforms are available on the [GitHub Releases](https://github.com/heshengtao/exameow/releases) page.
 
+### Platform Support
+
+| Platform | Status | Download |
+|----------|--------|----------|
+| Windows | ✅ Supported | `.msi` installer / portable `.zip` |
+| macOS (Apple Silicon) | ✅ Supported | `.dmg` (see release notes to remove quarantine) |
+| Linux (x86_64 / ARM64) | ✅ Supported | `.AppImage` / `.deb` |
+| Android (ARM64) | ✅ Supported | `.apk` |
+| iOS | ⚠️ Self-build required | See note below |
+| Web / Docker (self-hosted) | ✅ Supported | Docker image |
+
+> **About iOS:** An Apple Developer certificate costs $99/year, so no pre-built iOS package is provided for now — you'll need to build it yourself with Xcode (`pnpm tauri ios build`). If future donations cover the certificate fee, an officially signed iOS build will be published on GitHub Releases.
+
 ### Docker (Self-Hosted)
 
 ```bash
