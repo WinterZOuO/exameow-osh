@@ -35,6 +35,8 @@
     "screenrecord:allow-begin",
     "screenrecord:allow-adjust",
     "screenrecord:allow-stop",
-    "screenrecord:allow-show-answer"
+    "screenrecord:allow-show-answer",
+    "updater:default",
+    "process:default"
   ]
 }

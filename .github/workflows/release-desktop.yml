@@ -88,6 +88,9 @@ jobs:
 
       - name: Build Tauri
         run: pnpm tauri build --target ${{ matrix.target }} ${{ matrix.bundles }}
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Collect Linux artifacts
         if: startsWith(matrix.platform, 'ubuntu')
@@ -95,6 +98,7 @@ jobs:
           mkdir -p dist
           cp target/${{ matrix.target }}/release/bundle/deb/*.deb dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.deb
           cp target/${{ matrix.target }}/release/bundle/appimage/*.AppImage dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.AppImage
+          cp target/${{ matrix.target }}/release/bundle/appimage/*.AppImage.sig dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.AppImage.sig
         shell: bash
 
       - name: Collect Windows artifacts
@@ -102,6 +106,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist
           Copy-Item target/${{ matrix.target }}/release/bundle/msi/*.msi dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.msi
+          Copy-Item target/${{ matrix.target }}/release/bundle/nsis/*-setup.exe dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-setup.exe
+          Copy-Item target/${{ matrix.target }}/release/bundle/nsis/*-setup.exe.sig dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-setup.exe.sig
           Copy-Item target/${{ matrix.target }}/release/exameow.exe dist/Exameow.exe
           Compress-Archive -Path dist/Exameow.exe -DestinationPath dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
           Remove-Item dist/Exameow.exe
@@ -120,6 +126,8 @@ jobs:
           cp -R "$APP" "$WORKDIR/Exameow.app"
           (cd "$WORKDIR" && /tmp/dmgenv/bin/dmgbuild -s "$GITHUB_WORKSPACE/scripts/dmg-settings.json" "Exameow" "$GITHUB_WORKSPACE/dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg")
           rm -rf "$WORKDIR"
+          cp "$APP_DIR"/*.app.tar.gz dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.app.tar.gz
+          cp "$APP_DIR"/*.app.tar.gz.sig dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.app.tar.gz.sig
         shell: bash
 
       - uses: actions/upload-artifact@v4
@@ -139,6 +147,39 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+
+      - name: Generate latest.json for updater
+        run: |
+          node -e "
+          const fs = require('fs');
+          const tag = process.env.TAG;
+          const base = 'https://github.com/' + process.env.REPO + '/releases/download/' + tag + '/';
+          const files = fs.readdirSync('artifacts');
+          const find = (suffix) => files.find((f) => f.endsWith(suffix));
+          const platforms = {};
+          const add = (key, fileSuffix, sigSuffix) => {
+            const f = find(fileSuffix);
+            const s = find(sigSuffix);
+            if (f && s) {
+              platforms[key] = {
+                signature: fs.readFileSync('artifacts/' + s, 'utf8').trim(),
+                url: base + f,
+              };
+            }
+          };
+          add('windows-x86_64', '-setup.exe', '-setup.exe.sig');
+          add('darwin-aarch64', '.app.tar.gz', '.app.tar.gz.sig');
+          add('linux-x86_64', 'linux_amd64.AppImage', 'linux_amd64.AppImage.sig');
+          fs.writeFileSync('artifacts/latest.json', JSON.stringify({
+            version: tag.replace(/^v/, ''),
+            notes: 'See release notes',
+            pub_date: new Date().toISOString(),
+            platforms,
+          }, null, 2));
+          "
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
 
       - uses: softprops/action-gh-release@v2
         with:

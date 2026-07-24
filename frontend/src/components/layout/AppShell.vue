@@ -5,6 +5,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
 import TitleBar from './TitleBar.vue'
 import CookieBanner from './CookieBanner.vue'
+import UpdateDialog from './UpdateDialog.vue'
 import {
   Cog6ToothIcon,
   SparklesIcon,
@@ -212,6 +213,7 @@ const headerStyle = {
       </div>
     </nav>
     <CookieBanner />
+    <UpdateDialog />
   </div>
 </template>
 

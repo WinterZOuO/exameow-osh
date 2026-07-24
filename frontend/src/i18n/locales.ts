@@ -316,6 +316,16 @@ export interface LocaleMessages {
   // Cookie consent
   cookieBannerText: string
   cookieBannerAccept: string
+
+  // Updater
+  updateAvailableTitle: string
+  updateAvailableBody: string
+  updateNow: string
+  updateLater: string
+  updateDownloading: string
+  updateReady: string
+  updateRestart: string
+  updateFailed: string
 }
 
 export const zh: LocaleMessages = {
@@ -622,6 +632,16 @@ export const zh: LocaleMessages = {
   // Cookie consent
   cookieBannerText: '我们使用 Cookie 和本地存储来保存您的偏好设置、题库与练习记录。继续使用本网站即表示您同意我们的数据存储政策。',
   cookieBannerAccept: '我知道了',
+
+  // Updater
+  updateAvailableTitle: '发现新版本 v{version}',
+  updateAvailableBody: '新版本已发布，是否立即下载并更新？',
+  updateNow: '立即更新',
+  updateLater: '稍后再说',
+  updateDownloading: '正在下载更新…',
+  updateReady: '更新已就绪，重启应用后生效',
+  updateRestart: '重启应用',
+  updateFailed: '更新失败，请稍后在 GitHub Release 页手动下载',
 }
 
 export const en: LocaleMessages = {
@@ -928,4 +948,14 @@ export const en: LocaleMessages = {
   // Cookie consent
   cookieBannerText: 'We use cookies and local storage to save your preferences, question banks, and practice records. By continuing to use this site, you consent to our data storage policy.',
   cookieBannerAccept: 'Got it',
+
+  // Updater
+  updateAvailableTitle: 'Update available: v{version}',
+  updateAvailableBody: 'A new version is available. Download and install it now?',
+  updateNow: 'Update now',
+  updateLater: 'Later',
+  updateDownloading: 'Downloading update…',
+  updateReady: 'Update ready. Restart the app to apply.',
+  updateRestart: 'Restart',
+  updateFailed: 'Update failed. Please download manually from GitHub Releases later.',
 }

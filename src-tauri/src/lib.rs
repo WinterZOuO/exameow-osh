@@ -558,12 +558,17 @@ fn resize_record_overlay(_app: tauri::AppHandle, _w: f64, _h: f64) -> Result<(),
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sharekit::init())
-        .plugin(tauri_plugin_screenrecord::init())
+        .plugin(tauri_plugin_screenrecord::init());
+    #[cfg(desktop)]
+    let builder = builder
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init());
+    builder
         .setup(|app| {
             let config = &app.config().app.windows[0];
             let mut builder = tauri::WebviewWindowBuilder::from_config(app.handle(), config)?;
