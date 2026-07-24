@@ -53,6 +53,7 @@ jobs:
           - platform: macos-latest
             target: aarch64-apple-darwin
             artifact: macos_arm64
+            bundles: --bundles app
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -86,7 +87,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libspa-0.2-dev libwayland-dev libegl-dev xdg-utils libgbm-dev
 
       - name: Build Tauri
-        run: pnpm tauri build --target ${{ matrix.target }}
+        run: pnpm tauri build --target ${{ matrix.target }} ${{ matrix.bundles }}
 
       - name: Collect Linux artifacts
         if: startsWith(matrix.platform, 'ubuntu')
@@ -110,12 +111,14 @@ jobs:
         if: matrix.platform == 'macos-latest'
         run: |
           mkdir -p dist
-          DMG_DIR=$(find target -path '*/release/bundle/dmg' -type d | head -n 1)
-          cp "$DMG_DIR"/*.dmg dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg
           APP_DIR=$(find target -path '*/release/bundle/macos' -type d | head -n 1)
           APP=$(find "$APP_DIR" -maxdepth 1 -name "*.app" -type d | head -n 1)
           xattr -cr "$APP"
-          ditto -c -k --norsrc --noextattr --keepParent "$APP" dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
+          pip3 install dmgbuild
+          WORKDIR=$(mktemp -d)
+          cp -R "$APP" "$WORKDIR/Exameow.app"
+          (cd "$WORKDIR" && dmgbuild -s "$GITHUB_WORKSPACE/scripts/dmg-settings.json" "Exameow" "$GITHUB_WORKSPACE/dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg")
+          rm -rf "$WORKDIR"
         shell: bash
 
       - uses: actions/upload-artifact@v4
@@ -153,8 +156,6 @@ jobs:
 
             👉 [MacOS-dmg-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64.dmg)
 
-            👉 [MacOS-portable-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64-portable.zip)
-
             👉 [Linux-AppImage-X86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_amd64.AppImage)
 
             👉 [Linux-AppImage-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.AppImage)
@@ -165,9 +166,11 @@ jobs:
 
             👉 [Android-apk-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-android_arm64.apk)
 
-            ## ⚠️ macOS 提示「App 已损坏，无法打开」
+            ## ⚠️ macOS: "App is damaged" / 「App 已损坏，无法打开」
 
-            应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
+            **EN:** The app is ad-hoc signed (not notarized). macOS quarantines apps downloaded from the internet. Run the command below in Terminal, then open the app normally:
+
+            **中文：** 应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
 
             ```bash
             xattr -cr /Applications/Exameow.app

@@ -119,8 +119,6 @@ jobs:
 
             👉 [MacOS-dmg-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64.dmg)
 
-            👉 [MacOS-portable-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64-portable.zip)
-
             👉 [Linux-AppImage-X86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_amd64.AppImage)
 
             👉 [Linux-AppImage-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.AppImage)
@@ -131,9 +129,11 @@ jobs:
 
             👉 [Android-apk-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-android_arm64.apk)
 
-            ## ⚠️ macOS 提示「App 已损坏，无法打开」
+            ## ⚠️ macOS: "App is damaged" / 「App 已损坏，无法打开」
 
-            应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
+            **EN:** The app is ad-hoc signed (not notarized). macOS quarantines apps downloaded from the internet. Run the command below in Terminal, then open the app normally:
+
+            **中文：** 应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
 
             ```bash
             xattr -cr /Applications/Exameow.app
