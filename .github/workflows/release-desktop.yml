@@ -114,7 +114,8 @@ jobs:
           cp "$DMG_DIR"/*.dmg dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg
           APP_DIR=$(find target -path '*/release/bundle/macos' -type d | head -n 1)
           APP=$(find "$APP_DIR" -maxdepth 1 -name "*.app" -type d | head -n 1)
-          zip -r dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip "$APP"
+          xattr -cr "$APP"
+          ditto -c -k --norsrc --noextattr --keepParent "$APP" dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}-portable.zip
         shell: bash
 
       - uses: actions/upload-artifact@v4
@@ -163,5 +164,13 @@ jobs:
             👉 [Linux-deb-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.deb)
 
             👉 [Android-apk-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-android_arm64.apk)
+
+            ## ⚠️ macOS 提示「App 已损坏，无法打开」
+
+            应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
+
+            ```bash
+            xattr -cr /Applications/Exameow.app
+            ```
           files: artifacts/*
           fail_on_unmatched_files: false

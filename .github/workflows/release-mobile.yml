@@ -73,14 +73,16 @@ jobs:
           UNSIGNED_APK=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
           ALIGNED_APK="dist/Exameow-${{ github.ref_name }}-android_arm64.apk"
           BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -type d | sort -V | tail -n 1)
-          jarsigner -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore release.keystore \
-            -storepass exameow \
-            -keypass exameow \
-            "$UNSIGNED_APK" exameow
-          "$BUILD_TOOLS/zipalign" -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
+          "$BUILD_TOOLS/zipalign" -f -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks release.keystore \
+            --ks-pass pass:exameow \
+            --key-pass pass:exameow \
+            --ks-key-alias exameow \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            "$ALIGNED_APK"
+          "$BUILD_TOOLS/apksigner" verify --verbose "$ALIGNED_APK"
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
 
@@ -128,5 +130,13 @@ jobs:
             👉 [Linux-deb-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.deb)
 
             👉 [Android-apk-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-android_arm64.apk)
+
+            ## ⚠️ macOS 提示「App 已损坏，无法打开」
+
+            应用为自签名（未公证），从网络下载会带隔离属性。在终端执行以下命令后即可正常打开：
+
+            ```bash
+            xattr -cr /Applications/Exameow.app
+            ```
           files: artifacts/*
           fail_on_unmatched_files: false
