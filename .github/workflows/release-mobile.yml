@@ -57,18 +57,8 @@ jobs:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.ANDROID_NDK_VERSION }}
 
-      - name: Generate self-signed keystore
-        run: |
-          keytool -genkey \
-            -v \
-            -keystore release.keystore \
-            -alias exameow \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass exameow \
-            -keypass exameow \
-            -dname "CN=Exameow"
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
       - name: Sign and align APK
         run: |
@@ -79,8 +69,8 @@ jobs:
           "$BUILD_TOOLS/zipalign" -f -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
           "$BUILD_TOOLS/apksigner" sign \
             --ks release.keystore \
-            --ks-pass pass:exameow \
-            --key-pass pass:exameow \
+            --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --key-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --ks-key-alias exameow \
             --v1-signing-enabled true \
             --v2-signing-enabled true \

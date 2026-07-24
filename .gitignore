@@ -19,3 +19,4 @@ frontend/public/ocr/
 # Internal tooling (not part of the open-source release)
 docs/
 opencode.json
+release.keystore
