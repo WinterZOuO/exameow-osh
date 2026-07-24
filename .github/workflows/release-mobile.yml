@@ -45,6 +45,9 @@ jobs:
         with:
           packages: 'ndk;${{ env.ANDROID_NDK_VERSION }}'
 
+      - name: Init Android project
+        run: pnpm tauri android init
+
       - name: Build Android APK
         run: pnpm tauri android build --apk --target aarch64
         env:
