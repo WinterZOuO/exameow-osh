@@ -24,12 +24,34 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 
 ## Features
 
-- **Document Parsing** — Supports PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML
-- **AI Question Generation** — Compatible with any OpenAI-format API (OpenAI, DeepSeek, Qwen, GLM, etc.)
-- **Multiple Question Types** — Single choice, multiple choice, true/false, fill-in-the-blank, short answer
+### ✨ AI Question Generation
+- **Rich Input Formats** — PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML, images (PNG/JPG/WEBP/GIF/BMP), and any text/code file; multi-file upload with drag & drop
+- **5 Question Types** — Single choice, multiple choice, true/false, fill-in-the-blank, short answer, with per-type count control
+- **Fine-Tuned Control** — Difficulty (easy/medium/hard), output language, and topic/chapter filtering
+- **Smart Batching** — Large documents are automatically split and generated in batches with deduplication
+- **Any OpenAI-Compatible API** — OpenAI, DeepSeek, Qwen, GLM, etc.; or use the built-in free Cloudflare AI on the demo site
 - **Export** — Download results as XLSX or CSV
-- **Practice Mode** — Built-in quiz system with wrong-question tracking
-- **Multi-Platform** — Desktop (macOS/Windows/Linux), Mobile (iOS/Android), Web, Docker, Cloudflare
+
+### 📚 Practice Modes
+- **Sequential Practice** — Go through a question bank in order
+- **Random Practice** — Questions and options shuffled for better retention
+- **Mock Exam** — Auto-generate a randomized exam paper from any bank with configurable type counts
+- **Wrong-Question Review** — Track mistakes, practice only what you got wrong, and watch them clear as you improve
+- **Exam / Flashcard Modes** — Answer blind, or flip through questions with answers visible
+- **AI Grading** — Short-answer questions graded by AI against reference answers, with feedback; manual regrading supported
+- **Question Bank Management** — Import banks from XLSX/CSV with smart column mapping; export anytime
+
+### 🔍 Search Modes
+- **Text Search** — Type or paste a question to find matches in your local banks, with optional AI answering
+- **Photo Search** — Snap or upload a photo of a question; on-device OCR (runs locally in your browser, no upload)
+- **Camera Live Search** — Point your camera at the screen/paper; AI watches and matches questions in real time
+- **Screen Record Search** — Draw a capture frame over any window; AI monitors it and matches questions live, with a floating answer overlay (Windows / macOS / Linux / Android; not available on iOS due to system restrictions)
+
+### 🌐 Cross-Platform & Privacy
+- **Desktop & Mobile** — Windows, macOS, Linux, Android (iOS self-build)
+- **Self-Hosted Web** — One-command Docker deployment
+- **Local-First** — Question banks, practice records, and wrong questions stay on your device; API keys encrypted with AES-256-GCM on desktop
+- **Bilingual UI** — Auto-detects system language (Chinese / English), one-tap switch
 
 ## Installation
 
