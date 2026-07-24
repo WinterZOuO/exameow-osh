@@ -13,5 +13,15 @@ binding = "AI"
 directory = "./public"
 binding = "ASSETS"
 
+[[r2_buckets]]
+binding = "EXAM_BUCKET"
+bucket_name = "exameow-exams"
+
+workers_dev = true
+
+routes = [
+  { pattern = "exam.superagentparty.com", custom_domain = true },
+]
+
 [observability]
 enabled = true

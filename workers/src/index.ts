@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { Ai, Fetcher } from '@cloudflare/workers-types'
+import type { Ai, Fetcher, R2Bucket } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
+import { handlePublish } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
@@ -11,6 +12,7 @@ import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
 type Bindings = {
   AI: Ai
   ASSETS: Fetcher
+  EXAM_BUCKET: R2Bucket
   CF_ACCOUNT_ID?: string
   CF_API_TOKEN?: string
 }
@@ -265,6 +267,17 @@ app.post('/api/config/save', async (c) => {
 // GET /api/config/load - config load (no-op on worker, client uses localStorage)
 app.get('/api/config/load', (c) => {
   return c.json(null)
+})
+
+app.post('/api/exam/publish', async (c) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  const origin = new URL(c.req.url).origin
+  return handlePublish(c.env.EXAM_BUCKET, body, origin)
 })
 
 // GET /api/health - health check

@@ -69,3 +69,81 @@ export interface JudgeResult {
 }
 
 export const DEFAULT_MODEL = '@cf/openai/gpt-oss-120b'
+
+export interface PublicQuestion {
+  id: string
+  type: QuestionType
+  stem: string
+  options: string[]
+}
+
+export interface PublishExamRequest {
+  title: string
+  questions: Question[]
+  startAt: number
+  endAt: number
+  durationMinutes: number
+}
+
+export interface PublishExamResponse {
+  code: string
+  adminToken: string
+  manageUrl: string
+}
+
+export interface PublishedExamInfo {
+  title: string
+  questions: PublicQuestion[]
+  startAt: number
+  endAt: number
+  durationMinutes: number
+}
+
+export interface StoredExam {
+  title: string
+  questions: Question[]
+  startAt: number
+  endAt: number
+  durationMinutes: number
+  createdAt: number
+  adminTokenHash: string
+}
+
+export interface SubmitExamRequest {
+  name: string
+  answers: Record<string, string>
+  durationSec: number
+}
+
+export interface GradedQuestion {
+  question: Question
+  userAnswer: string | null
+  isCorrect: boolean | null
+}
+
+export interface SubmitExamResponse {
+  score: number
+  totalScore: number
+  correctCount: number
+  totalCount: number
+  pendingCount: number
+  graded: GradedQuestion[]
+}
+
+export interface ExamResultEntry {
+  name: string
+  answers: Record<string, string>
+  score: number
+  totalScore: number
+  correctCount: number
+  totalCount: number
+  pendingCount: number
+  durationSec: number
+  submittedAt: number
+}
+
+export interface ExamResultsResponse {
+  title: string
+  questions: Question[]
+  results: ExamResultEntry[]
+}
