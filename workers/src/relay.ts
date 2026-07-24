@@ -1,8 +1,15 @@
 import type {
-  Question,
+  ExamResultEntry,
+  ExamResultsResponse,
+  GradedQuestion,
+  PublicQuestion,
   PublishExamRequest,
   PublishExamResponse,
+  PublishedExamInfo,
+  Question,
   StoredExam,
+  SubmitExamRequest,
+  SubmitExamResponse,
 } from './types'
 
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -43,7 +50,7 @@ export async function readExam(bucket: R2Bucket, code: string): Promise<StoredEx
   return exam
 }
 
-function json(data: unknown, status = 200): Response {
+export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -102,5 +109,126 @@ export async function handlePublish(
     adminToken,
     manageUrl: `${origin}/#/manage/${code}?token=${adminToken}`,
   }
+  return json(res)
+}
+
+function normalizeChoice(s: string): string {
+  return s.trim().toUpperCase().replace(/[^A-H]/g, '').split('').sort().join('')
+}
+
+function isTrueAnswer(a: string): boolean {
+  const t = a.trim()
+  return ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1'].some(
+    (v) => t.toUpperCase() === v.toUpperCase() || t.includes(v),
+  )
+}
+
+function grade(q: Question, user: string | undefined): boolean | null {
+  if (q.type === 'short_answer') return null
+  if (!user || !user.trim()) return false
+  switch (q.type) {
+    case 'single_choice':
+    case 'multi_choice':
+      return normalizeChoice(user) === normalizeChoice(q.answer)
+    case 'true_false':
+      return isTrueAnswer(user) === isTrueAnswer(q.answer)
+    case 'fill_blank':
+      return user.trim().toLowerCase() === q.answer.trim().toLowerCase()
+    default:
+      return false
+  }
+}
+
+function windowCheck(exam: StoredExam): Response | null {
+  const now = Date.now()
+  if (now < exam.startAt) return json({ error: 'not_started', startAt: exam.startAt }, 403)
+  if (now > exam.endAt) return json({ error: 'ended' }, 403)
+  return null
+}
+
+export async function handleGetExam(bucket: R2Bucket, code: string): Promise<Response> {
+  const exam = await readExam(bucket, code)
+  if (!exam) return json({ error: 'not_found' }, 404)
+  const deny = windowCheck(exam)
+  if (deny) return deny
+  const publicQuestions: PublicQuestion[] = exam.questions.map(
+    ({ id, type, stem, options }) => ({ id, type, stem, options }),
+  )
+  const info: PublishedExamInfo = {
+    title: exam.title,
+    questions: publicQuestions,
+    startAt: exam.startAt,
+    endAt: exam.endAt,
+    durationMinutes: exam.durationMinutes,
+  }
+  return json(info)
+}
+
+export async function handleSubmit(
+  bucket: R2Bucket,
+  code: string,
+  body: unknown,
+): Promise<Response> {
+  const exam = await readExam(bucket, code)
+  if (!exam) return json({ error: 'not_found' }, 404)
+  const deny = windowCheck(exam)
+  if (deny) return deny
+
+  const req = body as Partial<SubmitExamRequest>
+  const name = (req.name || '').trim()
+  if (!name) return json({ error: 'Name is required' }, 400)
+  const answers = req.answers && typeof req.answers === 'object' ? req.answers : {}
+  const durationSec = typeof req.durationSec === 'number' ? Math.max(0, Math.round(req.durationSec)) : 0
+
+  const graded: GradedQuestion[] = exam.questions.map((q) => {
+    const userAnswer = answers[q.id] ?? null
+    return { question: q, userAnswer, isCorrect: grade(q, userAnswer ?? undefined) }
+  })
+  const objective = graded.filter((g) => g.isCorrect !== null)
+  const correctCount = objective.filter((g) => g.isCorrect === true).length
+  const pendingCount = graded.filter((g) => g.isCorrect === null).length
+
+  const entry: ExamResultEntry = {
+    name,
+    answers,
+    score: correctCount,
+    totalScore: objective.length,
+    correctCount,
+    totalCount: exam.questions.length,
+    pendingCount,
+    durationSec,
+    submittedAt: Date.now(),
+  }
+  await bucket.put(`results/${code}/${crypto.randomUUID()}.json`, JSON.stringify(entry))
+
+  const res: SubmitExamResponse = {
+    score: entry.score,
+    totalScore: entry.totalScore,
+    correctCount,
+    totalCount: entry.totalCount,
+    pendingCount,
+    graded,
+  }
+  return json(res)
+}
+
+export async function handleResults(
+  bucket: R2Bucket,
+  code: string,
+  token: string,
+): Promise<Response> {
+  const exam = await readExam(bucket, code)
+  if (!exam) return json({ error: 'not_found' }, 404)
+  if (!token || (await sha256Hex(token)) !== exam.adminTokenHash) {
+    return json({ error: 'unauthorized' }, 403)
+  }
+  const listed = await bucket.list({ prefix: `results/${code}/`, limit: 500 })
+  const results: ExamResultEntry[] = []
+  for (const obj of listed.objects) {
+    const o = await bucket.get(obj.key)
+    if (o) results.push((await o.json()) as ExamResultEntry)
+  }
+  results.sort((a, b) => b.score - a.score || a.submittedAt - b.submittedAt)
+  const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results }
   return json(res)
 }

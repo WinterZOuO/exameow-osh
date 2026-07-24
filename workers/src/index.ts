@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Ai, Fetcher, R2Bucket } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
-import { handlePublish } from './relay'
+import { handlePublish, handleGetExam, handleSubmit, handleResults } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
@@ -279,6 +279,22 @@ app.post('/api/exam/publish', async (c) => {
   const origin = new URL(c.req.url).origin
   return handlePublish(c.env.EXAM_BUCKET, body, origin)
 })
+
+app.get('/api/exam/code/:code', (c) => handleGetExam(c.env.EXAM_BUCKET, c.req.param('code')))
+
+app.post('/api/exam/code/:code/submit', async (c) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  return handleSubmit(c.env.EXAM_BUCKET, c.req.param('code'), body)
+})
+
+app.get('/api/exam/code/:code/results', (c) =>
+  handleResults(c.env.EXAM_BUCKET, c.req.param('code'), c.req.query('token') || ''),
+)
 
 // GET /api/health - health check
 app.get('/api/health', (c) => {
