@@ -28,7 +28,9 @@ export const cfApi = {
     signal?: AbortSignal,
   ): Promise<GenerateResult> {
     const formData = new FormData()
-    formData.append('file', file)
+    if (!params.text) {
+      formData.append('file', file)
+    }
     formData.append('params', JSON.stringify(params))
     formData.append('model', config.model)
 

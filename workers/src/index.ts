@@ -104,10 +104,6 @@ app.post('/api/generate', async (c) => {
     return c.json({ error: `Failed to parse form data: ${err}` }, 400)
   }
 
-  if (!fileData) {
-    return c.json({ error: 'No file uploaded' }, 400)
-  }
-
   if (!paramsJson) {
     return c.json({ error: 'No params provided' }, 400)
   }
@@ -120,10 +116,17 @@ app.post('/api/generate', async (c) => {
   }
 
   let text: string
-  try {
-    text = await parseFile(fileData, fileName)
-  } catch (err) {
-    return c.json({ error: `File parse error: ${err}` }, 400)
+  if (params.text && params.text.trim()) {
+    text = params.text
+  } else {
+    if (!fileData) {
+      return c.json({ error: 'No file uploaded' }, 400)
+    }
+    try {
+      text = await parseFile(fileData, fileName)
+    } catch (err) {
+      return c.json({ error: `File parse error: ${err}` }, 400)
+    }
   }
 
   if (!text.trim()) {
