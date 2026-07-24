@@ -185,7 +185,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ env.APP_NAME }} ${{ github.ref_name }}
-          prerelease: true
+          prerelease: false
+          draft: true
           body: |
             ## 🔗 Quick Links
             - [Docker Image](https://hub.docker.com/r/ailm32442/exameow)
