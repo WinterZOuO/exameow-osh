@@ -114,10 +114,11 @@ jobs:
           APP_DIR=$(find target -path '*/release/bundle/macos' -type d | head -n 1)
           APP=$(find "$APP_DIR" -maxdepth 1 -name "*.app" -type d | head -n 1)
           xattr -cr "$APP"
-          pip3 install dmgbuild
+          python3 -m venv /tmp/dmgenv
+          /tmp/dmgenv/bin/pip install dmgbuild
           WORKDIR=$(mktemp -d)
           cp -R "$APP" "$WORKDIR/Exameow.app"
-          (cd "$WORKDIR" && dmgbuild -s "$GITHUB_WORKSPACE/scripts/dmg-settings.json" "Exameow" "$GITHUB_WORKSPACE/dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg")
+          (cd "$WORKDIR" && /tmp/dmgenv/bin/dmgbuild -s "$GITHUB_WORKSPACE/scripts/dmg-settings.json" "Exameow" "$GITHUB_WORKSPACE/dist/Exameow-${{ github.ref_name }}-${{ matrix.artifact }}.dmg")
           rm -rf "$WORKDIR"
         shell: bash
 
