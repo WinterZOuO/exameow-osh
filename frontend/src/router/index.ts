@@ -64,6 +64,12 @@ const router = createRouter({
       meta: { title: 'Take Exam' },
     },
     {
+      path: '/manage/:code',
+      name: 'manage-exam',
+      component: () => import('@/views/ManageResultsView.vue'),
+      meta: { title: 'Exam Results' },
+    },
+    {
       path: '/config',
       name: 'config',
       component: () => import('@/views/ConfigView.vue'),
