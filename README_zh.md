@@ -2,7 +2,8 @@
 
 AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考题。
 
-[English](README.md)
+[![English](https://img.shields.io/badge/README-English-blue?style=for-the-badge)](README.md)
+[![中文](https://img.shields.io/badge/README-中文-red?style=for-the-badge)](README_zh.md)
 
 ![过了喵 Exameow 界面截图](screenshots/Cover_ZH.png)
 

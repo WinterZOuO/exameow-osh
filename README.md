@@ -2,7 +2,8 @@
 
 AI-powered exam question generator. Upload study materials, generate professional exam questions in seconds.
 
-[中文文档](README_zh.md)
+[![English](https://img.shields.io/badge/README-English-blue?style=for-the-badge)](README.md)
+[![中文](https://img.shields.io/badge/README-中文-red?style=for-the-badge)](README_zh.md)
 
 ![Exameow Screenshot](screenshots/Cover_EN.png)
 
