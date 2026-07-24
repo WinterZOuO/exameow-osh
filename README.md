@@ -2,8 +2,12 @@
 
 AI-powered exam question generator. Upload study materials, generate professional exam questions in seconds.
 
+<div align="center">
+
 [![English](https://img.shields.io/badge/README-English-blue?style=for-the-badge)](README.md)
 [![中文](https://img.shields.io/badge/README-中文-red?style=for-the-badge)](README_zh.md)
+
+</div>
 
 ![Exameow Screenshot](screenshots/Cover_EN.png)
 
@@ -143,6 +147,46 @@ exameow/
 ├── Dockerfile
 └── docker-compose.yml
 ```
+
+## Support
+
+### Please star us!
+⭐ Your support is the driving force for us to move forward!
+
+### Tips Welcome!
+<div align="center" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/agentparty)
+[![爱发电](https://img.shields.io/badge/爱发电-支持我们-946ce6?style=for-the-badge&logo=affine&logoColor=white)](https://afdian.com/a/agentparty)
+
+</div>
+
+### Follow us
+<div align="center">
+  <a href="https://space.bilibili.com/26978344">
+    <img src="screenshots/B.png" width="100" height="100" style="border-radius: 80%; overflow: hidden;" alt="bilibili"/>
+  </a>
+  <a href="https://www.youtube.com/@agentParty">
+    <img src="screenshots/YT.png" width="100" height="100" style="border-radius: 80%; overflow: hidden;" alt="youtube"/>
+  </a>
+</div>
+
+### Join the Community
+If you have any questions or issues with the project, you are welcome to join our community.
+
+1. QQ Group: `931057213` (Full) / `902882342` (Group 2)
+
+<div align="center">
+    <img src="screenshots/QQ2.jpg" style="width: 48%;" />
+</div>
+
+2. Discord: [Discord link](https://discord.gg/f2dsAKKr2V)
+
+## Contributors
+
+<a href="https://github.com/heshengtao/exameow/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=heshengtao/exameow" />
+</a>
 
 ## License
 

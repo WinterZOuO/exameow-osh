@@ -2,8 +2,12 @@
 
 AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考题。
 
+<div align="center">
+
 [![English](https://img.shields.io/badge/README-English-blue?style=for-the-badge)](README.md)
 [![中文](https://img.shields.io/badge/README-中文-red?style=for-the-badge)](README_zh.md)
+
+</div>
 
 ![过了喵 Exameow 界面截图](screenshots/Cover_ZH.png)
 
@@ -143,6 +147,46 @@ exameow/
 ├── Dockerfile
 └── docker-compose.yml
 ```
+
+## 支持我们
+
+### 请给我们点个 Star！
+⭐ 你的支持是我们前进的动力！
+
+### 欢迎打赏！
+<div align="center" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/agentparty)
+[![爱发电](https://img.shields.io/badge/爱发电-支持我们-946ce6?style=for-the-badge&logo=affine&logoColor=white)](https://afdian.com/a/agentparty)
+
+</div>
+
+### 关注我们
+<div align="center">
+  <a href="https://space.bilibili.com/26978344">
+    <img src="screenshots/B.png" width="100" height="100" style="border-radius: 80%; overflow: hidden;" alt="bilibili"/>
+  </a>
+  <a href="https://www.youtube.com/@agentParty">
+    <img src="screenshots/YT.png" width="100" height="100" style="border-radius: 80%; overflow: hidden;" alt="youtube"/>
+  </a>
+</div>
+
+### 加入社区
+如果你在使用过程中遇到任何问题，欢迎加入我们的社区交流。
+
+1. QQ 群：`931057213`（1群已满） `902882342`（2群）
+
+<div align="center">
+    <img src="screenshots/QQ2.jpg" style="width: 48%;" />
+</div>
+
+2. Discord: [Discord 链接](https://discord.gg/f2dsAKKr2V)
+
+## 贡献者
+
+<a href="https://github.com/heshengtao/exameow/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=heshengtao/exameow" />
+</a>
 
 ## License
 
