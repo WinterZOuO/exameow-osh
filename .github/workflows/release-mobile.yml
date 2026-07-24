@@ -70,7 +70,7 @@ jobs:
       - name: Sign and align APK
         run: |
           mkdir -p dist
-          UNSIGNED_APK=$(find src-tauri/gen/android/app/build/outputs/apk/aarch64/release -name "*.apk" | head -n 1)
+          UNSIGNED_APK=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
           ALIGNED_APK="dist/Exameow-${{ github.ref_name }}-android_arm64.apk"
           BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -type d | sort -V | tail -n 1)
           jarsigner -verbose \
