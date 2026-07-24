@@ -4,6 +4,8 @@ AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考�
 
 [English](README.md)
 
+![过了喵 Exameow 界面截图](screenshots/Cover_ZH.png)
+
 ## 功能
 
 - **文档解析** — 支持 PDF、DOCX、XLSX、PPTX、EPUB、ODT、TXT、CSV、HTML

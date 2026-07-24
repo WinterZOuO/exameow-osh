@@ -4,6 +4,8 @@ AI-powered exam question generator. Upload study materials, generate professiona
 
 [中文文档](README_zh.md)
 
+![Exameow Screenshot](screenshots/Cover_EN.png)
+
 ## Features
 
 - **Document Parsing** — Supports PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML
