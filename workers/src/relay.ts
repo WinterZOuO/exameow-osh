@@ -44,7 +44,7 @@ export async function readExam(bucket: R2Bucket, code: string): Promise<StoredEx
   if (!obj) return null
   const exam = (await obj.json()) as StoredExam
   if (isExpired(exam)) {
-    await bucket.delete(`exams/${code}.json`)
+    await bucket.delete([`exams/${code}.json`, `results/${code}.json`])
     return null
   }
   return exam
@@ -63,7 +63,8 @@ export async function handlePublish(
   origin: string,
 ): Promise<Response> {
   const req = body as Partial<PublishExamRequest>
-  const title = (req.title || '').trim()
+  if (typeof req.title !== 'string') return json({ error: 'Title is required' }, 400)
+  const title = req.title.trim()
   const questions = req.questions
   const { startAt, endAt, durationMinutes } = req
 
@@ -119,7 +120,7 @@ function normalizeChoice(s: string): string {
 function isTrueAnswer(a: string): boolean {
   const t = a.trim()
   return ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1'].some(
-    (v) => t.toUpperCase() === v.toUpperCase() || t.includes(v),
+    (v) => t.toUpperCase() === v.toUpperCase() || (v.length > 1 && t.includes(v)),
   )
 }
 
@@ -175,13 +176,15 @@ export async function handleSubmit(
   if (deny) return deny
 
   const req = body as Partial<SubmitExamRequest>
-  const name = (req.name || '').trim()
+  if (typeof req.name !== 'string') return json({ error: 'Name is required' }, 400)
+  const name = req.name.trim()
   if (!name) return json({ error: 'Name is required' }, 400)
   const answers = req.answers && typeof req.answers === 'object' ? req.answers : {}
   const durationSec = typeof req.durationSec === 'number' ? Math.max(0, Math.round(req.durationSec)) : 0
 
   const graded: GradedQuestion[] = exam.questions.map((q) => {
-    const userAnswer = answers[q.id] ?? null
+    const raw = answers[q.id]
+    const userAnswer = typeof raw === 'string' ? raw : null
     return { question: q, userAnswer, isCorrect: grade(q, userAnswer ?? undefined) }
   })
   const objective = graded.filter((g) => g.isCorrect !== null)
@@ -198,8 +201,36 @@ export async function handleSubmit(
     pendingCount,
     durationSec,
     submittedAt: Date.now(),
+    detail: graded.map((g) => ({ questionId: g.question.id, isCorrect: g.isCorrect })),
   }
-  await bucket.put(`results/${code}/${crypto.randomUUID()}.json`, JSON.stringify(entry))
+
+  const resultsKey = `results/${code}.json`
+  let stored = false
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const existing = await bucket.get(resultsKey)
+    let results: ExamResultEntry[] = []
+    if (existing) {
+      try {
+        const parsed = (await existing.json()) as { results?: ExamResultEntry[] }
+        if (Array.isArray(parsed.results)) results = parsed.results
+      } catch {
+        results = []
+      }
+    }
+    results.push(entry)
+    if (results.length > 500) results = results.slice(results.length - 500)
+    const payload = JSON.stringify({ results })
+    const put = existing
+      ? await bucket.put(resultsKey, payload, { onlyIf: { etagMatches: existing.etag } })
+      : await bucket.put(resultsKey, payload, { onlyIf: { etagDoesNotMatch: '*' } })
+    if (put) {
+      stored = true
+      break
+    }
+  }
+  if (!stored) {
+    console.error(`Failed to update results index for exam ${code} after 3 attempts`)
+  }
 
   const res: SubmitExamResponse = {
     score: entry.score,
@@ -222,11 +253,15 @@ export async function handleResults(
   if (!token || (await sha256Hex(token)) !== exam.adminTokenHash) {
     return json({ error: 'unauthorized' }, 403)
   }
-  const listed = await bucket.list({ prefix: `results/${code}/`, limit: 500 })
-  const results: ExamResultEntry[] = []
-  for (const obj of listed.objects) {
-    const o = await bucket.get(obj.key)
-    if (o) results.push((await o.json()) as ExamResultEntry)
+  const obj = await bucket.get(`results/${code}.json`)
+  let results: ExamResultEntry[] = []
+  if (obj) {
+    try {
+      const parsed = (await obj.json()) as { results?: ExamResultEntry[] }
+      if (Array.isArray(parsed.results)) results = parsed.results
+    } catch {
+      results = []
+    }
   }
   results.sort((a, b) => b.score - a.score || a.submittedAt - b.submittedAt)
   const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results }

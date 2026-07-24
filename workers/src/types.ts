@@ -140,6 +140,7 @@ export interface ExamResultEntry {
   pendingCount: number
   durationSec: number
   submittedAt: number
+  detail: { questionId: string; isCorrect: boolean | null }[]
 }
 
 export interface ExamResultsResponse {

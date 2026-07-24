@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchResults, RelayError } from '@/api/relay'
-import type { ExamResultsResponse } from '@exameow/shared'
+import type { ExamResultEntry, ExamResultsResponse, Question } from '@exameow/shared'
 
 const route = useRoute()
 const i18n = useI18nStore()
@@ -14,6 +14,23 @@ const token = (route.query.token as string || '').trim()
 const loading = ref(true)
 const unauthorized = ref(false)
 const data = ref<ExamResultsResponse | null>(null)
+const expanded = ref<Set<number>>(new Set())
+
+function toggle(i: number) {
+  const s = new Set(expanded.value)
+  if (s.has(i)) s.delete(i)
+  else s.add(i)
+  expanded.value = s
+}
+
+function detailFor(r: ExamResultEntry, questionId: string): boolean | null | undefined {
+  return r.detail.find((d) => d.questionId === questionId)?.isCorrect
+}
+
+function answerFor(r: ExamResultEntry, q: Question): string {
+  const a = r.answers[q.id]
+  return typeof a === 'string' && a.trim() ? a : i18n.t('takeUnanswered')
+}
 
 function fmtTime(ts: number): string {
   return new Date(ts).toLocaleString()
@@ -67,13 +84,40 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(r, i) in data.results" :key="i" class="border-t" style="border-color: rgb(var(--md-outline-variant))">
-              <td class="p-3">{{ r.name }}</td>
-              <td class="p-3 font-bold" style="color: rgb(var(--md-primary))">{{ r.score }}/{{ r.totalScore }}</td>
-              <td class="p-3">{{ r.correctCount }}/{{ r.totalCount }}</td>
-              <td class="p-3">{{ fmtDuration(r.durationSec) }}</td>
-              <td class="p-3">{{ fmtTime(r.submittedAt) }}</td>
-            </tr>
+            <template v-for="(r, i) in data.results" :key="i">
+              <tr class="border-t cursor-pointer" style="border-color: rgb(var(--md-outline-variant))" @click="toggle(i)">
+                <td class="p-3">{{ r.name }}</td>
+                <td class="p-3 font-bold" style="color: rgb(var(--md-primary))">{{ r.score }}/{{ r.totalScore }}</td>
+                <td class="p-3">{{ r.correctCount }}/{{ r.totalCount }}</td>
+                <td class="p-3">{{ fmtDuration(r.durationSec) }}</td>
+                <td class="p-3">{{ fmtTime(r.submittedAt) }}</td>
+              </tr>
+              <tr v-if="expanded.has(i)" class="border-t" style="border-color: rgb(var(--md-outline-variant))">
+                <td colspan="5" class="p-3">
+                  <div class="card-filled p-4 flex flex-col gap-3">
+                    <div v-for="(q, qi) in data.questions" :key="q.id" class="flex items-start gap-2">
+                      <span
+                        v-if="detailFor(r, q.id) === true"
+                        class="font-bold"
+                        style="color: rgb(46 125 50)"
+                      >✓</span>
+                      <span
+                        v-else-if="detailFor(r, q.id) === false"
+                        class="font-bold"
+                        style="color: rgb(var(--md-error))"
+                      >✗</span>
+                      <span v-else class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takePendingShort') }}</span>
+                      <div class="flex-1">
+                        <p class="font-medium">{{ qi + 1 }}. {{ q.stem }}</p>
+                        <p class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
+                          {{ i18n.t('takeYourAnswer') }}: {{ answerFor(r, q) }} · {{ i18n.t('takeCorrectAnswer') }}: {{ q.answer }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>

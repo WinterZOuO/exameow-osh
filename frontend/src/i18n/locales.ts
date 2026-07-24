@@ -364,6 +364,7 @@ export interface LocaleMessages {
   takeYourAnswer: string
   takeCorrectAnswer: string
   takeUnanswered: string
+  takePendingShort: string
   takeBackHome: string
   manageTitle: string
   manageUnauthorized: string
@@ -727,6 +728,7 @@ export const zh: LocaleMessages = {
   takeYourAnswer: '你的作答',
   takeCorrectAnswer: '参考答案',
   takeUnanswered: '未作答',
+  takePendingShort: '待评阅',
   takeBackHome: '返回首页',
   manageTitle: '成绩管理',
   manageUnauthorized: '管理链接无效',
@@ -1090,6 +1092,7 @@ export const en: LocaleMessages = {
   takeYourAnswer: 'Your Answer',
   takeCorrectAnswer: 'Correct Answer',
   takeUnanswered: 'Unanswered',
+  takePendingShort: 'Pending',
   takeBackHome: 'Back Home',
   manageTitle: 'Exam Results',
   manageUnauthorized: 'Invalid management link',
