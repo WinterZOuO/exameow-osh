@@ -1,6 +1,7 @@
 node_modules/
 target/
 frontend/dist/
+workers/public/
 .DS_Store
 *.log
 *.jks

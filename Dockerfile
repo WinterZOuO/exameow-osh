@@ -20,7 +20,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY packages/core/ packages/core/
 COPY packages/server/ packages/server/
 
-RUN sed -i '/src-tauri/d' Cargo.toml
+RUN sed -i '/src-tauri/d; /plugins\/screenrecord/d' Cargo.toml
 
 RUN cargo build --release -p exameow-server
 

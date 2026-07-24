@@ -1,1 +1,0 @@
-import{r as e}from"./core-w4ZWUd33.js";async function t(t,n){await e(`plugin:sharekit|share_file`,{url:t,...n})}export{t as shareFile};
