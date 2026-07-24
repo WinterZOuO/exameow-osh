@@ -145,6 +145,23 @@ jobs:
             - [Documentation](https://github.com/${{ github.repository }}#readme)
 
             ## 📦 Downloads
-            See attached assets.
+
+            👉 [Windows-msi](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-windows_amd64.msi)
+
+            👉 [Windows-portable](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-windows_amd64-portable.zip)
+
+            👉 [MacOS-dmg-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64.dmg)
+
+            👉 [MacOS-portable-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-macos_arm64-portable.zip)
+
+            👉 [Linux-AppImage-X86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_amd64.AppImage)
+
+            👉 [Linux-AppImage-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.AppImage)
+
+            👉 [Linux-deb-X86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_amd64.deb)
+
+            👉 [Linux-deb-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-linux_arm64.deb)
+
+            👉 [Android-apk-Arm64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Exameow-${{ github.ref_name }}-android_arm64.apk)
           files: artifacts/*
           fail_on_unmatched_files: false
