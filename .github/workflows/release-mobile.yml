@@ -46,7 +46,10 @@ jobs:
           packages: 'ndk;${{ env.ANDROID_NDK_VERSION }}'
 
       - name: Init Android project
-        run: pnpm tauri android init
+        run: |
+          pnpm tauri android init
+          pnpm tauri icon src-tauri/icons/icon.png
+          sed -i 's/#fff/#EE9D62/' src-tauri/gen/android/app/src/main/res/values/ic_launcher_background.xml
 
       - name: Build Android APK
         run: pnpm tauri android build --apk --target aarch64
