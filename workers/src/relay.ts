@@ -120,7 +120,9 @@ function normalizeChoice(s: string): string {
 function isTrueAnswer(a: string): boolean {
   const t = a.trim()
   return ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1'].some(
-    (v) => t.toUpperCase() === v.toUpperCase() || (v.length > 1 && t.includes(v)),
+    (v) =>
+      t.toUpperCase() === v.toUpperCase() ||
+      (v.length > 1 && t.includes(v) && !/[不非错没]/.test(t.replace(v, ''))),
   )
 }
 
@@ -193,7 +195,9 @@ export async function handleSubmit(
 
   const entry: ExamResultEntry = {
     name,
-    answers,
+    answers: Object.fromEntries(
+      Object.entries(answers).filter(([, v]) => typeof v === 'string'),
+    ),
     score: correctCount,
     totalScore: objective.length,
     correctCount,

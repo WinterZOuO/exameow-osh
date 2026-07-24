@@ -24,7 +24,7 @@ function toggle(i: number) {
 }
 
 function detailFor(r: ExamResultEntry, questionId: string): boolean | null | undefined {
-  return r.detail.find((d) => d.questionId === questionId)?.isCorrect
+  return r.detail?.find((d) => d.questionId === questionId)?.isCorrect ?? null
 }
 
 function answerFor(r: ExamResultEntry, q: Question): string {
