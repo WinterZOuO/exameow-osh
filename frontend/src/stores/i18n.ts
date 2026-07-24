@@ -4,13 +4,23 @@ import { zh, en, type LocaleMessages } from '@/i18n/locales'
 
 export type Locale = 'zh' | 'en'
 
+const LOCALE_KEY = 'exameow-locale'
+
+function detectLocale(): Locale {
+  const saved = localStorage.getItem(LOCALE_KEY)
+  if (saved === 'zh' || saved === 'en') return saved
+  const lang = (navigator.language || '').toLowerCase()
+  return lang.startsWith('zh') ? 'zh' : 'en'
+}
+
 export const useI18nStore = defineStore('i18n', () => {
-  const locale = ref<Locale>('zh')
+  const locale = ref<Locale>(detectLocale())
 
   const messages = computed<LocaleMessages>(() => (locale.value === 'zh' ? zh : en))
 
   function toggle() {
     locale.value = locale.value === 'zh' ? 'en' : 'zh'
+    localStorage.setItem(LOCALE_KEY, locale.value)
   }
 
   function t(key: keyof LocaleMessages, params?: Record<string, string | number>): string {
