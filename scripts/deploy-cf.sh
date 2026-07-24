@@ -26,6 +26,14 @@ rm -f public/assets/ort-wasm-simd-threaded*
 echo "  Removed local OCR assets (CF uses CDN)."
 echo "  Files copied to workers/public/"
 
+# Step 2.5: Ensure R2 bucket exists (idempotent)
+echo ""
+echo "[2.5/3] Ensuring R2 bucket exists..."
+cd "$PROJECT_DIR/workers"
+if ! npx wrangler r2 bucket list 2>/dev/null | grep -q "exameow-exams"; then
+  npx wrangler r2 bucket create exameow-exams
+fi
+
 # Step 3: Deploy worker
 echo ""
 echo "[3/3] Deploying to Cloudflare..."
