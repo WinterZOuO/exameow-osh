@@ -11,6 +11,17 @@ AI-powered exam question generator. Upload study materials, generate professiona
 
 ![Exameow Screenshot](screenshots/Cover_EN.png)
 
+## Live Demo
+
+Try it online: **[exam.superagentparty.com](https://exam.superagentparty.com/)**
+
+The demo runs on Cloudflare Workers with the free Workers AI tier:
+
+- ⏳ **Daily quota is limited** — Cloudflare's free AI allocation resets daily
+- 📄 **Context window limit** — large documents will be truncated to fit the model's context window
+
+For unlimited usage, self-host with Docker or use the desktop/mobile apps with your own API key.
+
 ## Features
 
 - **Document Parsing** — Supports PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML

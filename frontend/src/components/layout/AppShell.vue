@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
 import TitleBar from './TitleBar.vue'
+import CookieBanner from './CookieBanner.vue'
 import {
   Cog6ToothIcon,
   SparklesIcon,
@@ -210,6 +211,7 @@ const headerStyle = {
         </div>
       </div>
     </nav>
+    <CookieBanner />
   </div>
 </template>
 

@@ -11,6 +11,17 @@ AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考�
 
 ![过了喵 Exameow 界面截图](screenshots/Cover_ZH.png)
 
+## 在线演示
+
+在线体验：**[exam.superagentparty.com](https://exam.superagentparty.com/)**
+
+演示站基于 Cloudflare Workers 免费 AI 套餐运行：
+
+- ⏳ **每日次数有限** — Cloudflare 免费 AI 额度每日重置
+- 📄 **上下文窗口限制** — 过大的文档会被截断以适应模型上下文窗口
+
+如需无限制使用，请通过 Docker 自托管，或使用桌面/移动应用并配置自己的 API Key。
+
 ## 功能
 
 - **文档解析** — 支持 PDF、DOCX、XLSX、PPTX、EPUB、ODT、TXT、CSV、HTML

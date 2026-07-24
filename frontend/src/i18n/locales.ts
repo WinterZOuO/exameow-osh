@@ -312,6 +312,10 @@ export interface LocaleMessages {
   practiceAiJudging: string
   practiceAiFeedback: string
   practiceRegradeHint: string
+
+  // Cookie consent
+  cookieBannerText: string
+  cookieBannerAccept: string
 }
 
 export const zh: LocaleMessages = {
@@ -614,6 +618,10 @@ export const zh: LocaleMessages = {
   practiceAiJudging: 'AI 判卷中…',
   practiceAiFeedback: 'AI 评语',
   practiceRegradeHint: '对判定结果不满意？可人工改判',
+
+  // Cookie consent
+  cookieBannerText: '我们使用 Cookie 和本地存储来保存您的偏好设置、题库与练习记录。继续使用本网站即表示您同意我们的数据存储政策。',
+  cookieBannerAccept: '我知道了',
 }
 
 export const en: LocaleMessages = {
@@ -916,4 +924,8 @@ export const en: LocaleMessages = {
   practiceAiJudging: 'AI grading…',
   practiceAiFeedback: 'AI feedback',
   practiceRegradeHint: 'Disagree with the verdict? Regrade manually',
+
+  // Cookie consent
+  cookieBannerText: 'We use cookies and local storage to save your preferences, question banks, and practice records. By continuing to use this site, you consent to our data storage policy.',
+  cookieBannerAccept: 'Got it',
 }
