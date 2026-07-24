@@ -126,4 +126,4 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 - **Hash-based SPA routing** (`createWebHashHistory`); CF Worker + Axum both serve SPA fallback.
 - **Material You theme** in `frontend/tailwind.config.js` (full tonal palette + custom animations).
 - Docs: `README.md` (EN), `README_zh.md` (ZH). `frontend/README.md` is boilerplate.
-- CI releases on `v*` tags: Tauri (linux/windows/macOS, x86_64+aarch64) + Docker to `ghcr.io/heshengtao/exameow`.
+- CI releases on `v*` tags: Tauri (linux/windows/macOS, x86_64+aarch64) + Docker to Docker Hub (`<DOCKERHUB_USERNAME>/exameow`).

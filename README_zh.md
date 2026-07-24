@@ -40,12 +40,12 @@ docker compose up -d --build
 ### Docker 预构建镜像
 
 ```bash
-docker pull ghcr.io/heshengtao/exameow:latest
+docker pull ailm32442/exameow:latest
 docker run -d -p 3000:3000 \
   -e AI_ENDPOINT=https://api.openai.com/v1 \
   -e AI_API_KEY=sk-your-key-here \
   -e AI_MODEL=gpt-4o \
-  ghcr.io/heshengtao/exameow:latest
+  ailm32442/exameow:latest
 ```
 
 ## 环境变量

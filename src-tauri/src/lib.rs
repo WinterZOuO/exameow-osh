@@ -29,6 +29,22 @@ use base64::Engine;
 
 const APP_NAME: &str = "Exameow";
 
+#[cfg(target_os = "macos")]
+fn setup_dock_icon() {
+    use objc::runtime::{Class, Object};
+    use objc::{msg_send, sel, sel_impl};
+
+    const ICON: &[u8] = include_bytes!("../icons/icon.png");
+
+    unsafe {
+        let data: *mut Object = msg_send![Class::get("NSData").unwrap(), dataWithBytes:ICON.as_ptr() as *const std::ffi::c_void length:ICON.len()];
+        let image: *mut Object = msg_send![Class::get("NSImage").unwrap(), alloc];
+        let _: () = msg_send![image, initWithData:data];
+        let app: *mut Object = msg_send![Class::get("NSApplication").unwrap(), sharedApplication];
+        let _: () = msg_send![app, setApplicationIconImage:image];
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct CommandError(String);
 
@@ -568,6 +584,9 @@ pub fn run() {
 
             #[cfg(not(target_os = "android"))]
             window.show()?;
+
+            #[cfg(target_os = "macos")]
+            setup_dock_icon();
 
             Ok(())
         })
