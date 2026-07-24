@@ -474,7 +474,7 @@ class OverlayController(
     root.addView(emptyLabel)
 
     val dragListener = DragTouchListener { p }
-    grip.setOnTouchListener(dragListener)
+    gripView!!.setOnTouchListener(dragListener)
     header.setOnTouchListener(dragListener)
 
     answerRoot = root
