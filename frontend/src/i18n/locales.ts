@@ -355,9 +355,10 @@ export interface LocaleMessages {
   takeNotStarted: string
   takeEnded: string
   takeTimeLeft: string
-  takeSubmit: string
-  takeSubmitConfirm: string
-  takeSubmitting: string
+   takeSubmit: string
+   takeSubmitConfirm: string
+   takeSubmitting: string
+   takeSubmitFailed: string
   takeScore: string
   takePendingReview: string
   takeYourAnswer: string
@@ -717,9 +718,10 @@ export const zh: LocaleMessages = {
   takeNotStarted: '考试尚未开始，开始时间：{time}',
   takeEnded: '考试已结束',
   takeTimeLeft: '剩余时间',
-  takeSubmit: '交卷',
-  takeSubmitConfirm: '确定交卷吗？还有 {n} 题未作答。',
-  takeSubmitting: '交卷中...',
+   takeSubmit: '交卷',
+   takeSubmitConfirm: '确定交卷吗？还有 {n} 题未作答。',
+   takeSubmitting: '交卷中...',
+   takeSubmitFailed: '交卷失败，请重试',
   takeScore: '得分',
   takePendingReview: '{n} 道简答题待教师评阅，未计入得分',
   takeYourAnswer: '你的作答',
@@ -1079,9 +1081,10 @@ export const en: LocaleMessages = {
   takeNotStarted: 'Exam has not started. Starts at {time}',
   takeEnded: 'Exam has ended',
   takeTimeLeft: 'Time Left',
-  takeSubmit: 'Submit',
-  takeSubmitConfirm: 'Submit now? {n} question(s) unanswered.',
-  takeSubmitting: 'Submitting...',
+   takeSubmit: 'Submit',
+   takeSubmitConfirm: 'Submit now? {n} question(s) unanswered.',
+   takeSubmitting: 'Submitting...',
+   takeSubmitFailed: 'Submission failed, please retry',
   takeScore: 'Score',
   takePendingReview: '{n} short-answer question(s) pending teacher review, not scored',
   takeYourAnswer: 'Your Answer',

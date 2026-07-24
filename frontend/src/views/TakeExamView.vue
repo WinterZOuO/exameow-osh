@@ -20,6 +20,7 @@ const answers = ref<Record<string, string>>({})
 const remainingSec = ref(0)
 const startedAt = ref(0)
 const submitting = ref(false)
+const submitError = ref('')
 const result = ref<SubmitExamResponse | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 
@@ -56,6 +57,8 @@ function select(qid: string, label: string, multi: boolean) {
 
 async function doSubmit() {
   if (submitting.value || result.value || !exam.value) return
+  if (timer) clearInterval(timer)
+  submitError.value = ''
   submitting.value = true
   try {
     result.value = await submitExam(code, {
@@ -63,9 +66,9 @@ async function doSubmit() {
       answers: answers.value,
       durationSec: Math.round((Date.now() - startedAt.value) / 1000),
     })
-    if (timer) clearInterval(timer)
   } catch (e) {
     if (e instanceof RelayError && e.code === 'ended') errorKey.value = 'ended'
+    else submitError.value = e instanceof Error ? e.message : String(e)
   } finally {
     submitting.value = false
   }
@@ -159,6 +162,15 @@ const isChoice = (t: string) => ['single_choice', 'multi_choice', 'true_false'].
           class="input-outlined w-full"
         />
         <textarea v-else v-model="answers[q.id]" rows="3" class="input-outlined w-full" />
+      </div>
+
+      <div
+        v-if="submitError"
+        class="px-4 py-3 rounded-2xl text-sm mb-3 flex items-start justify-between gap-2"
+        style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+      >
+        <span>{{ i18n.t('takeSubmitFailed') }}: {{ submitError }}</span>
+        <button class="shrink-0" @click="submitError = ''">✕</button>
       </div>
 
       <button class="btn-filled w-full !h-12 mb-8" :disabled="submitting" @click="handleSubmitClick">
