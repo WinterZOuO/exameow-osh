@@ -13,6 +13,7 @@ import { isAndroid } from '@/utils/platform'
 import PublishExamDialog from '@/components/exam/PublishExamDialog.vue'
 import JoinExamDialog from '@/components/exam/JoinExamDialog.vue'
 import LaunchExamDialog from '@/components/exam/LaunchExamDialog.vue'
+import AiConfigNotice from '@/components/common/AiConfigNotice.vue'
 import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
 const examStore = useExamStore()
@@ -170,6 +171,7 @@ async function handleShare() {
     </Transition>
 
     <!-- Generate Button -->
+    <AiConfigNotice v-if="!configStore.configured" class="max-w-md mx-auto mb-4" />
     <div class="flex flex-wrap items-center justify-center gap-2">
       <button
         class="btn-filled text-base !px-10 !h-12"

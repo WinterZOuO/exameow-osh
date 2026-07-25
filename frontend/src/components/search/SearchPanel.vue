@@ -194,7 +194,7 @@ const hasBanks = computed(() => practiceStore.banks.length > 0)
           <button
             v-if="aiNotConfigured"
             class="btn-outlined !h-8 text-xs !px-3"
-            @click="router.push('/config')"
+            @click="router.push('/mine/config')"
           >
             {{ i18n.t('searchGotoConfig') }}
           </button>

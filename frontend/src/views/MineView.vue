@@ -20,7 +20,7 @@ const entries = [
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div>
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-display-sm">{{ i18n.t('navMine') }}</h1>
       <span class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>

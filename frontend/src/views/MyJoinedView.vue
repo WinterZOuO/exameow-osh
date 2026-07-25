@@ -28,7 +28,7 @@ function fmtTime(ts: number): string {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div>
     <div class="flex items-center gap-2 mb-6">
       <button class="btn-icon" @click="router.push('/mine')">
         <ArrowLeftIcon class="w-5 h-5" />

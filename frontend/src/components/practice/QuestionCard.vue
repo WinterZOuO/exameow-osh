@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import type { Question, PracticeMode } from '@exameow/shared'
 import {
@@ -37,6 +38,11 @@ const emit = defineEmits<{
 }>()
 
 const i18n = useI18nStore()
+const router = useRouter()
+
+function goConfig() {
+  router.push('/mine/config')
+}
 
 const answerRevealed = ref(false)
 
@@ -426,13 +432,14 @@ function getBadgeStyle(opt: string) {
           {{ question.type === 'fill_blank' ? i18n.t('practiceSubmitAutoHint') : i18n.t('practiceAiJudgeHint') }}
           · {{ i18n.t('practiceRevealHint') }}
         </div>
-        <div
+        <button
           v-if="question.type === 'short_answer' && !aiConfigured"
-          class="text-xs mt-1 text-center"
+          class="text-xs mt-1 mx-auto flex items-center gap-1 underline"
           :style="{ color: 'rgb(var(--md-error))' }"
+          @click="goConfig"
         >
           {{ i18n.t('searchNotConfigured') }}
-        </div>
+        </button>
         <div
           v-if="aiJudgeError"
           class="mt-2 p-3 rounded-xl text-sm flex items-center justify-between gap-2"

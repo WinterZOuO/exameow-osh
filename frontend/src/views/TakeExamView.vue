@@ -249,7 +249,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div>
     <p v-if="loading" class="text-center py-10">{{ i18n.t('takeLoading') }}</p>
 
     <div v-else-if="errorKey" class="card-filled p-6 text-center space-y-4">

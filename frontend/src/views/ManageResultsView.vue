@@ -87,7 +87,7 @@ function fmtDuration(sec: number): string {
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto">
+  <div>
     <p v-if="loading" class="text-center py-10">{{ i18n.t('takeLoading') }}</p>
 
     <div v-else-if="unauthorized" class="card-filled p-6 text-center">
