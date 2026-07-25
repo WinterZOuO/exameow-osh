@@ -41,6 +41,14 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **AI Grading** — Short-answer questions graded by AI against reference answers, with feedback; manual regrading supported
 - **Question Bank Management** — Import banks from XLSX/CSV with smart column mapping; export anytime
 
+### 📝 Online Exams
+- **Launch Exams from Banks** — Compose exams from multiple local banks with per-type question counts and point values; set title, start time, and duration
+- **6-Digit Code + Exam Link** — Students join from any device browser, no app install required
+- **Timed Sessions** — Local countdown with auto-submit; progress survives page refresh (resume where you left off)
+- **Instant Scoring** — Objective questions graded server-side with answers and analysis on submission; results stored locally for anytime review
+- **Teacher Dashboard** — Score-sorted results with per-question drill-down; locally cached so results are only fetched once after the exam ends; teachers can delete an exam anytime (instantly blocks students and purges results)
+- **Privacy-First Relay** — Exam data lives on Cloudflare D1 for at most 7 days before automatic deletion; answers are never sent to students before submission
+
 ### 🔍 Search Modes
 - **Text Search** — Type or paste a question to find matches in your local banks, with optional AI answering
 - **Photo Search** — Snap or upload a photo of a question; on-device OCR (runs locally in your browser, no upload)
