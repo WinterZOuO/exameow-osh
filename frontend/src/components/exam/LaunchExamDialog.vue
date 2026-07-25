@@ -4,6 +4,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { usePracticeStore } from '@/stores/practice'
 import { usePublishedStore } from '@/stores/published'
 import { publishExam } from '@/api/relay'
+import ScheduleFields from '@/components/exam/ScheduleFields.vue'
 import { QuestionType, type Question } from '@exameow/shared'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -48,7 +49,6 @@ const selectedBankIds = ref<Set<string>>(new Set())
 const counts = ref<Record<string, number>>({})
 const title = ref('')
 const startAt = ref(toLocalInput(new Date()))
-const endAt = ref(toLocalInput(new Date(Date.now() + 24 * 3600 * 1000)))
 const durationMinutes = ref(60)
 const publishing = ref(false)
 const error = ref('')
@@ -105,8 +105,8 @@ function composeQuestions(): Question[] {
 async function handlePublish() {
   error.value = ''
   const start = new Date(startAt.value).getTime()
-  const end = new Date(endAt.value).getTime()
-  if (!title.value.trim() || !start || !end || !(start < end) || !(durationMinutes.value > 0)) {
+  const end = start + durationMinutes.value * 60000
+  if (!title.value.trim() || !start || !(durationMinutes.value > 0)) {
     error.value = i18n.t('pubErrorInvalid')
     return
   }
@@ -144,7 +144,7 @@ async function copy(text: string, which: string) {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(0,0,0,0.4)" @click.self="emit('close')">
-    <div class="card-filled w-full max-w-md p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+    <div class="card-filled w-full max-w-md sm:max-w-xl p-5 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto">
       <template v-if="!result">
         <h2 class="text-title-lg">{{ i18n.t('pubLaunch') }}</h2>
 
@@ -153,7 +153,7 @@ async function copy(text: string, which: string) {
           <p v-if="banks.length === 0" class="text-sm mt-1" style="color: rgb(var(--md-on-surface-variant))">
             {{ i18n.t('launchNoBanks') }}
           </p>
-          <div v-else class="mt-1 space-y-1">
+          <div v-else class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button
               v-for="b in banks"
               :key="b.id"
@@ -187,23 +187,10 @@ async function copy(text: string, which: string) {
           <p class="text-xs mt-1" style="color: rgb(var(--md-primary))">{{ i18n.t('launchTotal', { n: totalSelected }) }}</p>
         </div>
 
-        <div class="space-y-3 pt-1">
+        <div class="pt-1">
           <label class="text-label-sm">{{ i18n.t('launchExamSettings') }}</label>
-          <div>
-            <label class="text-label-sm">{{ i18n.t('pubFieldTitle') }}</label>
-            <input v-model="title" class="input-outlined w-full mt-1" :placeholder="i18n.t('pubFieldTitlePlaceholder')" />
-          </div>
-          <div>
-            <label class="text-label-sm">{{ i18n.t('pubFieldStart') }}</label>
-            <input v-model="startAt" type="datetime-local" class="input-outlined w-full mt-1" />
-          </div>
-          <div>
-            <label class="text-label-sm">{{ i18n.t('pubFieldEnd') }}</label>
-            <input v-model="endAt" type="datetime-local" class="input-outlined w-full mt-1" />
-          </div>
-          <div>
-            <label class="text-label-sm">{{ i18n.t('pubFieldDuration') }}</label>
-            <input v-model.number="durationMinutes" type="number" min="1" class="input-outlined w-full mt-1" />
+          <div class="mt-2">
+            <ScheduleFields v-model:title="title" v-model:start-at="startAt" v-model:duration-minutes="durationMinutes" />
           </div>
         </div>
 

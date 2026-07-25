@@ -333,8 +333,10 @@ export interface LocaleMessages {
   pubFieldTitle: string
   pubFieldTitlePlaceholder: string
   pubFieldStart: string
-  pubFieldEnd: string
   pubFieldDuration: string
+  presetNow: string
+  presetIn1Hour: string
+  presetTomorrow8: string
   pubConfirm: string
   pubPublishing: string
   pubCancel: string
@@ -704,8 +706,10 @@ export const zh: LocaleMessages = {
   pubFieldTitle: '考试名称',
   pubFieldTitlePlaceholder: '例如：高三数学期末模拟',
   pubFieldStart: '开始时间',
-  pubFieldEnd: '结束时间',
   pubFieldDuration: '考试时长（分钟）',
+  presetNow: '现在',
+  presetIn1Hour: '1 小时后',
+  presetTomorrow8: '明天 8:00',
   pubConfirm: '发布',
   pubPublishing: '发布中...',
   pubCancel: '取消',
@@ -715,7 +719,7 @@ export const zh: LocaleMessages = {
   pubCopy: '复制',
   pubCopied: '已复制',
   pubClose: '完成',
-  pubErrorInvalid: '请完整填写所有字段，且结束时间必须晚于开始时间',
+  pubErrorInvalid: '请完整填写所有字段',
   pubMyPublished: '我发布的考试',
   pubLaunch: '发起考试',
   launchSelectBanks: '选择题库',
@@ -1075,8 +1079,10 @@ export const en: LocaleMessages = {
   pubFieldTitle: 'Exam Title',
   pubFieldTitlePlaceholder: 'e.g. Final Math Mock',
   pubFieldStart: 'Start Time',
-  pubFieldEnd: 'End Time',
   pubFieldDuration: 'Duration (minutes)',
+  presetNow: 'Now',
+  presetIn1Hour: 'In 1 hour',
+  presetTomorrow8: 'Tomorrow 8:00',
   pubConfirm: 'Publish',
   pubPublishing: 'Publishing...',
   pubCancel: 'Cancel',
@@ -1086,7 +1092,7 @@ export const en: LocaleMessages = {
   pubCopy: 'Copy',
   pubCopied: 'Copied',
   pubClose: 'Done',
-  pubErrorInvalid: 'Fill in all fields; end time must be after start time',
+  pubErrorInvalid: 'Please fill in all fields',
   pubMyPublished: 'My Published Exams',
   pubLaunch: 'Launch Exam',
   launchSelectBanks: 'Select Banks',

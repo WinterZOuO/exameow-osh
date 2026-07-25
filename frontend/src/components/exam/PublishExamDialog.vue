@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePublishedStore } from '@/stores/published'
 import { publishExam } from '@/api/relay'
+import ScheduleFields from '@/components/exam/ScheduleFields.vue'
 import type { Question } from '@exameow/shared'
 
 const props = defineProps<{ questions: Question[] }>()
@@ -18,7 +19,6 @@ function toLocalInput(d: Date): string {
 
 const title = ref('')
 const startAt = ref(toLocalInput(new Date()))
-const endAt = ref(toLocalInput(new Date(Date.now() + 24 * 3600 * 1000)))
 const durationMinutes = ref(60)
 const publishing = ref(false)
 const error = ref('')
@@ -28,8 +28,8 @@ const copied = ref('')
 async function handlePublish() {
   error.value = ''
   const start = new Date(startAt.value).getTime()
-  const end = new Date(endAt.value).getTime()
-  if (!title.value.trim() || !start || !end || !(start < end) || durationMinutes.value <= 0) {
+  const end = start + durationMinutes.value * 60000
+  if (!title.value.trim() || !start || !(durationMinutes.value > 0)) {
     error.value = i18n.t('pubErrorInvalid')
     return
   }
@@ -62,25 +62,10 @@ async function copy(text: string, which: string) {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(0,0,0,0.4)" @click.self="emit('close')">
-    <div class="card-filled w-full max-w-md p-5 space-y-4">
+    <div class="card-filled w-full max-w-md sm:max-w-lg p-5 space-y-4">
       <template v-if="!result">
         <h2 class="text-title-lg">{{ i18n.t('pubDialogTitle') }}</h2>
-        <div>
-          <label class="text-label-sm">{{ i18n.t('pubFieldTitle') }}</label>
-          <input v-model="title" class="input-outlined w-full mt-1" :placeholder="i18n.t('pubFieldTitlePlaceholder')" />
-        </div>
-        <div>
-          <label class="text-label-sm">{{ i18n.t('pubFieldStart') }}</label>
-          <input v-model="startAt" type="datetime-local" class="input-outlined w-full mt-1" />
-        </div>
-        <div>
-          <label class="text-label-sm">{{ i18n.t('pubFieldEnd') }}</label>
-          <input v-model="endAt" type="datetime-local" class="input-outlined w-full mt-1" />
-        </div>
-        <div>
-          <label class="text-label-sm">{{ i18n.t('pubFieldDuration') }}</label>
-          <input v-model.number="durationMinutes" type="number" min="1" class="input-outlined w-full mt-1" />
-        </div>
+        <ScheduleFields v-model:title="title" v-model:start-at="startAt" v-model:duration-minutes="durationMinutes" />
         <p v-if="error" class="text-sm" style="color: rgb(var(--md-error))">{{ error }}</p>
         <div class="flex gap-2 justify-end">
           <button class="btn-outlined" @click="emit('close')">{{ i18n.t('pubCancel') }}</button>
