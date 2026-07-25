@@ -48,6 +48,8 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **Instant Scoring** — Objective questions graded server-side with answers and analysis on submission; results stored locally for anytime review
 - **Teacher Dashboard** — Score-sorted results with per-question drill-down; locally cached so results are only fetched once after the exam ends; teachers can delete an exam anytime (instantly blocks students and purges results)
 - **Privacy-First Relay** — Exam data lives on Cloudflare D1 for at most 7 days before automatic deletion; answers are never sent to students before submission
+- **Anti-Abuse** — 20 publishes per IP per day; one-tap student reports auto-suspend an exam at 3 distinct-IP reports; admins review, restore, or delete from the `#/admin` page
+- **Fully Self-Hosted** — The Docker image ships the same exam relay (SQLite), with zero dependency on the demo site; set `ADMIN_TOKEN` to secure the admin page (defaults to `pass`, must be changed on first visit to `#/admin`)
 
 ### 🔍 Search Modes
 - **Text Search** — Type or paste a question to find matches in your local banks, with optional AI answering

@@ -21,3 +21,4 @@ frontend/public/ocr/
 docs/
 opencode.json
 release.keystore
+.secrets/

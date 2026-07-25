@@ -56,7 +56,7 @@ packages/
     src/exam/          types.rs (Question/ExamParams), prompt.rs (generate_exam + prompts)
     src/export/        writer.rs (CSV), xlsx.rs (manual ZIP+XML, no lib)
     src/config/        store.rs (AES-256-GCM encrypted config persistence)
-  server/              Axum HTTP server; routes.rs has 6 handlers
+  server/              Axum HTTP server; routes.rs (AI 端点) + relay.rs (在线考试,SQLite via rusqlite)
   shared/              TS shared types (@exameow/shared) src/types.ts
 
 src-tauri/             Tauri app; src/lib.rs = all Tauri commands; tauri.conf.json; capabilities/
@@ -102,7 +102,7 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 
 - **Browser `localStorage`**: question banks, practice sessions, wrong questions, config. Keys: `exameow-banks`, `exameow-practice-session`, `exameow-wrong`, `exameow-questions`, `exameow-sourcefile`.
 - **Native (Tauri/Axum)**: AI credentials encrypted with AES-256-GCM via `ConfigStore` in OS config dir (macOS `~/Library/Application Support/Exameow/`, Linux `~/.config/Exameow/`, Windows `%APPDATA%/Exameow/`).
-- **Server is stateless** — only handles file parsing + AI calls.
+- **Server is stateless for AI** — 但自 v1.3 起内置在线考试 relay(SQLite),Docker 版完全自包含,不依赖演示站。反滥用:每 IP 每日发布限 20 场;≥3 个独立 IP 举报自动暂停;管理员页 `#/admin`(CF 密钥存 `wrangler secret`,本地备份于 gitignored 的 `.secrets/`)。
 
 ## Environment Variables
 
@@ -113,6 +113,10 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 | `AI_MODEL` | `gpt-4o` | Server | Default model |
 | `PORT` | `3000` | Server | Axum port |
 | `STATIC_DIR` | `../frontend/dist` (local) | Server | Built frontend path |
+| `ADMIN_TOKEN` | `pass` | Server | Docker 管理员密钥；`pass` 时管理员页强制修改,改后写入 `ADMIN_TOKEN_FILE` |
+| `EXAM_DB_PATH` | `./exameow.db` | Server | 在线考试 SQLite 路径(docker-compose 挂卷 `/app/data`) |
+| `ADMIN_TOKEN_FILE` | `./admin_token.txt` | Server | 修改后的密钥持久化文件 |
+| `VITE_EXAM_RELAY` | — | Frontend | 覆盖考试中转地址;默认 Tauri 用 CF 域名,网页/Docker 走同源 |
 | `VITE_CLOUDFLARE` | — | Frontend | Set in deploy-cf.sh to trigger CF routing |
 | `CF_ACCOUNT_ID` / `CF_API_TOKEN` | wrangler.toml | Workers | CF model listing |
 

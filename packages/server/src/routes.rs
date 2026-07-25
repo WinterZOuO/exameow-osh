@@ -12,10 +12,12 @@ use exameow_core::exam::{
 use exameow_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub struct AppState {
     pub config_store: ConfigStore,
+    pub relay: crate::relay::RelayState,
+    pub admin_token: Mutex<String>,
 }
 
 #[derive(Deserialize)]

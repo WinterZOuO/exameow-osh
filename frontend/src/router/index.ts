@@ -115,6 +115,12 @@ const router = createRouter({
       component: () => import('@/views/TermsView.vue'),
       meta: { title: 'Terms of Service' },
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { title: 'Admin' },
+    },
   ],
 })
 

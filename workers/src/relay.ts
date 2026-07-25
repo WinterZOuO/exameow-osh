@@ -17,7 +17,7 @@ const CODE_LENGTH = 6
 export const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_QUESTIONS = 500
 const MAX_PUBLISH_PER_DAY = 20
-const REPORT_SUSPEND_THRESHOLD = 5
+const REPORT_SUSPEND_THRESHOLD = 3
 const MAX_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 export function generateCode(): string {
@@ -382,7 +382,7 @@ export async function handleAdminReports(db: D1Database): Promise<Response> {
               (SELECT title FROM exams e WHERE e.code = r.code) AS title,
               (SELECT suspended FROM exams e WHERE e.code = r.code) AS suspended,
               (SELECT reason FROM reports r2 WHERE r2.code = r.code ORDER BY r2.created_at DESC LIMIT 1) AS last_reason
-       FROM reports r GROUP BY r.code ORDER BY last_reported_at DESC LIMIT 100`,
+       FROM reports r GROUP BY r.code ORDER BY ip_count DESC, last_reported_at DESC LIMIT 100`,
     )
     .all()
   return json({ reports: rows })

@@ -12,4 +12,6 @@ start.bat
 start.sh
 opencode.json
 exameow.jks
+release.keystore
+.secrets
 pnpm-lock.yaml

@@ -402,6 +402,18 @@ export interface LocaleMessages {
   reportThanks: string
   takeReported: string
   pubRateLimited: string
+  adminTitle: string
+  adminLogin: string
+  adminTokenPlaceholder: string
+  adminForceChange: string
+  adminNewToken: string
+  adminNewTokenConfirm: string
+  adminChangeToken: string
+  adminTokenMismatch: string
+  adminNoReports: string
+  adminReportCount: string
+  adminRestore: string
+  adminDeleteConfirm: string
   joinDialogTitle: string
   joinCodeLabel: string
   joinNameLabel: string
@@ -822,6 +834,18 @@ export const zh: LocaleMessages = {
   reportThanks: '已收到举报，感谢反馈',
   takeReported: '该考试因被举报已暂停',
   pubRateLimited: '发布次数已达今日上限，请明天再试',
+  adminTitle: '管理员',
+  adminLogin: '管理员登录',
+  adminTokenPlaceholder: '管理密钥',
+  adminForceChange: '默认密钥必须修改后才能继续',
+  adminNewToken: '新管理密钥',
+  adminNewTokenConfirm: '确认新密钥',
+  adminChangeToken: '修改密钥',
+  adminTokenMismatch: '两次输入的密钥不一致',
+  adminNoReports: '暂无被举报的考试',
+  adminReportCount: '{n} 个 IP 举报',
+  adminRestore: '恢复',
+  adminDeleteConfirm: '确定删除考试 {code} 及其全部成绩？',
   joinDialogTitle: '参加考试',
   joinCodeLabel: '6 位校验码',
   joinNameLabel: '你的姓名',
@@ -1242,6 +1266,18 @@ export const en: LocaleMessages = {
   reportThanks: 'Report received, thank you',
   takeReported: 'This exam has been suspended due to reports',
   pubRateLimited: 'Daily publish limit reached, try again tomorrow',
+  adminTitle: 'Admin',
+  adminLogin: 'Admin Login',
+  adminTokenPlaceholder: 'Admin token',
+  adminForceChange: 'Default token must be changed to continue',
+  adminNewToken: 'New admin token',
+  adminNewTokenConfirm: 'Confirm new token',
+  adminChangeToken: 'Change Token',
+  adminTokenMismatch: 'Tokens do not match',
+  adminNoReports: 'No reported exams',
+  adminReportCount: '{n} IP reports',
+  adminRestore: 'Restore',
+  adminDeleteConfirm: 'Delete exam {code} and all its results?',
   joinDialogTitle: 'Join Exam',
   joinCodeLabel: '6-digit Code',
   joinNameLabel: 'Your Name',
