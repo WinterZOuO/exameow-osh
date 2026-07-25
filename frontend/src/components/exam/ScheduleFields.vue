@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18nStore } from '@/stores/i18n'
-import { CalendarIcon, ClockIcon } from '@heroicons/vue/24/outline'
+import { ClockIcon } from '@heroicons/vue/24/outline'
+import DateTimeField from '@/components/exam/DateTimeField.vue'
 
 const title = defineModel<string>('title', { required: true })
 const startAt = defineModel<string>('startAt', { required: true })
@@ -34,13 +35,8 @@ function setPreset(kind: 'now' | 'hour' | 'tomorrow8') {
     </div>
     <div>
       <label class="text-label-sm">{{ i18n.t('pubFieldStart') }}</label>
-      <div class="relative mt-1">
-        <CalendarIcon class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
-        <input
-          v-model="startAt"
-          type="datetime-local"
-          class="input-outlined w-full !pl-10 [color-scheme:light] dark:[color-scheme:dark]"
-        />
+      <div class="mt-1">
+        <DateTimeField v-model="startAt" />
       </div>
       <div class="flex flex-wrap gap-2 mt-2">
         <button type="button" class="btn-tonal !h-7 !px-3 !text-xs" @click="setPreset('now')">{{ i18n.t('presetNow') }}</button>
