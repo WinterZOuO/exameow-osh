@@ -7,13 +7,13 @@ import TitleBar from './TitleBar.vue'
 import CookieBanner from './CookieBanner.vue'
 import UpdateDialog from './UpdateDialog.vue'
 import {
-  Cog6ToothIcon,
   SparklesIcon,
   SunIcon,
   MoonIcon,
   ComputerDesktopIcon,
   AcademicCapIcon,
   MagnifyingGlassIcon,
+  UserCircleIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -73,7 +73,7 @@ const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
   { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
   { key: 'navSearch', path: '/search', icon: MagnifyingGlassIcon },
-  { key: 'navConfig', path: '/config', icon: Cog6ToothIcon },
+  { key: 'navMine', path: '/mine', icon: UserCircleIcon },
 ]
 
 function isNavActive(item: { path: string }): boolean {

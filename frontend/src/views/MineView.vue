@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/i18n'
+import {
+  CpuChipIcon,
+  PaperAirplaneIcon,
+  PencilSquareIcon,
+  ChevronRightIcon,
+} from '@heroicons/vue/24/outline'
+
+const router = useRouter()
+const i18n = useI18nStore()
+
+const entries = [
+  { key: 'mineAIConfig', descKey: 'mineAIConfigDesc', path: '/mine/config', icon: CpuChipIcon },
+  { key: 'minePublished', descKey: 'minePublishedDesc', path: '/mine/published', icon: PaperAirplaneIcon },
+  { key: 'mineJoined', descKey: 'mineJoinedDesc', path: '/mine/joined', icon: PencilSquareIcon },
+] as const
+</script>
+
+<template>
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-display-sm mb-1">{{ i18n.t('navMine') }}</h1>
+    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('appName') }}</p>
+
+    <div class="space-y-3">
+      <button
+        v-for="e in entries"
+        :key="e.path"
+        class="card-outlined w-full flex items-center gap-4 p-4 sm:p-5 text-left transition-all duration-200 hover:elevation-1"
+        @click="router.push(e.path)"
+      >
+        <div
+          class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+          style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
+        >
+          <component :is="e.icon" class="w-6 h-6" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-title-sm">{{ i18n.t(e.key) }}</div>
+          <div class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t(e.descKey) }}</div>
+        </div>
+        <ChevronRightIcon class="w-5 h-5 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
+      </button>
+    </div>
+  </div>
+</template>

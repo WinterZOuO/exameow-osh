@@ -70,10 +70,32 @@ const router = createRouter({
       meta: { title: 'Exam Results' },
     },
     {
-      path: '/config',
-      name: 'config',
+      path: '/mine',
+      name: 'mine',
+      component: () => import('@/views/MineView.vue'),
+      meta: { title: 'Mine' },
+    },
+    {
+      path: '/mine/config',
+      name: 'mine-config',
       component: () => import('@/views/ConfigView.vue'),
       meta: { title: 'AI Config' },
+    },
+    {
+      path: '/mine/published',
+      name: 'mine-published',
+      component: () => import('@/views/MyPublishedView.vue'),
+      meta: { title: 'My Launched Exams' },
+    },
+    {
+      path: '/mine/joined',
+      name: 'mine-joined',
+      component: () => import('@/views/MyJoinedView.vue'),
+      meta: { title: 'My Joined Exams' },
+    },
+    {
+      path: '/config',
+      redirect: '/mine/config',
     },
   ],
 })

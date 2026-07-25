@@ -9,6 +9,21 @@ export interface LocaleMessages {
   navPreview: string
   navPractice: string
   navSearch: string
+  navMine: string
+
+  // Mine
+  mineAIConfig: string
+  mineAIConfigDesc: string
+  minePublished: string
+  minePublishedDesc: string
+  mineJoined: string
+  mineJoinedDesc: string
+  publishedEmpty: string
+  joinedEmpty: string
+  joinedNotSubmitted: string
+  joinedReenter: string
+  pubViewResults: string
+  pubDeleteRecord: string
 
   // Config
   configTitle: string
@@ -394,6 +409,21 @@ export const zh: LocaleMessages = {
   navPreview: '预览',
   navPractice: '刷题',
   navSearch: '搜题',
+  navMine: '我的',
+
+  // Mine
+  mineAIConfig: '算力配置',
+  mineAIConfigDesc: '模型服务商与密钥',
+  minePublished: '我发起的考试',
+  minePublishedDesc: '校验码与成绩管理',
+  mineJoined: '我参与的考试',
+  mineJoinedDesc: '成绩与再次进入',
+  publishedEmpty: '还没有发起过考试',
+  joinedEmpty: '还没有参与过考试',
+  joinedNotSubmitted: '未交卷',
+  joinedReenter: '进入',
+  pubViewResults: '查看成绩',
+  pubDeleteRecord: '删除记录',
 
   configTitle: '设置',
   configSubtitle: '连接 AI 后台，开始出题',
@@ -767,6 +797,21 @@ export const en: LocaleMessages = {
   navPreview: 'Preview',
   navPractice: 'Practice',
   navSearch: 'Search',
+  navMine: 'Mine',
+
+  // Mine
+  mineAIConfig: 'AI Config',
+  mineAIConfigDesc: 'Endpoint, key & model',
+  minePublished: 'My Launched Exams',
+  minePublishedDesc: 'Codes & results',
+  mineJoined: 'My Joined Exams',
+  mineJoinedDesc: 'Scores & re-entry',
+  publishedEmpty: 'No launched exams yet',
+  joinedEmpty: 'No joined exams yet',
+  joinedNotSubmitted: 'Not submitted',
+  joinedReenter: 'Enter',
+  pubViewResults: 'Results',
+  pubDeleteRecord: 'Delete',
 
   configTitle: 'Settings',
   configSubtitle: 'Connect your AI backend to get started',

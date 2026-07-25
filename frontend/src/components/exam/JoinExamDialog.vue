@@ -2,10 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { useJoinedStore } from '@/stores/joined'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 const i18n = useI18nStore()
 const router = useRouter()
+const joinedStore = useJoinedStore()
 
 const code = ref('')
 const name = ref('')
@@ -13,6 +15,7 @@ const name = ref('')
 function handleJoin() {
   const c = code.value.trim().toUpperCase()
   if (c.length !== 6 || !name.value.trim()) return
+  joinedStore.add(c, name.value.trim())
   router.push({ path: `/take/${c}`, query: { name: name.value.trim() } })
   emit('close')
 }

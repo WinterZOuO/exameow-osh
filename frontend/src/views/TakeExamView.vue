@@ -3,11 +3,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchExam, submitExam, RelayError } from '@/api/relay'
+import { useJoinedStore } from '@/stores/joined'
 import type { PublishedExamInfo, SubmitExamResponse } from '@exameow/shared'
 
 const route = useRoute()
 const router = useRouter()
 const i18n = useI18nStore()
+const joinedStore = useJoinedStore()
 
 const code = (route.params.code as string || '').toUpperCase()
 const studentName = (route.query.name as string || '').trim()
@@ -66,6 +68,7 @@ async function doSubmit() {
       answers: answers.value,
       durationSec: Math.round((Date.now() - startedAt.value) / 1000),
     })
+    joinedStore.markSubmitted(code, studentName, exam.value.title, result.value.score, result.value.totalScore)
   } catch (e) {
     if (e instanceof RelayError && e.code === 'ended') errorKey.value = 'ended'
     else submitError.value = e instanceof Error ? e.message : String(e)
