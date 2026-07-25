@@ -100,6 +100,14 @@ docker compose up -d --build
 
 Open `http://localhost:3000`.
 
+> **🔐 Admin token (required for online-exam administration):** the admin page at `http://localhost:3000/#/admin` is protected by `ADMIN_TOKEN`. If you don't set it, it defaults to **`pass`** and you will be **forced to change it on first login** before you can do anything. To skip that, set it at startup:
+>
+> ```bash
+> ADMIN_TOKEN=your-strong-token docker compose up -d --build
+> ```
+>
+> The changed token persists in the `exameow-data` volume (`/app/data/admin_token.txt`) across container restarts. Exam data (SQLite) is stored in the same volume.
+
 ### Docker (Pre-Built Image)
 
 ```bash
@@ -108,8 +116,12 @@ docker run -d -p 3000:3000 \
   -e AI_ENDPOINT=https://api.openai.com/v1 \
   -e AI_API_KEY=sk-your-key-here \
   -e AI_MODEL=gpt-4o \
+  -e ADMIN_TOKEN=your-strong-token \
+  -v exameow-data:/app/data \
   ailm32442/exameow:latest
 ```
+
+If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first visit to `/#/admin`.
 
 ## Environment Variables
 
@@ -120,6 +132,9 @@ docker run -d -p 3000:3000 \
 | `AI_MODEL` | `gpt-4o` | Default model to use |
 | `PORT` | `3000` | Server listen port |
 | `STATIC_DIR` | `/app/static` | Static files directory |
+| `ADMIN_TOKEN` | `pass` | Admin page token; `pass` forces a change on first login at `/#/admin` |
+| `EXAM_DB_PATH` | `/app/data/exameow.db` | SQLite path for the online-exam relay |
+| `ADMIN_TOKEN_FILE` | `/app/data/admin_token.txt` | Where a changed admin token is persisted |
 | `RUST_LOG` | `info` | Log level |
 
 ## API Endpoints

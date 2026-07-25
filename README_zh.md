@@ -100,6 +100,14 @@ docker compose up -d --build
 
 打开 `http://localhost:3000` 开始出题。
 
+> **🔐 管理密钥（在线考试管理必看）:** 管理员页面 `http://localhost:3000/#/admin` 由 `ADMIN_TOKEN` 保护。**不设置时默认为 `pass`，首次登录会被强制要求修改后才能使用**。想跳过这步，启动时直接声明:
+>
+> ```bash
+> ADMIN_TOKEN=你的强密钥 docker compose up -d --build
+> ```
+>
+> 修改后的密钥会持久化在 `exameow-data` 数据卷(`/app/data/admin_token.txt`)中，容器重启不丢失；考试数据（SQLite）也存在同一数据卷。
+
 ### Docker 预构建镜像
 
 ```bash
@@ -108,8 +116,12 @@ docker run -d -p 3000:3000 \
   -e AI_ENDPOINT=https://api.openai.com/v1 \
   -e AI_API_KEY=sk-your-key-here \
   -e AI_MODEL=gpt-4o \
+  -e ADMIN_TOKEN=你的强密钥 \
+  -v exameow-data:/app/data \
   ailm32442/exameow:latest
 ```
+
+不设置 `ADMIN_TOKEN` 时默认为 `pass`，首次访问 `/#/admin` 会被强制修改。
 
 ## 环境变量
 
@@ -120,6 +132,9 @@ docker run -d -p 3000:3000 \
 | `AI_MODEL` | `gpt-4o` | 默认模型 |
 | `PORT` | `3000` | 服务端口 |
 | `STATIC_DIR` | `/app/static` | 静态文件目录 |
+| `ADMIN_TOKEN` | `pass` | 管理员页密钥;`pass` 时首次访问 `/#/admin` 强制修改 |
+| `EXAM_DB_PATH` | `/app/data/exameow.db` | 在线考试 SQLite 路径 |
+| `ADMIN_TOKEN_FILE` | `/app/data/admin_token.txt` | 修改后的密钥持久化文件 |
 | `RUST_LOG` | `info` | 日志级别 |
 
 ## API 接口
