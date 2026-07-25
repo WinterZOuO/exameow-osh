@@ -25,6 +25,9 @@ export interface LocaleMessages {
   joinedReenter: string
   pubViewResults: string
   pubDeleteRecord: string
+  pubDeleteConfirm: string
+  privacyTitle: string
+  cookieBannerLearnMore: string
 
   // Config
   configTitle: string
@@ -432,6 +435,9 @@ export const zh: LocaleMessages = {
   joinedReenter: '进入',
   pubViewResults: '查看成绩',
   pubDeleteRecord: '删除记录',
+  pubDeleteConfirm: '删除后学生将无法进入考试，所有成绩也将一并清除。确定删除？',
+  privacyTitle: '隐私政策',
+  cookieBannerLearnMore: '了解详情',
 
   configTitle: '算力配置',
   configSubtitle: '连接 AI 后台，开始出题',
@@ -725,7 +731,7 @@ export const zh: LocaleMessages = {
   practiceRegradeHint: '对判定结果不满意？可人工改判',
 
   // Cookie consent
-  cookieBannerText: '我们使用 Cookie 和本地存储来保存您的偏好设置、题库与练习记录。继续使用本网站即表示您同意我们的数据存储政策。',
+  cookieBannerText: '我们使用本地存储保存您的偏好、题库与考试记录;在线考试数据在服务器最多保留 7 天。不使用追踪 Cookie。',
   cookieBannerAccept: '我知道了',
 
   // Updater
@@ -827,6 +833,9 @@ export const en: LocaleMessages = {
   joinedReenter: 'Enter',
   pubViewResults: 'Results',
   pubDeleteRecord: 'Delete',
+  pubDeleteConfirm: 'Students will no longer be able to take this exam, and all results will be deleted. Continue?',
+  privacyTitle: 'Privacy Policy',
+  cookieBannerLearnMore: 'Learn more',
 
   configTitle: 'AI Config',
   configSubtitle: 'Connect your AI backend to get started',
@@ -1120,7 +1129,7 @@ export const en: LocaleMessages = {
   practiceRegradeHint: 'Disagree with the verdict? Regrade manually',
 
   // Cookie consent
-  cookieBannerText: 'We use cookies and local storage to save your preferences, question banks, and practice records. By continuing to use this site, you consent to our data storage policy.',
+  cookieBannerText: 'We use local storage for your preferences, question banks, and exam records. Online exam data is kept on our server for at most 7 days. No tracking cookies.',
   cookieBannerAccept: 'Got it',
 
   // Updater

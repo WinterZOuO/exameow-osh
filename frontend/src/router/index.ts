@@ -97,6 +97,12 @@ const router = createRouter({
       path: '/config',
       redirect: '/mine/config',
     },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('@/views/PrivacyView.vue'),
+      meta: { title: 'Privacy Policy' },
+    },
   ],
 })
 

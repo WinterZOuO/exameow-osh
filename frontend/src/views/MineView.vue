@@ -47,5 +47,15 @@ const entries = [
         <ChevronRightIcon class="w-5 h-5 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
       </button>
     </div>
+
+    <div class="mt-8 text-center">
+      <button
+        class="text-body-sm underline"
+        style="color: rgb(var(--md-on-surface-variant))"
+        @click="router.push('/privacy')"
+      >
+        {{ i18n.t('privacyTitle') }}
+      </button>
+    </div>
   </div>
 </template>

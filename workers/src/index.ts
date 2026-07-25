@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Ai, Fetcher, D1Database } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
-import { handlePublish, handleGetExam, handleSubmit, handleResults } from './relay'
+import { handlePublish, handleGetExam, handleSubmit, handleResults, handleDeleteExam } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
@@ -21,7 +21,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 
 app.use('/api/*', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type'],
 }))
 
@@ -294,6 +294,10 @@ app.post('/api/exam/code/:code/submit', async (c) => {
 
 app.get('/api/exam/code/:code/results', (c) =>
   handleResults(c.env.EXAM_DB, c.req.param('code'), c.req.query('token') || ''),
+)
+
+app.delete('/api/exam/code/:code', (c) =>
+  handleDeleteExam(c.env.EXAM_DB, c.req.param('code'), c.req.query('token') || ''),
 )
 
 // GET /api/health - health check

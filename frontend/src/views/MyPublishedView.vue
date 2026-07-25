@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { usePublishedStore } from '@/stores/published'
+import { deleteExam } from '@/api/relay'
 import { ArrowLeftIcon, ClipboardDocumentIcon, ChartBarIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { ref } from 'vue'
 
@@ -9,6 +10,38 @@ const router = useRouter()
 const i18n = useI18nStore()
 const publishedStore = usePublishedStore()
 const copiedCode = ref('')
+const deletingCode = ref('')
+const showDeleteConfirm = ref(false)
+const deleteError = ref('')
+
+function tokenOf(manageUrl: string): string {
+  return new URLSearchParams(manageUrl.split('?')[1] || '').get('token') || ''
+}
+
+function askDelete(code: string) {
+  deletingCode.value = code
+  deleteError.value = ''
+  showDeleteConfirm.value = true
+}
+
+async function confirmDelete() {
+  const rec = publishedStore.list.find((r) => r.code === deletingCode.value)
+  if (!rec) {
+    showDeleteConfirm.value = false
+    return
+  }
+  try {
+    await deleteExam(rec.code, tokenOf(rec.manageUrl))
+  } catch (e: any) {
+    if (e?.status !== 404) {
+      deleteError.value = e?.message || String(e)
+      return
+    }
+  }
+  localStorage.removeItem(`exameow-results-${rec.code}`)
+  publishedStore.remove(rec.code)
+  showDeleteConfirm.value = false
+}
 
 function managePath(manageUrl: string): string {
   const hash = manageUrl.split('#')[1] || ''
@@ -64,11 +97,31 @@ function fmtTime(ts: number): string {
           <button class="btn-tonal !h-8 !px-3 !text-xs" @click="copyText(examLink(rec.code), 'link:' + rec.code)">
             <ClipboardDocumentIcon class="w-4 h-4" /> {{ copiedCode === 'link:' + rec.code ? i18n.t('pubCopied') : i18n.t('pubExamLink') }}
           </button>
-          <button class="btn-outlined !h-8 !px-3 !text-xs" @click="publishedStore.remove(rec.code)">
+          <button class="btn-outlined !h-8 !px-3 !text-xs" @click="askDelete(rec.code)">
             <TrashIcon class="w-4 h-4" /> {{ i18n.t('pubDeleteRecord') }}
           </button>
         </div>
       </div>
     </div>
+
+    <Transition name="scale">
+      <div v-if="showDeleteConfirm" class="scrim flex items-center justify-center p-4 z-50" @click.self="showDeleteConfirm = false">
+        <div class="card-elevated w-full max-w-sm p-5 text-center">
+          <TrashIcon class="w-10 h-10 mx-auto mb-3" style="color: rgb(var(--md-error))" />
+          <div class="text-title-sm mb-1">{{ i18n.t('pubDeleteConfirm') }}</div>
+          <p v-if="deleteError" class="text-sm mt-2" style="color: rgb(var(--md-error))">{{ deleteError }}</p>
+          <div class="flex gap-3 mt-4">
+            <button class="btn-outlined flex-1" @click="showDeleteConfirm = false">{{ i18n.t('pubCancel') }}</button>
+            <button
+              class="btn-filled flex-1"
+              style="background-color: rgb(var(--md-error)); color: rgb(var(--md-on-error))"
+              @click="confirmDelete"
+            >
+              {{ i18n.t('pubDeleteRecord') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>

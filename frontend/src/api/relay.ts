@@ -56,3 +56,9 @@ export function submitExam(code: string, req: SubmitExamRequest): Promise<Submit
 export function fetchResults(code: string, token: string): Promise<ExamResultsResponse> {
   return request(`/api/exam/code/${encodeURIComponent(code)}/results?token=${encodeURIComponent(token)}`)
 }
+
+export function deleteExam(code: string, token: string): Promise<{ ok: boolean }> {
+  return request(`/api/exam/code/${encodeURIComponent(code)}?token=${encodeURIComponent(token)}`, {
+    method: 'DELETE',
+  })
+}

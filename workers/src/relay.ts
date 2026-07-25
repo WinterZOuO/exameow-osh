@@ -314,3 +314,20 @@ export async function handleResults(
   const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results, endAt: exam.endAt }
   return json(res)
 }
+
+export async function handleDeleteExam(
+  db: D1Database,
+  code: string,
+  token: string,
+): Promise<Response> {
+  const exam = await readExam(db, code)
+  if (!exam) return json({ error: 'not_found' }, 404)
+  if (!token || (await sha256Hex(token)) !== exam.adminTokenHash) {
+    return json({ error: 'unauthorized' }, 403)
+  }
+  await db.batch([
+    db.prepare('DELETE FROM exams WHERE code = ?').bind(code),
+    db.prepare('DELETE FROM results WHERE code = ?').bind(code),
+  ])
+  return json({ ok: true })
+}

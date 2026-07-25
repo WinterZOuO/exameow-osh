@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { isCloudflare } from '@/utils/platform'
 
 const CONSENT_KEY = 'exameow-cookie-consent'
 const i18n = useI18nStore()
+const router = useRouter()
 
 const visible = ref(isCloudflare() && !localStorage.getItem(CONSENT_KEY))
 
 function accept() {
   localStorage.setItem(CONSENT_KEY, '1')
   visible.value = false
+}
+
+function openPrivacy() {
+  localStorage.setItem(CONSENT_KEY, '1')
+  visible.value = false
+  router.push('/privacy')
 }
 </script>
 
@@ -28,6 +36,13 @@ function accept() {
       >
         <p class="flex-1 text-sm leading-relaxed" style="color: rgb(var(--md-on-surface-variant))">
           {{ i18n.t('cookieBannerText') }}
+          <button
+            class="underline font-medium ml-1"
+            style="color: rgb(var(--md-primary))"
+            @click="openPrivacy"
+          >
+            {{ i18n.t('cookieBannerLearnMore') }}
+          </button>
         </p>
         <button
           class="shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-opacity hover:opacity-80"
