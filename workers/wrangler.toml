@@ -17,9 +17,14 @@ binding = "AI"
 directory = "./public"
 binding = "ASSETS"
 
-[[r2_buckets]]
-binding = "EXAM_BUCKET"
-bucket_name = "exameow-exams"
+[[d1_databases]]
+binding = "EXAM_DB"
+database_name = "exameow-exams"
+database_id = "REPLACE_WITH_REAL_ID"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["15 4 * * *"]
 
 [observability]
 enabled = true

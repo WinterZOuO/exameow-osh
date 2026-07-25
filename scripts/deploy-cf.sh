@@ -26,13 +26,26 @@ rm -f public/assets/ort-wasm-simd-threaded*
 echo "  Removed local OCR assets (CF uses CDN)."
 echo "  Files copied to workers/public/"
 
-# Step 2.5: Ensure R2 bucket exists (idempotent)
+# Step 2.5: Ensure D1 database exists (idempotent)
 echo ""
-echo "[2.5/3] Ensuring R2 bucket exists..."
+echo "[2.5/3] Ensuring D1 database exists..."
 cd "$PROJECT_DIR/workers"
-if ! npx wrangler r2 bucket list 2>/dev/null | grep -q "exameow-exams"; then
-  npx wrangler r2 bucket create exameow-exams
+if ! npx wrangler d1 list 2>/dev/null | grep -q "exameow-exams"; then
+  npx wrangler d1 create exameow-exams
 fi
+if command -v jq >/dev/null 2>&1; then
+  DB_ID=$(npx wrangler d1 list --json 2>/dev/null | jq -r '.[] | select(.name == "exameow-exams") | .uuid' | head -1)
+else
+  DB_ID=$(npx wrangler d1 list 2>/dev/null | grep -A2 "exameow-exams" | grep -oE '[0-9a-f-]{36}' | head -1)
+fi
+if [ -z "$DB_ID" ]; then
+  echo "  ERROR: could not determine D1 database_id for exameow-exams; set it manually in workers/wrangler.toml" >&2
+  exit 1
+fi
+if grep -q 'REPLACE_WITH_REAL_ID' wrangler.toml; then
+  sed -i.bak "s/database_id = \"REPLACE_WITH_REAL_ID\"/database_id = \"$DB_ID\"/" wrangler.toml && rm -f wrangler.toml.bak
+fi
+npx wrangler d1 migrations apply exameow-exams --remote
 
 # Step 3: Deploy worker
 echo ""

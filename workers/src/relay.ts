@@ -39,12 +39,49 @@ export function isExpired(exam: StoredExam): boolean {
   return Date.now() - exam.createdAt > MAX_AGE_MS
 }
 
-export async function readExam(bucket: R2Bucket, code: string): Promise<StoredExam | null> {
-  const obj = await bucket.get(`exams/${code}.json`)
-  if (!obj) return null
-  const exam = (await obj.json()) as StoredExam
+interface ExamRow {
+  code: string
+  title: string
+  questions: string
+  start_at: number
+  end_at: number
+  duration_minutes: number
+  created_at: number
+  admin_token_hash: string
+}
+
+interface ResultRow {
+  id: string
+  code: string
+  name: string
+  answers: string
+  score: number
+  total_score: number
+  correct_count: number
+  total_count: number
+  pending_count: number
+  duration_sec: number
+  submitted_at: number
+  detail: string
+}
+
+export async function readExam(db: D1Database, code: string): Promise<StoredExam | null> {
+  const row = await db.prepare('SELECT * FROM exams WHERE code = ?').bind(code).first<ExamRow>()
+  if (!row) return null
+  const exam: StoredExam = {
+    title: row.title,
+    questions: JSON.parse(row.questions) as Question[],
+    startAt: row.start_at,
+    endAt: row.end_at,
+    durationMinutes: row.duration_minutes,
+    createdAt: row.created_at,
+    adminTokenHash: row.admin_token_hash,
+  }
   if (isExpired(exam)) {
-    await bucket.delete([`exams/${code}.json`, `results/${code}.json`])
+    await db.batch([
+      db.prepare('DELETE FROM exams WHERE code = ?').bind(code),
+      db.prepare('DELETE FROM results WHERE code = ?').bind(code),
+    ])
     return null
   }
   return exam
@@ -58,7 +95,7 @@ export function json(data: unknown, status = 200): Response {
 }
 
 export async function handlePublish(
-  bucket: R2Bucket,
+  db: D1Database,
   body: unknown,
   origin: string,
 ): Promise<Response> {
@@ -88,22 +125,28 @@ export async function handlePublish(
 
   let code = generateCode()
   for (let i = 0; i < 5; i++) {
-    const head = await bucket.head(`exams/${code}.json`)
-    if (!head) break
+    const existing = await db.prepare('SELECT code FROM exams WHERE code = ?').bind(code).first()
+    if (!existing) break
     code = generateCode()
   }
 
   const adminToken = randomToken()
-  const stored: StoredExam = {
-    title,
-    questions: questions as Question[],
-    startAt,
-    endAt,
-    durationMinutes,
-    createdAt: Date.now(),
-    adminTokenHash: await sha256Hex(adminToken),
-  }
-  await bucket.put(`exams/${code}.json`, JSON.stringify(stored))
+  const adminTokenHash = await sha256Hex(adminToken)
+  await db
+    .prepare(
+      'INSERT INTO exams (code, title, questions, start_at, end_at, duration_minutes, created_at, admin_token_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(
+      code,
+      title,
+      JSON.stringify(questions),
+      startAt,
+      endAt,
+      durationMinutes,
+      Date.now(),
+      adminTokenHash,
+    )
+    .run()
 
   const res: PublishExamResponse = {
     code,
@@ -149,8 +192,8 @@ function windowCheck(exam: StoredExam): Response | null {
   return null
 }
 
-export async function handleGetExam(bucket: R2Bucket, code: string): Promise<Response> {
-  const exam = await readExam(bucket, code)
+export async function handleGetExam(db: D1Database, code: string): Promise<Response> {
+  const exam = await readExam(db, code)
   if (!exam) return json({ error: 'not_found' }, 404)
   const deny = windowCheck(exam)
   if (deny) return deny
@@ -168,11 +211,11 @@ export async function handleGetExam(bucket: R2Bucket, code: string): Promise<Res
 }
 
 export async function handleSubmit(
-  bucket: R2Bucket,
+  db: D1Database,
   code: string,
   body: unknown,
 ): Promise<Response> {
-  const exam = await readExam(bucket, code)
+  const exam = await readExam(db, code)
   if (!exam) return json({ error: 'not_found' }, 404)
   const deny = windowCheck(exam)
   if (deny) return deny
@@ -208,33 +251,25 @@ export async function handleSubmit(
     detail: graded.map((g) => ({ questionId: g.question.id, isCorrect: g.isCorrect })),
   }
 
-  const resultsKey = `results/${code}.json`
-  let stored = false
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const existing = await bucket.get(resultsKey)
-    let results: ExamResultEntry[] = []
-    if (existing) {
-      try {
-        const parsed = (await existing.json()) as { results?: ExamResultEntry[] }
-        if (Array.isArray(parsed.results)) results = parsed.results
-      } catch {
-        results = []
-      }
-    }
-    results.push(entry)
-    if (results.length > 500) results = results.slice(results.length - 500)
-    const payload = JSON.stringify({ results })
-    const put = existing
-      ? await bucket.put(resultsKey, payload, { onlyIf: { etagMatches: existing.etag } })
-      : await bucket.put(resultsKey, payload, { onlyIf: { etagDoesNotMatch: '*' } })
-    if (put) {
-      stored = true
-      break
-    }
-  }
-  if (!stored) {
-    console.error(`Failed to update results index for exam ${code} after 3 attempts`)
-  }
+  await db
+    .prepare(
+      'INSERT INTO results (id, code, name, answers, score, total_score, correct_count, total_count, pending_count, duration_sec, submitted_at, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(
+      crypto.randomUUID(),
+      code,
+      entry.name,
+      JSON.stringify(entry.answers),
+      entry.score,
+      entry.totalScore,
+      entry.correctCount,
+      entry.totalCount,
+      entry.pendingCount,
+      entry.durationSec,
+      entry.submittedAt,
+      JSON.stringify(entry.detail),
+    )
+    .run()
 
   const res: SubmitExamResponse = {
     score: entry.score,
@@ -248,26 +283,31 @@ export async function handleSubmit(
 }
 
 export async function handleResults(
-  bucket: R2Bucket,
+  db: D1Database,
   code: string,
   token: string,
 ): Promise<Response> {
-  const exam = await readExam(bucket, code)
+  const exam = await readExam(db, code)
   if (!exam) return json({ error: 'not_found' }, 404)
   if (!token || (await sha256Hex(token)) !== exam.adminTokenHash) {
     return json({ error: 'unauthorized' }, 403)
   }
-  const obj = await bucket.get(`results/${code}.json`)
-  let results: ExamResultEntry[] = []
-  if (obj) {
-    try {
-      const parsed = (await obj.json()) as { results?: ExamResultEntry[] }
-      if (Array.isArray(parsed.results)) results = parsed.results
-    } catch {
-      results = []
-    }
-  }
-  results.sort((a, b) => b.score - a.score || a.submittedAt - b.submittedAt)
+  const { results: rows } = await db
+    .prepare('SELECT * FROM results WHERE code = ? ORDER BY score DESC, submitted_at ASC LIMIT 500')
+    .bind(code)
+    .all<ResultRow>()
+  const results: ExamResultEntry[] = rows.map((r) => ({
+    name: r.name,
+    answers: JSON.parse(r.answers) as Record<string, string>,
+    score: r.score,
+    totalScore: r.total_score,
+    correctCount: r.correct_count,
+    totalCount: r.total_count,
+    pendingCount: r.pending_count,
+    durationSec: r.duration_sec,
+    submittedAt: r.submitted_at,
+    detail: JSON.parse(r.detail) as { questionId: string; isCorrect: boolean | null }[],
+  }))
   const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results }
   return json(res)
 }
