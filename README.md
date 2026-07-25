@@ -210,7 +210,7 @@ exameow/
 
 - This project is an **open-source learning tool**, intended for personal study, teaching, and internal training only.
 - **AI-generated content is not guaranteed to be accurate.** Questions and analyses may contain errors — review them before use. The authors accept no liability for consequences arising from the use of generated content.
-- **User-generated content (UGC) is the sole responsibility of its publisher.** Do not use the online exam feature to store or distribute unlawful, infringing, or sensitive material. The operator may remove violating content without notice. Report abuse via GitHub Issues.
+- **User-generated content (UGC) is the sole responsibility of its publisher.** Do not use the online exam feature to store or distribute unlawful, infringing, or sensitive material. The operator may remove violating content without notice. Reporting channels: ① the built-in **Report button** on every exam page — when 3 or more distinct IPs report the same exam, its link is **automatically locked and made inaccessible** pending admin review; ② GitHub Issues. Verified violations are taken down; wrongly suspended exams can be restored by the admin.
 - The demo site (exam.superagentparty.com) is a free public service with **no guarantee of availability or data persistence** (exam data is retained for at most 7 days). Back up anything important.
 - By using this project you accept all associated risks and agree to comply with the laws of your jurisdiction.
 
