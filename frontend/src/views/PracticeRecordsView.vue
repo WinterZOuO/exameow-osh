@@ -229,15 +229,15 @@ const typeSegments = computed(() => {
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="card-outlined p-5 flex flex-col items-center">
         <div class="text-label-sm mb-3 self-start" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('recordsAccuracy') }}</div>
-        <div class="relative w-36 h-36">
+        <div class="relative w-32 h-32">
           <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
-            <circle cx="64" cy="64" :r="GAUGE_R" fill="none" stroke-width="12" style="stroke: rgba(var(--md-primary) / 0.12)" />
+            <circle cx="64" cy="64" :r="GAUGE_R" fill="none" stroke-width="18" style="stroke: rgba(var(--md-primary) / 0.1)" />
             <circle
               cx="64"
               cy="64"
               :r="GAUGE_R"
               fill="none"
-              stroke-width="12"
+              stroke-width="18"
               stroke-linecap="round"
               style="stroke: rgb(var(--md-primary)); transition: stroke-dashoffset 0.8s ease"
               :stroke-dasharray="GAUGE_C"
@@ -245,45 +245,57 @@ const typeSegments = computed(() => {
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-2xl font-bold" style="color: rgb(var(--md-primary))">{{ accuracy }}%</span>
+            <span class="text-xl font-bold" style="color: rgb(var(--md-primary))">{{ accuracy }}%</span>
             <span class="text-[11px]" style="color: rgb(var(--md-on-surface-variant))">{{ stats.correct }}/{{ stats.total }}</span>
+          </div>
+        </div>
+        <div class="mt-3 space-y-1.5 w-full max-w-[200px]">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: rgb(var(--md-primary))" />
+            <span class="flex-1" style="color: rgb(var(--md-on-surface))">{{ i18n.t('practiceCorrect') }}</span>
+            <span class="text-xs font-bold tabular-nums" style="color: rgb(var(--md-primary))">{{ accuracy }}%</span>
+            <span class="text-xs tabular-nums" style="color: rgb(var(--md-on-surface-variant))">{{ stats.correct }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: rgb(var(--md-error))" />
+            <span class="flex-1" style="color: rgb(var(--md-on-surface))">{{ i18n.t('practiceIncorrect') }}</span>
+            <span class="text-xs font-bold tabular-nums" style="color: rgb(var(--md-error))">{{ stats.total > 0 ? 100 - accuracy : 0 }}%</span>
+            <span class="text-xs tabular-nums" style="color: rgb(var(--md-on-surface-variant))">{{ stats.total - stats.correct }}</span>
           </div>
         </div>
       </div>
 
-      <div class="card-outlined p-5">
-        <div class="text-label-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('recordsTypeDist') }}</div>
-        <div class="flex items-center gap-5">
-          <div class="relative w-32 h-32 shrink-0">
-            <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
-              <circle cx="64" cy="64" :r="PIE_R" fill="none" stroke-width="18" style="stroke: rgba(var(--md-primary) / 0.08)" />
-              <circle
-                v-for="seg in typeSegments"
-                :key="seg.type"
-                cx="64"
-                cy="64"
-                :r="PIE_R"
-                fill="none"
-                stroke-width="18"
-                :stroke="seg.color"
-                :stroke-dasharray="seg.dash"
-                :stroke-dashoffset="seg.offset"
-              />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-xl font-bold" style="color: rgb(var(--md-on-surface))">{{ stats.total }}</span>
-              <span class="text-[11px]" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('recordsTotal') }}</span>
-            </div>
+      <div class="card-outlined p-5 flex flex-col items-center">
+        <div class="text-label-sm mb-3 self-start" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('recordsTypeDist') }}</div>
+        <div class="relative w-32 h-32">
+          <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+            <circle cx="64" cy="64" :r="PIE_R" fill="none" stroke-width="18" style="stroke: rgba(var(--md-primary) / 0.08)" />
+            <circle
+              v-for="seg in typeSegments"
+              :key="seg.type"
+              cx="64"
+              cy="64"
+              :r="PIE_R"
+              fill="none"
+              stroke-width="18"
+              :stroke="seg.color"
+              :stroke-dasharray="seg.dash"
+              :stroke-dashoffset="seg.offset"
+            />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-bold" style="color: rgb(var(--md-on-surface))">{{ stats.total }}</span>
+            <span class="text-[11px]" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('recordsTotal') }}</span>
           </div>
-          <div class="flex-1 grid grid-cols-1 gap-y-2 min-w-0">
-            <div v-for="seg in typeSegments" :key="seg.type" class="flex items-center gap-2 text-sm">
-              <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: seg.color }" />
-              <span class="flex-1 truncate" style="color: rgb(var(--md-on-surface))">{{ typeLabel(seg.type) }}</span>
-              <span class="text-xs font-bold tabular-nums" :style="{ color: seg.color }">
-                {{ stats.total > 0 ? Math.round((seg.count / stats.total) * 100) : 0 }}%
-              </span>
-              <span class="text-xs tabular-nums w-10 text-right" style="color: rgb(var(--md-on-surface-variant))">{{ seg.count }}</span>
-            </div>
+        </div>
+        <div class="mt-3 space-y-1.5 w-full max-w-[200px]">
+          <div v-for="seg in typeSegments" :key="seg.type" class="flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: seg.color }" />
+            <span class="flex-1 truncate" style="color: rgb(var(--md-on-surface))">{{ typeLabel(seg.type) }}</span>
+            <span class="text-xs font-bold tabular-nums" :style="{ color: seg.color }">
+              {{ stats.total > 0 ? Math.round((seg.count / stats.total) * 100) : 0 }}%
+            </span>
+            <span class="text-xs tabular-nums" style="color: rgb(var(--md-on-surface-variant))">{{ seg.count }}</span>
           </div>
         </div>
       </div>
