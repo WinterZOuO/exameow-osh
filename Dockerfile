@@ -1,5 +1,5 @@
-# Stage 1: Build
-FROM rust:1-alpine AS builder
+# Stage 1: Chef base (with cargo-chef preinstalled)
+FROM lukemathwalker/cargo-chef:latest-rust-1-alpine AS chef
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache musl-dev perl
 RUN mkdir -p /root/.cargo
@@ -16,15 +16,25 @@ CARGO_CONFIG
 ENV CARGO_HOME=/root/.cargo
 WORKDIR /app
 
+# Stage 2: Plan — compute dependency recipe (only changes when manifests change)
+FROM chef AS planner
 COPY Cargo.toml Cargo.lock ./
 COPY packages/core/ packages/core/
 COPY packages/server/ packages/server/
-
 RUN sed -i '/src-tauri/d; /plugins\/screenrecord/d' Cargo.toml
+RUN cargo chef prepare --recipe-path recipe.json
 
+# Stage 3: Build — cook dependencies first (cached layer), then build our crates
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json -p exameow-server
+COPY Cargo.toml Cargo.lock ./
+COPY packages/core/ packages/core/
+COPY packages/server/ packages/server/
+RUN sed -i '/src-tauri/d; /plugins\/screenrecord/d' Cargo.toml
 RUN cargo build --release -p exameow-server
 
-# Stage 2: Runtime
+# Stage 4: Runtime
 FROM alpine:3.21
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache ca-certificates
