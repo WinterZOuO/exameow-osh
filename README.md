@@ -9,7 +9,7 @@ AI-powered exam question generator. Upload study materials, generate professiona
 
 </div>
 
-![Exameow Screenshot](screenshots/Cover_EN.png)
+![Exameow Screenshot](screenshots/Cover.png)
 
 ## Live Demo
 
@@ -216,10 +216,6 @@ exameow/
 If you have any questions or issues with the project, you are welcome to join our community.
 
 1. QQ Group: `931057213` (Full) / `902882342` (Group 2)
-
-<div align="center">
-    <img src="screenshots/QQ2.jpg" style="width: 48%;" />
-</div>
 
 2. Discord: [Discord link](https://discord.gg/f2dsAKKr2V)
 

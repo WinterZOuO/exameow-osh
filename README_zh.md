@@ -9,7 +9,7 @@ AI 驱动的考试题目生成器。上传学习资料，秒级生成专业考�
 
 </div>
 
-![过了喵 Exameow 界面截图](screenshots/Cover_ZH.png)
+![过了喵 Exameow 界面截图](screenshots/Cover.png)
 
 ## 在线演示
 
@@ -216,10 +216,6 @@ exameow/
 如果你在使用过程中遇到任何问题，欢迎加入我们的社区交流。
 
 1. QQ 群：`931057213`（1群已满） `902882342`（2群）
-
-<div align="center">
-    <img src="screenshots/QQ2.jpg" style="width: 48%;" />
-</div>
 
 2. Discord: [Discord 链接](https://discord.gg/f2dsAKKr2V)
 
