@@ -109,6 +109,12 @@ const router = createRouter({
       component: () => import('@/views/PrivacyView.vue'),
       meta: { title: 'Privacy Policy' },
     },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('@/views/TermsView.vue'),
+      meta: { title: 'Terms of Service' },
+    },
   ],
 })
 

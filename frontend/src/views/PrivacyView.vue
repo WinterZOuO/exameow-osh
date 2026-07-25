@@ -75,6 +75,10 @@ const i18n = useI18nStore()
         <h2 class="text-title-sm">8. 政策变更与联系</h2>
         <p>本政策如有更新,会在本页面公布并更新生效日期。如有疑问,请通过 GitHub 仓库 Issues 联系我们。</p>
       </section>
+
+      <p class="text-center text-body-sm">
+        <a class="underline" style="color: rgb(var(--md-primary))" href="#/terms">{{ i18n.t('termsTitle') }}</a>
+      </p>
     </div>
 
     <div v-else class="space-y-5 text-body-md" style="color: rgb(var(--md-on-surface))">
@@ -136,6 +140,10 @@ const i18n = useI18nStore()
         <h2 class="text-title-sm">8. Changes & Contact</h2>
         <p>If this policy changes, we will post the update on this page with a new effective date. For questions, contact us via GitHub Issues.</p>
       </section>
+
+      <p class="text-center text-body-sm">
+        <a class="underline" style="color: rgb(var(--md-primary))" href="#/terms">{{ i18n.t('termsTitle') }}</a>
+      </p>
     </div>
   </div>
 </template>

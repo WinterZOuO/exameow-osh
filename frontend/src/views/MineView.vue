@@ -50,13 +50,20 @@ const entries = [
       </button>
     </div>
 
-    <div class="mt-8 text-center">
+    <div class="mt-8 flex items-center justify-center gap-4">
       <button
         class="text-body-sm underline"
         style="color: rgb(var(--md-on-surface-variant))"
         @click="router.push('/privacy')"
       >
         {{ i18n.t('privacyTitle') }}
+      </button>
+      <button
+        class="text-body-sm underline"
+        style="color: rgb(var(--md-on-surface-variant))"
+        @click="router.push('/terms')"
+      >
+        {{ i18n.t('termsTitle') }}
       </button>
     </div>
   </div>

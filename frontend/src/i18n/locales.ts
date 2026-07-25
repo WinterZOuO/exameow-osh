@@ -41,6 +41,7 @@ export interface LocaleMessages {
   pubDeleteRecord: string
   pubDeleteConfirm: string
   privacyTitle: string
+  termsTitle: string
   cookieBannerLearnMore: string
 
   // Config
@@ -465,6 +466,7 @@ export const zh: LocaleMessages = {
   pubDeleteRecord: '删除记录',
   pubDeleteConfirm: '删除后学生将无法进入考试，所有成绩也将一并清除。确定删除？',
   privacyTitle: '隐私政策',
+  termsTitle: '用户协议',
   cookieBannerLearnMore: '了解详情',
 
   configTitle: '算力配置',
@@ -877,6 +879,7 @@ export const en: LocaleMessages = {
   pubDeleteRecord: 'Delete',
   pubDeleteConfirm: 'Students will no longer be able to take this exam, and all results will be deleted. Continue?',
   privacyTitle: 'Privacy Policy',
+  termsTitle: 'Terms of Service',
   cookieBannerLearnMore: 'Learn more',
 
   configTitle: 'AI Config',
