@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { QuestionBank, PracticeSession, PracticeMode, MockExamConfig, Question } from '@exameow/shared'
 import { analyzeCSV, analyzeExcel, parseWithMapping } from '@/utils/importParser'
 import type { ColumnMapping, ImportAnalysis } from '@/utils/importParser'
+import { usePracticeHistoryStore } from '@/stores/practiceHistory'
 
 const STORAGE_KEY = 'exameow-banks'
 const SESSION_KEY = 'exameow-practice-session'
@@ -247,6 +248,7 @@ export const usePracticeStore = defineStore('practice', () => {
       item.isCorrect = userAns !== '' && userAns === correctAns
     }
 
+    usePracticeHistoryStore().record(q.type, item.isCorrect)
     saveSession(session.value)
     return item.isCorrect
   }
@@ -257,6 +259,7 @@ export const usePracticeStore = defineStore('practice', () => {
     if (!item) return
     item.isCorrect = isCorrect
     item.submitted = true
+    usePracticeHistoryStore().record(item.question.type, isCorrect)
     saveSession(session.value)
   }
 

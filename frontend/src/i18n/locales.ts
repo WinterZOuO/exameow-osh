@@ -19,6 +19,16 @@ export interface LocaleMessages {
   minePublishedDesc: string
   mineJoined: string
   mineJoinedDesc: string
+  mineRecords: string
+  mineRecordsDesc: string
+  recordsTotal: string
+  recordsAccuracy: string
+  recordsStreak: string
+  recordsActiveDays: string
+  recordsTypeDist: string
+  recordsLess: string
+  recordsMore: string
+  recordsDayTooltip: string
   publishedEmpty: string
   joinedEmpty: string
   joinedNotSubmitted: string
@@ -429,6 +439,16 @@ export const zh: LocaleMessages = {
   minePublishedDesc: '校验码与成绩管理',
   mineJoined: '我参与的考试',
   mineJoinedDesc: '成绩与再次进入',
+  mineRecords: '练习记录',
+  mineRecordsDesc: '练习热力与数据统计',
+  recordsTotal: '累计练习',
+  recordsAccuracy: '正确率',
+  recordsStreak: '连续打卡',
+  recordsActiveDays: '活跃天数',
+  recordsTypeDist: '题型分布',
+  recordsLess: '少',
+  recordsMore: '多',
+  recordsDayTooltip: '{n} 题',
   publishedEmpty: '还没有发起过考试',
   joinedEmpty: '还没有参与过考试',
   joinedNotSubmitted: '未交卷',
@@ -827,6 +847,16 @@ export const en: LocaleMessages = {
   minePublishedDesc: 'Codes & results',
   mineJoined: 'My Joined Exams',
   mineJoinedDesc: 'Scores & re-entry',
+  mineRecords: 'Practice Records',
+  mineRecordsDesc: 'Activity heatmap & stats',
+  recordsTotal: 'Total Practiced',
+  recordsAccuracy: 'Accuracy',
+  recordsStreak: 'Day Streak',
+  recordsActiveDays: 'Active Days',
+  recordsTypeDist: 'Type Distribution',
+  recordsLess: 'Less',
+  recordsMore: 'More',
+  recordsDayTooltip: '{n} questions',
   publishedEmpty: 'No launched exams yet',
   joinedEmpty: 'No joined exams yet',
   joinedNotSubmitted: 'Not submitted',

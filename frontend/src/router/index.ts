@@ -94,6 +94,12 @@ const router = createRouter({
       meta: { title: 'My Joined Exams' },
     },
     {
+      path: '/mine/records',
+      name: 'mine-records',
+      component: () => import('@/views/PracticeRecordsView.vue'),
+      meta: { title: 'Practice Records' },
+    },
+    {
       path: '/config',
       redirect: '/mine/config',
     },
