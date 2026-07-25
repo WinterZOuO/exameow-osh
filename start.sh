@@ -10,10 +10,15 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+APP_VERSION=$(grep -m1 '"version"' "$SCRIPT_DIR/package.json" | cut -d'"' -f4)
+TITLE="Exameow v${APP_VERSION}"
+printf -v CENTERED '%*s' $(( (34 + ${#TITLE}) / 2 )) "$TITLE"
+printf -v CENTERED '%-34s' "$CENTERED"
+
 echo -e "${CYAN}"
 echo "  ╔══════════════════════════════════╗"
-echo "  ║         Exameow v0.1.0           ║"
-echo "  ║  AI Exam Question Generator      ║"
+echo "  ║${CENTERED}║"
+echo "  ║   AI Exam Question Generator     ║"
 echo "  ╚══════════════════════════════════╝"
 echo -e "${NC}"
 
