@@ -346,6 +346,13 @@ export interface LocaleMessages {
   pubClose: string
   pubErrorInvalid: string
   pubMyPublished: string
+  pubLaunch: string
+  launchSelectBanks: string
+  launchNoBanks: string
+  launchTypeCounts: string
+  launchTotal: string
+  launchExamSettings: string
+  launchErrorNoQuestions: string
   joinDialogTitle: string
   joinCodeLabel: string
   joinNameLabel: string
@@ -710,6 +717,13 @@ export const zh: LocaleMessages = {
   pubClose: '完成',
   pubErrorInvalid: '请完整填写所有字段，且结束时间必须晚于开始时间',
   pubMyPublished: '我发布的考试',
+  pubLaunch: '发起考试',
+  launchSelectBanks: '选择题库',
+  launchNoBanks: '暂无本地题库，请先在练习页生成或导入',
+  launchTypeCounts: '各题型出题数',
+  launchTotal: '试卷共 {n} 题',
+  launchExamSettings: '考试设置',
+  launchErrorNoQuestions: '请选择题库，并确保出题数大于 0',
   joinDialogTitle: '参加考试',
   joinCodeLabel: '6 位校验码',
   joinNameLabel: '你的姓名',
@@ -1074,6 +1088,13 @@ export const en: LocaleMessages = {
   pubClose: 'Done',
   pubErrorInvalid: 'Fill in all fields; end time must be after start time',
   pubMyPublished: 'My Published Exams',
+  pubLaunch: 'Launch Exam',
+  launchSelectBanks: 'Select Banks',
+  launchNoBanks: 'No local banks yet. Generate or import one in Practice first.',
+  launchTypeCounts: 'Questions per Type',
+  launchTotal: '{n} questions in exam',
+  launchExamSettings: 'Exam Settings',
+  launchErrorNoQuestions: 'Select banks and set at least 1 question',
   joinDialogTitle: 'Join Exam',
   joinCodeLabel: '6-digit Code',
   joinNameLabel: 'Your Name',

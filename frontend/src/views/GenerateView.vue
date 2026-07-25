@@ -12,6 +12,7 @@ import { generateCsvContent } from '@/api/http'
 import { isAndroid } from '@/utils/platform'
 import PublishExamDialog from '@/components/exam/PublishExamDialog.vue'
 import JoinExamDialog from '@/components/exam/JoinExamDialog.vue'
+import LaunchExamDialog from '@/components/exam/LaunchExamDialog.vue'
 import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
 
 const examStore = useExamStore()
@@ -26,6 +27,7 @@ const exporting = ref(false)
 const exportingXlsx = ref(false)
 const showPublish = ref(false)
 const showJoin = ref(false)
+const showLaunch = ref(false)
 
 const baseFileName = computed(() => examStore.sourceFileName || 'exameow_questions')
 
@@ -119,7 +121,8 @@ async function handleShare() {
   <div>
     <h1 class="text-display-sm mb-1">{{ i18n.t('genTitle') }}</h1>
     <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genSubtitle') }}</p>
-    <div class="mb-6 flex justify-end">
+    <div class="mb-6 flex justify-end gap-2">
+      <button class="btn-filled text-sm" @click="showLaunch = true">{{ i18n.t('pubLaunch') }}</button>
       <button class="btn-tonal text-sm" @click="showJoin = true">{{ i18n.t('pubJoin') }}</button>
     </div>
 
@@ -223,5 +226,6 @@ async function handleShare() {
     </template>
     <PublishExamDialog v-if="showPublish" :questions="examStore.questions" @close="showPublish = false" />
     <JoinExamDialog v-if="showJoin" @close="showJoin = false" />
+    <LaunchExamDialog v-if="showLaunch" @close="showLaunch = false" />
   </div>
 </template>
