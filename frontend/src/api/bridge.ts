@@ -59,6 +59,10 @@ export const tauriApi = {
     return invoke<string>('export_xlsx_data', { questionsJson: JSON.stringify(questions) })
   },
 
+  async writeFile(savePath: string, contentBase64: string): Promise<void> {
+    return invoke<void>('write_file', { savePath, contentBase64 })
+  },
+
   async saveToDownloads(filename: string, contentBase64: string): Promise<string> {
     return invoke<string>('save_to_downloads', { filename, contentBase64 })
   },

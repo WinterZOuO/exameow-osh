@@ -147,21 +147,26 @@ async function handleDownloadTemplate() {
     const filename = 'exameow_template.xlsx'
 
     if (isTauriPlatform) {
+      const bytes = new Uint8Array(buf)
+      let binary = ''
+      for (let i = 0; i < bytes.length; i += 8192) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
+      }
+      const b64 = btoa(binary)
       try {
         const mod: any = await import('@tauri-apps/plugin-dialog')
         const path = await mod.save({ defaultPath: filename, filters: [{ name: 'Excel File', extensions: ['xlsx'] }] })
         if (path === null) {
           return
         }
-        const { writeFile } = await import('@tauri-apps/plugin-fs')
-        await writeFile(path, new Uint8Array(buf))
+        const { tauriApi } = await import('@/api/bridge')
+        await tauriApi.writeFile(path, b64)
         templateExportSuccess.value = i18n.t('previewExportSaved') + path
         templateExportFilePath.value = path
         return
       } catch {}
 
       try {
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)))
         const { tauriApi } = await import('@/api/bridge')
         const savedPath = await tauriApi.saveToDownloads(filename, b64)
         templateExportSuccess.value = i18n.t('previewExportSaved') + savedPath

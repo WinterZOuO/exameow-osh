@@ -189,6 +189,14 @@ fn export_xlsx_data(questions_json: String) -> Result<String, CommandError> {
 }
 
 #[tauri::command]
+fn write_file(save_path: String, content_base64: String) -> Result<(), CommandError> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(&content_base64)
+        .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
+    std::fs::write(&save_path, &bytes).map_err(|e| CommandError(format!("Write error: {e}")))
+}
+
+#[tauri::command]
 fn save_to_downloads(filename: String, content_base64: String) -> Result<String, CommandError> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&content_base64)
@@ -606,6 +614,7 @@ pub fn run() {
             export_csv,
             export_xlsx,
             export_xlsx_data,
+            write_file,
             save_to_downloads,
             save_config,
             load_config,
