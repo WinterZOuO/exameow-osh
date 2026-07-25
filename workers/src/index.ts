@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { Ai, Fetcher, R2Bucket } from '@cloudflare/workers-types'
+import type { Ai, Fetcher, D1Database } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
 import { handlePublish, handleGetExam, handleSubmit, handleResults } from './relay'
 import { answerQuestion } from './answer'
@@ -12,7 +12,7 @@ import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
 type Bindings = {
   AI: Ai
   ASSETS: Fetcher
-  EXAM_BUCKET: R2Bucket
+  EXAM_DB: D1Database
   CF_ACCOUNT_ID?: string
   CF_API_TOKEN?: string
 }
@@ -277,10 +277,10 @@ app.post('/api/exam/publish', async (c) => {
     return c.json({ error: 'Invalid JSON body' }, 400)
   }
   const origin = new URL(c.req.url).origin
-  return handlePublish(c.env.EXAM_BUCKET, body, origin)
+  return handlePublish(c.env.EXAM_DB, body, origin)
 })
 
-app.get('/api/exam/code/:code', (c) => handleGetExam(c.env.EXAM_BUCKET, c.req.param('code')))
+app.get('/api/exam/code/:code', (c) => handleGetExam(c.env.EXAM_DB, c.req.param('code')))
 
 app.post('/api/exam/code/:code/submit', async (c) => {
   let body: unknown
@@ -289,11 +289,11 @@ app.post('/api/exam/code/:code/submit', async (c) => {
   } catch {
     return c.json({ error: 'Invalid JSON body' }, 400)
   }
-  return handleSubmit(c.env.EXAM_BUCKET, c.req.param('code'), body)
+  return handleSubmit(c.env.EXAM_DB, c.req.param('code'), body)
 })
 
 app.get('/api/exam/code/:code/results', (c) =>
-  handleResults(c.env.EXAM_BUCKET, c.req.param('code'), c.req.query('token') || ''),
+  handleResults(c.env.EXAM_DB, c.req.param('code'), c.req.query('token') || ''),
 )
 
 // GET /api/health - health check
@@ -324,4 +324,15 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500)
 })
 
-export default app
+export default {
+  fetch: app.fetch,
+  async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+    ctx.waitUntil(
+      env.EXAM_DB.batch([
+        env.EXAM_DB.prepare('DELETE FROM exams WHERE created_at < ?').bind(cutoff),
+        env.EXAM_DB.prepare('DELETE FROM results WHERE submitted_at < ?').bind(cutoff),
+      ]),
+    )
+  },
+}
