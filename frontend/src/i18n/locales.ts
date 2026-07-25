@@ -26,6 +26,10 @@ export interface LocaleMessages {
   recordsStreak: string
   recordsActiveDays: string
   recordsTypeDist: string
+  recordsTodayAccuracy: string
+  recordsTrend: string
+  recordsTrendCount: string
+  recordsTrendAccuracy: string
   recordsLess: string
   recordsMore: string
   recordsDayTooltip: string
@@ -446,6 +450,10 @@ export const zh: LocaleMessages = {
   recordsStreak: '连续打卡',
   recordsActiveDays: '活跃天数',
   recordsTypeDist: '题型分布',
+  recordsTodayAccuracy: '今日正确率',
+  recordsTrend: '练习趋势',
+  recordsTrendCount: '题量',
+  recordsTrendAccuracy: '正确率',
   recordsLess: '少',
   recordsMore: '多',
   recordsDayTooltip: '{n} 题',
@@ -854,6 +862,10 @@ export const en: LocaleMessages = {
   recordsStreak: 'Day Streak',
   recordsActiveDays: 'Active Days',
   recordsTypeDist: 'Type Distribution',
+  recordsTodayAccuracy: "Today's Accuracy",
+  recordsTrend: 'Practice Trend',
+  recordsTrendCount: 'Questions',
+  recordsTrendAccuracy: 'Accuracy',
   recordsLess: 'Less',
   recordsMore: 'More',
   recordsDayTooltip: '{n} questions',
