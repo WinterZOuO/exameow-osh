@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchResults, RelayError } from '@/api/relay'
@@ -16,7 +16,48 @@ const token = (route.query.token as string || '').trim()
 const loading = ref(true)
 const unauthorized = ref(false)
 const data = ref<ExamResultsResponse | null>(null)
+const fromCache = ref(false)
+const refreshing = ref(false)
 const expanded = ref<Set<number>>(new Set())
+
+const CACHE_KEY = `exameow-results-${code}`
+
+function loadCache(): { data: ExamResultsResponse; fetchedAt: number } | null {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
+  } catch {
+    return null
+  }
+}
+
+const isLive = computed(() => !!data.value && Date.now() < data.value.endAt)
+
+async function refresh() {
+  refreshing.value = true
+  try {
+    const fresh = await fetchResults(code, token)
+    data.value = fresh
+    fromCache.value = false
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: fresh, fetchedAt: Date.now() }))
+  } catch (e) {
+    if (!data.value) unauthorized.value = true
+  } finally {
+    refreshing.value = false
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  const cache = loadCache()
+  if (cache) {
+    data.value = cache.data
+    fromCache.value = true
+    loading.value = false
+    if (Date.now() < cache.data.endAt) return
+    if (cache.fetchedAt > cache.data.endAt) return
+  }
+  await refresh()
+})
 
 function toggle(i: number) {
   const s = new Set(expanded.value)
@@ -43,17 +84,6 @@ function fmtDuration(sec: number): string {
   const s = sec % 60
   return m > 0 ? `${m}m ${s}s` : `${s}s`
 }
-
-onMounted(async () => {
-  try {
-    data.value = await fetchResults(code, token)
-  } catch (e) {
-    if (e instanceof RelayError) unauthorized.value = true
-    else unauthorized.value = true
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <template>
@@ -74,6 +104,18 @@ onMounted(async () => {
       <p class="text-body-lg mb-4" style="color: rgb(var(--md-on-surface-variant))">
         {{ data.title }} · {{ code }}
       </p>
+
+      <div v-if="isLive" class="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center justify-between gap-3" style="background-color: rgba(var(--md-primary) / 0.08); color: rgb(var(--md-primary))">
+        <span>{{ i18n.t('manageLiveHint') }}</span>
+        <button class="btn-tonal !h-7 !px-3 !text-xs shrink-0" :disabled="refreshing" @click="refresh">
+          {{ i18n.t('manageRefresh') }}
+        </button>
+      </div>
+      <div v-else-if="fromCache" class="mb-4 flex justify-end">
+        <button class="btn-tonal !h-7 !px-3 !text-xs" :disabled="refreshing" @click="refresh">
+          {{ i18n.t('manageRefresh') }}
+        </button>
+      </div>
 
       <p v-if="data.results.length === 0" class="text-center py-10" style="color: rgb(var(--md-on-surface-variant))">
         {{ i18n.t('manageNoResults') }}

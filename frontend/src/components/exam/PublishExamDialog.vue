@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePublishedStore } from '@/stores/published'
 import { publishExam } from '@/api/relay'
@@ -24,6 +24,8 @@ const publishing = ref(false)
 const error = ref('')
 const result = ref<{ code: string; manageUrl: string } | null>(null)
 const copied = ref('')
+
+const examLink = computed(() => `${window.location.origin}/#/take/${result.value?.code ?? ''}`)
 
 async function handlePublish() {
   error.value = ''
@@ -84,10 +86,10 @@ async function copy(text: string, which: string) {
           </button>
         </div>
         <div>
-          <div class="text-label-sm mb-1">{{ i18n.t('pubManageLinkLabel') }}</div>
+          <div class="text-label-sm mb-1">{{ i18n.t('pubExamLink') }}</div>
           <div class="flex gap-2">
-            <input :value="result.manageUrl" readonly class="input-outlined flex-1 text-xs" />
-            <button class="btn-tonal text-sm shrink-0" @click="copy(result.manageUrl, 'link')">
+            <input :value="examLink" readonly class="input-outlined flex-1 text-xs" />
+            <button class="btn-tonal text-sm shrink-0" @click="copy(examLink, 'link')">
               {{ copied === 'link' ? i18n.t('pubCopied') : i18n.t('pubCopy') }}
             </button>
           </div>

@@ -235,14 +235,17 @@ export async function handleSubmit(
   const objective = graded.filter((g) => g.isCorrect !== null)
   const correctCount = objective.filter((g) => g.isCorrect === true).length
   const pendingCount = graded.filter((g) => g.isCorrect === null).length
+  const pointsOf = (g: GradedQuestion) => (typeof g.question.score === 'number' && g.question.score > 0 ? g.question.score : 1)
+  const score = objective.filter((g) => g.isCorrect === true).reduce((s, g) => s + pointsOf(g), 0)
+  const totalScore = objective.reduce((s, g) => s + pointsOf(g), 0)
 
   const entry: ExamResultEntry = {
     name,
     answers: Object.fromEntries(
       Object.entries(answers).filter(([, v]) => typeof v === 'string'),
     ),
-    score: correctCount,
-    totalScore: objective.length,
+    score,
+    totalScore,
     correctCount,
     totalCount: exam.questions.length,
     pendingCount,
@@ -308,6 +311,6 @@ export async function handleResults(
     submittedAt: r.submitted_at,
     detail: JSON.parse(r.detail) as { questionId: string; isCorrect: boolean | null }[],
   }))
-  const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results }
+  const res: ExamResultsResponse = { title: exam.title, questions: exam.questions, results, endAt: exam.endAt }
   return json(res)
 }

@@ -47,6 +47,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 const selectedBankIds = ref<Set<string>>(new Set())
 const counts = ref<Record<string, number>>({})
+const points = ref<Record<string, number>>({})
 const title = ref('')
 const startAt = ref(toLocalInput(new Date()))
 const durationMinutes = ref(60)
@@ -54,6 +55,8 @@ const publishing = ref(false)
 const error = ref('')
 const result = ref<{ code: string; manageUrl: string } | null>(null)
 const copied = ref('')
+
+const examLink = computed(() => `${window.location.origin}/#/take/${result.value?.code ?? ''}`)
 
 const banks = computed(() => practiceStore.banks)
 
@@ -72,12 +75,15 @@ const activeTypes = computed(() => TYPE_ORDER.filter((t) => (availableByType.val
 
 watch(selectedBanks, () => {
   const next: Record<string, number> = {}
+  const nextPoints: Record<string, number> = {}
   for (const t of activeTypes.value) {
     const prev = counts.value[t]
     const avail = availableByType.value[t] ?? 0
     next[t] = prev !== undefined ? Math.min(prev, avail) : avail
+    nextPoints[t] = points.value[t] ?? 1
   }
   counts.value = next
+  points.value = nextPoints
 })
 
 const totalSelected = computed(() =>
@@ -97,7 +103,8 @@ function composeQuestions(): Question[] {
     const want = Math.min(Math.max(0, counts.value[t] ?? 0), availableByType.value[t] ?? 0)
     if (want <= 0) continue
     const pool = selectedBanks.value.flatMap((b) => b.questions.filter((q) => q.type === t))
-    picked.push(...shuffle(pool).slice(0, want))
+    const pts = Math.max(1, points.value[t] ?? 1)
+    picked.push(...shuffle(pool).slice(0, want).map((q) => ({ ...q, score: pts })))
   }
   return picked.map((q, i) => ({ ...q, id: `q${i + 1}` }))
 }
@@ -181,7 +188,14 @@ async function copy(text: string, which: string) {
                 :max="availableByType[t]"
                 class="input-outlined w-20 text-center"
               />
-              <span class="text-xs" style="color: rgb(var(--md-on-surface-variant))">/ {{ availableByType[t] }}</span>
+              <span class="text-xs shrink-0" style="color: rgb(var(--md-on-surface-variant))">/ {{ availableByType[t] }}</span>
+              <span class="text-xs shrink-0" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('launchPoints') }}</span>
+              <input
+                v-model.number="points[t]"
+                type="number"
+                min="1"
+                class="input-outlined w-16 text-center"
+              />
             </div>
           </div>
           <p class="text-xs mt-1" style="color: rgb(var(--md-primary))">{{ i18n.t('launchTotal', { n: totalSelected }) }}</p>
@@ -213,10 +227,10 @@ async function copy(text: string, which: string) {
           </button>
         </div>
         <div>
-          <div class="text-label-sm mb-1">{{ i18n.t('pubManageLinkLabel') }}</div>
+          <div class="text-label-sm mb-1">{{ i18n.t('pubExamLink') }}</div>
           <div class="flex gap-2">
-            <input :value="result.manageUrl" readonly class="input-outlined flex-1 text-xs" />
-            <button class="btn-tonal text-sm shrink-0" @click="copy(result.manageUrl, 'link')">
+            <input :value="examLink" readonly class="input-outlined flex-1 text-xs" />
+            <button class="btn-tonal text-sm shrink-0" @click="copy(examLink, 'link')">
               {{ copied === 'link' ? i18n.t('pubCopied') : i18n.t('pubCopy') }}
             </button>
           </div>

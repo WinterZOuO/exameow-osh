@@ -19,6 +19,7 @@ export interface Question {
   options: string[]
   answer: string
   analysis: string
+  score?: number
 }
 
 export interface ExamParams {
@@ -147,4 +148,5 @@ export interface ExamResultsResponse {
   title: string
   questions: Question[]
   results: ExamResultEntry[]
+  endAt: number
 }

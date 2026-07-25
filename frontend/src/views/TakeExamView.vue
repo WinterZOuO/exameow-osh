@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchExam, submitExam, RelayError } from '@/api/relay'
@@ -14,7 +14,9 @@ const i18n = useI18nStore()
 const joinedStore = useJoinedStore()
 
 const code = (route.params.code as string || '').toUpperCase()
-const studentName = (route.query.name as string || '').trim()
+const studentName = ref((route.query.name as string || '').trim())
+const nameInput = ref(studentName.value)
+const needsName = ref(false)
 
 const loading = ref(true)
 const errorKey = ref<'not_found' | 'not_started' | 'ended' | ''>('')
@@ -111,11 +113,12 @@ async function doSubmit() {
   submitting.value = true
   try {
     result.value = await submitExam(code, {
-      name: studentName,
+      name: studentName.value,
       answers: answers.value,
       durationSec: Math.round((Date.now() - startedAt.value) / 1000),
     })
-    joinedStore.markSubmitted(code, studentName, exam.value.title, result.value.score, result.value.totalScore)
+    joinedStore.markSubmitted(code, studentName.value, exam.value.title, result.value.score, result.value.totalScore, result.value.graded)
+    sessionStorage.removeItem(storageKey())
   } catch (e) {
     if (e instanceof RelayError && e.code === 'ended') errorKey.value = 'ended'
     else submitError.value = e instanceof Error ? e.message : String(e)
@@ -133,18 +136,65 @@ function handleSubmitClick() {
   }
 }
 
-onMounted(async () => {
+function storageKey(): string {
+  return `exameow-take-${code}`
+}
+
+function saveProgress() {
+  if (!exam.value || result.value) return
+  try {
+    sessionStorage.setItem(storageKey(), JSON.stringify({
+      name: studentName.value,
+      info: exam.value,
+      answers: answers.value,
+      startedAt: startedAt.value,
+    }))
+  } catch {}
+}
+
+watch(answers, saveProgress, { deep: true })
+
+function restore(): boolean {
+  try {
+    const raw = sessionStorage.getItem(storageKey())
+    if (!raw) return false
+    const saved = JSON.parse(raw)
+    if (!saved.info || Date.now() > saved.info.endAt) {
+      sessionStorage.removeItem(storageKey())
+      return false
+    }
+    if (studentName.value && saved.name !== studentName.value) return false
+    exam.value = saved.info
+    answers.value = saved.answers || {}
+    startedAt.value = saved.startedAt || Date.now()
+    studentName.value = saved.name
+    return true
+  } catch {
+    return false
+  }
+}
+
+function beginTimer() {
+  if (timer) clearInterval(timer)
+  timer = setInterval(() => {
+    if (!exam.value) return
+    const elapsed = Math.floor((Date.now() - startedAt.value) / 1000)
+    remainingSec.value = Math.min(
+      exam.value.durationMinutes * 60 - elapsed,
+      Math.floor((exam.value.endAt - Date.now()) / 1000),
+    )
+    if (remainingSec.value <= 0) doSubmit()
+  }, 1000)
+}
+
+async function loadExam() {
+  loading.value = true
   try {
     const info = await fetchExam(code)
     exam.value = info
     startedAt.value = Date.now()
-    const durationSec = info.durationMinutes * 60
-    const windowSec = Math.floor((info.endAt - Date.now()) / 1000)
-    remainingSec.value = Math.min(durationSec, windowSec)
-    timer = setInterval(() => {
-      remainingSec.value--
-      if (remainingSec.value <= 0) doSubmit()
-    }, 1000)
+    saveProgress()
+    beginTimer()
   } catch (e) {
     if (e instanceof RelayError) {
       if (e.code === 'not_started') {
@@ -159,6 +209,38 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+function handleNameSubmit() {
+  const n = nameInput.value.trim()
+  if (!n) return
+  studentName.value = n
+  joinedStore.add(code, n)
+  needsName.value = false
+  if (restore()) {
+    beginTimer()
+    return
+  }
+  loadExam()
+}
+
+onMounted(async () => {
+  if (!studentName.value) {
+    if (restore()) {
+      beginTimer()
+      loading.value = false
+      return
+    }
+    needsName.value = true
+    loading.value = false
+    return
+  }
+  if (restore()) {
+    beginTimer()
+    loading.value = false
+    return
+  }
+  await loadExam()
 })
 
 onUnmounted(() => {
@@ -177,6 +259,20 @@ onUnmounted(() => {
         <template v-else>{{ i18n.t('takeNotFound') }}</template>
       </p>
       <button class="btn-tonal" @click="router.push('/')">{{ i18n.t('takeBackHome') }}</button>
+    </div>
+
+    <div v-else-if="needsName" class="card-filled p-6 space-y-4 max-w-sm mx-auto">
+      <h1 class="text-title-lg">{{ i18n.t('joinDialogTitle') }}</h1>
+      <p class="text-sm tracking-[0.3em] font-bold" style="color: rgb(var(--md-primary))">{{ code }}</p>
+      <input
+        v-model="nameInput"
+        class="input-outlined w-full"
+        :placeholder="i18n.t('takeEnterName')"
+        @keyup.enter="handleNameSubmit"
+      />
+      <button class="btn-filled w-full" :disabled="!nameInput.trim()" @click="handleNameSubmit">
+        {{ i18n.t('joinConfirm') }}
+      </button>
     </div>
 
     <template v-else-if="exam && !result && currentQuestion">

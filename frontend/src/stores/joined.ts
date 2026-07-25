@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import type { GradedQuestion } from '@exameow/shared'
 
 export interface JoinedRecord {
   code: string
@@ -9,6 +10,7 @@ export interface JoinedRecord {
   score?: number
   totalScore?: number
   submittedAt?: number
+  graded?: GradedQuestion[]
 }
 
 const KEY = 'exameow-joined'
@@ -34,13 +36,14 @@ export const useJoinedStore = defineStore('joined', () => {
     list.value.unshift({ code, name, joinedAt: Date.now() })
   }
 
-  function markSubmitted(code: string, name: string, title: string, score: number, totalScore: number) {
+  function markSubmitted(code: string, name: string, title: string, score: number, totalScore: number, graded?: GradedQuestion[]) {
     const rec = list.value.find((r) => r.code === code && r.name === name)
     if (!rec) return
     rec.title = title
     rec.score = score
     rec.totalScore = totalScore
     rec.submittedAt = Date.now()
+    if (graded) rec.graded = graded
   }
 
   function remove(code: string, name: string) {

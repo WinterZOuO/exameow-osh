@@ -15,10 +15,14 @@ function managePath(manageUrl: string): string {
   return hash || '/'
 }
 
-async function copyLink(url: string, code: string) {
+function examLink(code: string): string {
+  return `${window.location.origin}/#/take/${code}`
+}
+
+async function copyText(text: string, key: string) {
   try {
-    await navigator.clipboard.writeText(url)
-    copiedCode.value = code
+    await navigator.clipboard.writeText(text)
+    copiedCode.value = key
     setTimeout(() => (copiedCode.value = ''), 1500)
   } catch {}
 }
@@ -54,8 +58,11 @@ function fmtTime(ts: number): string {
           <button class="btn-filled !h-8 !px-3 !text-xs" @click="router.push(managePath(rec.manageUrl))">
             <ChartBarIcon class="w-4 h-4" /> {{ i18n.t('pubViewResults') }}
           </button>
-          <button class="btn-tonal !h-8 !px-3 !text-xs" @click="copyLink(rec.manageUrl, rec.code)">
-            <ClipboardDocumentIcon class="w-4 h-4" /> {{ copiedCode === rec.code ? i18n.t('pubCopied') : i18n.t('pubCopy') }}
+          <button class="btn-tonal !h-8 !px-3 !text-xs" @click="copyText(rec.code, 'code:' + rec.code)">
+            <ClipboardDocumentIcon class="w-4 h-4" /> {{ copiedCode === 'code:' + rec.code ? i18n.t('pubCopied') : i18n.t('pubCodeLabel') }}
+          </button>
+          <button class="btn-tonal !h-8 !px-3 !text-xs" @click="copyText(examLink(rec.code), 'link:' + rec.code)">
+            <ClipboardDocumentIcon class="w-4 h-4" /> {{ copiedCode === 'link:' + rec.code ? i18n.t('pubCopied') : i18n.t('pubExamLink') }}
           </button>
           <button class="btn-outlined !h-8 !px-3 !text-xs" @click="publishedStore.remove(rec.code)">
             <TrashIcon class="w-4 h-4" /> {{ i18n.t('pubDeleteRecord') }}

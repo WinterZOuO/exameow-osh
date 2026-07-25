@@ -371,6 +371,12 @@ export interface LocaleMessages {
   launchTotal: string
   launchExamSettings: string
   launchErrorNoQuestions: string
+  launchPoints: string
+  pubExamLink: string
+  manageLiveHint: string
+  manageRefresh: string
+  joinedViewResult: string
+  takeEnterName: string
   joinDialogTitle: string
   joinCodeLabel: string
   joinNameLabel: string
@@ -760,6 +766,12 @@ export const zh: LocaleMessages = {
   launchTotal: '试卷共 {n} 题',
   launchExamSettings: '考试设置',
   launchErrorNoQuestions: '请选择题库，并确保出题数大于 0',
+  launchPoints: '分值',
+  pubExamLink: '考试链接',
+  manageLiveHint: '考试进行中，成绩将在结束后更新（结束后自动查询一次，节省资源）',
+  manageRefresh: '刷新',
+  joinedViewResult: '查看成绩',
+  takeEnterName: '请输入你的姓名',
   joinDialogTitle: '参加考试',
   joinCodeLabel: '6 位校验码',
   joinNameLabel: '你的姓名',
@@ -1149,6 +1161,12 @@ export const en: LocaleMessages = {
   launchTotal: '{n} questions in exam',
   launchExamSettings: 'Exam Settings',
   launchErrorNoQuestions: 'Select banks and set at least 1 question',
+  launchPoints: 'Points',
+  pubExamLink: 'Exam Link',
+  manageLiveHint: 'Exam in progress. Results refresh after it ends (fetched once to save resources)',
+  manageRefresh: 'Refresh',
+  joinedViewResult: 'View Result',
+  takeEnterName: 'Enter your name',
   joinDialogTitle: 'Join Exam',
   joinCodeLabel: '6-digit Code',
   joinNameLabel: 'Your Name',
