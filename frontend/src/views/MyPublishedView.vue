@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { usePublishedStore } from '@/stores/published'
-import { deleteExam } from '@/api/relay'
+import { deleteExam, examLinkFor } from '@/api/relay'
 import { ArrowLeftIcon, ClipboardDocumentIcon, ChartBarIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { ref } from 'vue'
 
@@ -37,7 +37,7 @@ function managePath(manageUrl: string): string {
 }
 
 function examLink(code: string): string {
-  return `${window.location.origin}/#/take/${code}`
+  return examLinkFor(code)
 }
 
 async function copyText(text: string, key: string) {

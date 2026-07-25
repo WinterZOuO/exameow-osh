@@ -10,6 +10,10 @@ import type {
 const RELAY_BASE: string =
   (import.meta.env.VITE_EXAM_RELAY as string | undefined) || 'https://exam.superagentparty.com'
 
+export function examLinkFor(code: string): string {
+  return `${RELAY_BASE}/#/take/${encodeURIComponent(code)}`
+}
+
 export class RelayError extends Error {
   constructor(
     public status: number,

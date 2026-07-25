@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { usePublishedStore } from '@/stores/published'
-import { publishExam } from '@/api/relay'
+import { publishExam, examLinkFor } from '@/api/relay'
 import ScheduleFields from '@/components/exam/ScheduleFields.vue'
 import type { Question } from '@exameow/shared'
 
@@ -25,7 +25,7 @@ const error = ref('')
 const result = ref<{ code: string; manageUrl: string } | null>(null)
 const copied = ref('')
 
-const examLink = computed(() => `${window.location.origin}/#/take/${result.value?.code ?? ''}`)
+const examLink = computed(() => examLinkFor(result.value?.code ?? ''))
 
 async function handlePublish() {
   error.value = ''
