@@ -168,7 +168,7 @@ function isToday(day: number | null): boolean {
               type="number"
               min="0"
               max="23"
-              class="input-outlined w-20 text-center dt-no-spinner"
+              class="input-outlined w-20 text-center no-spinner"
               @change="setHour(Number(($event.target as HTMLInputElement).value))"
             />
             <span class="font-bold">:</span>
@@ -177,7 +177,7 @@ function isToday(day: number | null): boolean {
               type="number"
               min="0"
               max="59"
-              class="input-outlined w-20 text-center dt-no-spinner"
+              class="input-outlined w-20 text-center no-spinner"
               @change="setMinute(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
@@ -188,15 +188,3 @@ function isToday(day: number | null): boolean {
     </Transition>
   </Teleport>
 </template>
-
-<style scoped>
-.dt-no-spinner::-webkit-outer-spin-button,
-.dt-no-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.dt-no-spinner {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-</style>

@@ -186,7 +186,7 @@ async function copy(text: string, which: string) {
                 type="number"
                 min="0"
                 :max="availableByType[t]"
-                class="input-outlined w-20 text-center"
+                class="input-outlined w-20 text-center no-spinner"
               />
               <span class="text-xs shrink-0" style="color: rgb(var(--md-on-surface-variant))">/ {{ availableByType[t] }}</span>
               <span class="text-xs shrink-0" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('launchPoints') }}</span>
@@ -194,7 +194,7 @@ async function copy(text: string, which: string) {
                 v-model.number="points[t]"
                 type="number"
                 min="1"
-                class="input-outlined w-16 text-center"
+                class="input-outlined w-20 text-center no-spinner"
               />
             </div>
           </div>
