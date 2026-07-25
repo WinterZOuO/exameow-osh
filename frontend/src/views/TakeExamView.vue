@@ -2,11 +2,11 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
-import { fetchExam, submitExam, RelayError } from '@/api/relay'
+import { fetchExam, submitExam, reportExam, RelayError } from '@/api/relay'
 import { useJoinedStore } from '@/stores/joined'
 import ProgressBar from '@/components/practice/ProgressBar.vue'
 import type { PublishedExamInfo, SubmitExamResponse } from '@exameow/shared'
-import { CheckIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/vue/24/outline'
+import { CheckIcon, CheckCircleIcon, XCircleIcon, ClockIcon, FlagIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,7 +19,7 @@ const nameInput = ref(studentName.value)
 const needsName = ref(false)
 
 const loading = ref(true)
-const errorKey = ref<'not_found' | 'not_started' | 'ended' | ''>('')
+const errorKey = ref<'not_found' | 'not_started' | 'ended' | 'reported' | ''>('')
 const notStartedTime = ref('')
 const exam = ref<PublishedExamInfo | null>(null)
 const answers = ref<Record<string, string>>({})
@@ -31,6 +31,21 @@ const result = ref<SubmitExamResponse | null>(null)
 const currentIndex = ref(0)
 const showSheet = ref(false)
 const showSubmitConfirm = ref(false)
+const showReport = ref(false)
+const reportReason = ref('')
+const reportSent = ref(false)
+
+async function sendReport() {
+  try {
+    await reportExam(code, reportReason.value.trim())
+  } catch {}
+  reportSent.value = true
+  setTimeout(() => {
+    showReport.value = false
+    reportSent.value = false
+    reportReason.value = ''
+  }, 1500)
+}
 let timer: ReturnType<typeof setInterval> | null = null
 
 const optionLabels = 'ABCDEFGH'.split('')
@@ -202,6 +217,7 @@ async function loadExam() {
         if (e.startAt) notStartedTime.value = new Date(e.startAt).toLocaleString()
       }
       else if (e.code === 'ended') errorKey.value = 'ended'
+      else if (e.code === 'reported') errorKey.value = 'reported'
       else errorKey.value = 'not_found'
     } else {
       errorKey.value = 'not_found'
@@ -256,6 +272,7 @@ onUnmounted(() => {
       <p class="text-body-lg" style="color: rgb(var(--md-error))">
         <template v-if="errorKey === 'not_started'">{{ i18n.t('takeNotStarted', { time: notStartedTime }) }}</template>
         <template v-else-if="errorKey === 'ended'">{{ i18n.t('takeEnded') }}</template>
+        <template v-else-if="errorKey === 'reported'">{{ i18n.t('takeReported') }}</template>
         <template v-else>{{ i18n.t('takeNotFound') }}</template>
       </p>
       <button class="btn-tonal" @click="router.push('/')">{{ i18n.t('takeBackHome') }}</button>
@@ -282,12 +299,22 @@ onUnmounted(() => {
           <h1 class="text-display-sm mb-1 truncate">{{ exam.title }}</h1>
           <p class="text-body-lg" style="color: rgb(var(--md-on-surface-variant))">{{ studentName }}</p>
         </div>
-        <div
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0"
-          style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
-        >
-          <ClockIcon class="w-4 h-4" />
-          <span class="text-sm font-bold tabular-nums">{{ timeText }}</span>
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            class="btn-icon !w-8 !h-8"
+            :title="i18n.t('reportBtn')"
+            style="color: rgb(var(--md-on-surface-variant))"
+            @click="showReport = true"
+          >
+            <FlagIcon class="w-4 h-4" />
+          </button>
+          <div
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
+          >
+            <ClockIcon class="w-4 h-4" />
+            <span class="text-sm font-bold tabular-nums">{{ timeText }}</span>
+          </div>
         </div>
       </div>
 
@@ -448,6 +475,28 @@ onUnmounted(() => {
             >{{ i + 1 }}</button>
           </div>
           <button class="btn-tonal w-full" @click="showSheet = false">{{ i18n.t('pubClose') }}</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Report Dialog -->
+    <Transition name="scale">
+      <div v-if="showReport" class="scrim flex items-center justify-center p-4 z-50" @click.self="showReport = false">
+        <div class="card-elevated w-full max-w-sm p-5 space-y-3">
+          <div class="text-title-sm">{{ i18n.t('reportDialogTitle') }}</div>
+          <template v-if="!reportSent">
+            <textarea
+              v-model="reportReason"
+              rows="3"
+              class="input-outlined w-full !min-h-[80px]"
+              :placeholder="i18n.t('reportReasonPlaceholder')"
+            />
+            <div class="flex gap-3">
+              <button class="btn-outlined flex-1" @click="showReport = false">{{ i18n.t('pubCancel') }}</button>
+              <button class="btn-filled flex-1" @click="sendReport">{{ i18n.t('reportSubmit') }}</button>
+            </div>
+          </template>
+          <p v-else class="text-sm text-center py-2" style="color: rgb(var(--md-primary))">{{ i18n.t('reportThanks') }}</p>
         </div>
       </div>
     </Transition>

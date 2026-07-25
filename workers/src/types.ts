@@ -108,6 +108,7 @@ export interface StoredExam {
   durationMinutes: number
   createdAt: number
   adminTokenHash: string
+  suspended?: number
 }
 
 export interface SubmitExamRequest {

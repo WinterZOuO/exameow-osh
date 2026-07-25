@@ -16,6 +16,8 @@ const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 const CODE_LENGTH = 6
 export const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_QUESTIONS = 500
+const MAX_PUBLISH_PER_DAY = 20
+const REPORT_SUSPEND_THRESHOLD = 5
 const MAX_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 export function generateCode(): string {
@@ -48,6 +50,7 @@ interface ExamRow {
   duration_minutes: number
   created_at: number
   admin_token_hash: string
+  suspended: number
 }
 
 interface ResultRow {
@@ -76,6 +79,7 @@ export async function readExam(db: D1Database, code: string): Promise<StoredExam
     durationMinutes: row.duration_minutes,
     createdAt: row.created_at,
     adminTokenHash: row.admin_token_hash,
+    suspended: row.suspended,
   }
   if (isExpired(exam)) {
     await db.batch([
@@ -98,7 +102,23 @@ export async function handlePublish(
   db: D1Database,
   body: unknown,
   origin: string,
+  ip: string,
 ): Promise<Response> {
+  const day = new Date().toISOString().slice(0, 10)
+  await db
+    .prepare(
+      'INSERT INTO publish_limits (ip, day, count) VALUES (?, ?, 1) ON CONFLICT(ip, day) DO UPDATE SET count = count + 1',
+    )
+    .bind(ip, day)
+    .run()
+  const limitRow = await db
+    .prepare('SELECT count FROM publish_limits WHERE ip = ? AND day = ?')
+    .bind(ip, day)
+    .first<{ count: number }>()
+  if ((limitRow?.count ?? 0) > MAX_PUBLISH_PER_DAY) {
+    return json({ error: 'rate_limited' }, 429)
+  }
+
   const req = body as Partial<PublishExamRequest>
   if (typeof req.title !== 'string') return json({ error: 'Title is required' }, 400)
   const title = req.title.trim()
@@ -195,6 +215,7 @@ function windowCheck(exam: StoredExam): Response | null {
 export async function handleGetExam(db: D1Database, code: string): Promise<Response> {
   const exam = await readExam(db, code)
   if (!exam) return json({ error: 'not_found' }, 404)
+  if (exam.suspended) return json({ error: 'reported' }, 403)
   const deny = windowCheck(exam)
   if (deny) return deny
   const publicQuestions: PublicQuestion[] = exam.questions.map(
@@ -217,6 +238,7 @@ export async function handleSubmit(
 ): Promise<Response> {
   const exam = await readExam(db, code)
   if (!exam) return json({ error: 'not_found' }, 404)
+  if (exam.suspended) return json({ error: 'reported' }, 403)
   const deny = windowCheck(exam)
   if (deny) return deny
 
@@ -328,6 +350,57 @@ export async function handleDeleteExam(
   await db.batch([
     db.prepare('DELETE FROM exams WHERE code = ?').bind(code),
     db.prepare('DELETE FROM results WHERE code = ?').bind(code),
+  ])
+  return json({ ok: true })
+}
+
+export async function handleReport(db: D1Database, code: string, ip: string, body: unknown): Promise<Response> {
+  const exam = await readExam(db, code)
+  if (!exam) return json({ error: 'not_found' }, 404)
+  const reason = typeof (body as { reason?: unknown })?.reason === 'string'
+    ? ((body as { reason: string }).reason || '').trim().slice(0, 500)
+    : ''
+  await db
+    .prepare('INSERT INTO reports (id, code, ip, reason, created_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(crypto.randomUUID(), code, ip, reason, Date.now())
+    .run()
+  const row = await db
+    .prepare('SELECT COUNT(DISTINCT ip) AS n FROM reports WHERE code = ?')
+    .bind(code)
+    .first<{ n: number }>()
+  if ((row?.n ?? 0) >= REPORT_SUSPEND_THRESHOLD) {
+    await db.prepare('UPDATE exams SET suspended = 1 WHERE code = ?').bind(code).run()
+  }
+  return json({ ok: true })
+}
+
+export async function handleAdminReports(db: D1Database): Promise<Response> {
+  const { results: rows } = await db
+    .prepare(
+      `SELECT r.code, COUNT(*) AS report_count, COUNT(DISTINCT r.ip) AS ip_count,
+              MAX(r.created_at) AS last_reported_at,
+              (SELECT title FROM exams e WHERE e.code = r.code) AS title,
+              (SELECT suspended FROM exams e WHERE e.code = r.code) AS suspended,
+              (SELECT reason FROM reports r2 WHERE r2.code = r.code ORDER BY r2.created_at DESC LIMIT 1) AS last_reason
+       FROM reports r GROUP BY r.code ORDER BY last_reported_at DESC LIMIT 100`,
+    )
+    .all()
+  return json({ reports: rows })
+}
+
+export async function handleAdminDelete(db: D1Database, code: string): Promise<Response> {
+  await db.batch([
+    db.prepare('DELETE FROM exams WHERE code = ?').bind(code),
+    db.prepare('DELETE FROM results WHERE code = ?').bind(code),
+    db.prepare('DELETE FROM reports WHERE code = ?').bind(code),
+  ])
+  return json({ ok: true })
+}
+
+export async function handleAdminRestore(db: D1Database, code: string): Promise<Response> {
+  await db.batch([
+    db.prepare('UPDATE exams SET suspended = 0 WHERE code = ?').bind(code),
+    db.prepare('DELETE FROM reports WHERE code = ?').bind(code),
   ])
   return json({ ok: true })
 }

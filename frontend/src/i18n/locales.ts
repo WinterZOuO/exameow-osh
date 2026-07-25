@@ -395,6 +395,13 @@ export interface LocaleMessages {
   manageRefresh: string
   joinedViewResult: string
   takeEnterName: string
+  reportBtn: string
+  reportDialogTitle: string
+  reportReasonPlaceholder: string
+  reportSubmit: string
+  reportThanks: string
+  takeReported: string
+  pubRateLimited: string
   joinDialogTitle: string
   joinCodeLabel: string
   joinNameLabel: string
@@ -808,6 +815,13 @@ export const zh: LocaleMessages = {
   manageRefresh: '刷新',
   joinedViewResult: '查看成绩',
   takeEnterName: '请输入你的姓名',
+  reportBtn: '举报',
+  reportDialogTitle: '举报考试',
+  reportReasonPlaceholder: '请描述问题（选填）',
+  reportSubmit: '提交举报',
+  reportThanks: '已收到举报，感谢反馈',
+  takeReported: '该考试因被举报已暂停',
+  pubRateLimited: '发布次数已达今日上限，请明天再试',
   joinDialogTitle: '参加考试',
   joinCodeLabel: '6 位校验码',
   joinNameLabel: '你的姓名',
@@ -1221,6 +1235,13 @@ export const en: LocaleMessages = {
   manageRefresh: 'Refresh',
   joinedViewResult: 'View Result',
   takeEnterName: 'Enter your name',
+  reportBtn: 'Report',
+  reportDialogTitle: 'Report Exam',
+  reportReasonPlaceholder: 'Describe the issue (optional)',
+  reportSubmit: 'Submit Report',
+  reportThanks: 'Report received, thank you',
+  takeReported: 'This exam has been suspended due to reports',
+  pubRateLimited: 'Daily publish limit reached, try again tomorrow',
   joinDialogTitle: 'Join Exam',
   joinCodeLabel: '6-digit Code',
   joinNameLabel: 'Your Name',

@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Ai, Fetcher, D1Database } from '@cloudflare/workers-types'
 import { generateExam } from './exam'
-import { handlePublish, handleGetExam, handleSubmit, handleResults, handleDeleteExam } from './relay'
+import { handlePublish, handleGetExam, handleSubmit, handleResults, handleDeleteExam, handleReport, handleAdminReports, handleAdminDelete, handleAdminRestore } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
 import { parseFile } from './parser'
@@ -15,6 +15,7 @@ type Bindings = {
   EXAM_DB: D1Database
   CF_ACCOUNT_ID?: string
   CF_API_TOKEN?: string
+  ADMIN_TOKEN?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -277,7 +278,7 @@ app.post('/api/exam/publish', async (c) => {
     return c.json({ error: 'Invalid JSON body' }, 400)
   }
   const origin = new URL(c.req.url).origin
-  return handlePublish(c.env.EXAM_DB, body, origin)
+  return handlePublish(c.env.EXAM_DB, body, origin, c.req.header('CF-Connecting-IP') || 'unknown')
 })
 
 app.get('/api/exam/code/:code', (c) => handleGetExam(c.env.EXAM_DB, c.req.param('code')))
@@ -299,6 +300,37 @@ app.get('/api/exam/code/:code/results', (c) =>
 app.delete('/api/exam/code/:code', (c) =>
   handleDeleteExam(c.env.EXAM_DB, c.req.param('code'), c.req.query('token') || ''),
 )
+
+app.post('/api/exam/code/:code/report', async (c) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  return handleReport(c.env.EXAM_DB, c.req.param('code'), c.req.header('CF-Connecting-IP') || 'unknown', body)
+})
+
+function adminAuthorized(c: { env: Bindings; req: { header: (name: string) => string | undefined } }): boolean {
+  const token = c.env.ADMIN_TOKEN
+  if (!token) return false
+  return c.req.header('authorization') === `Bearer ${token}`
+}
+
+app.get('/api/exam/admin/reports', (c) => {
+  if (!adminAuthorized(c)) return c.json({ error: 'unauthorized' }, 403)
+  return handleAdminReports(c.env.EXAM_DB)
+})
+
+app.delete('/api/exam/admin/code/:code', (c) => {
+  if (!adminAuthorized(c)) return c.json({ error: 'unauthorized' }, 403)
+  return handleAdminDelete(c.env.EXAM_DB, c.req.param('code'))
+})
+
+app.post('/api/exam/admin/code/:code/restore', (c) => {
+  if (!adminAuthorized(c)) return c.json({ error: 'unauthorized' }, 403)
+  return handleAdminRestore(c.env.EXAM_DB, c.req.param('code'))
+})
 
 // GET /api/health - health check
 app.get('/api/health', (c) => {
@@ -332,10 +364,13 @@ export default {
   fetch: app.fetch,
   async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+    const dayCutoff = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
     ctx.waitUntil(
       env.EXAM_DB.batch([
         env.EXAM_DB.prepare('DELETE FROM exams WHERE created_at < ?').bind(cutoff),
         env.EXAM_DB.prepare('DELETE FROM results WHERE submitted_at < ?').bind(cutoff),
+        env.EXAM_DB.prepare('DELETE FROM reports WHERE created_at < ?').bind(cutoff),
+        env.EXAM_DB.prepare('DELETE FROM publish_limits WHERE day < ?').bind(dayCutoff),
       ]),
     )
   },

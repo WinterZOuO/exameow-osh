@@ -66,3 +66,11 @@ export function deleteExam(code: string, token: string): Promise<{ ok: boolean }
     method: 'DELETE',
   })
 }
+
+export function reportExam(code: string, reason: string): Promise<{ ok: boolean }> {
+  return request(`/api/exam/code/${encodeURIComponent(code)}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  })
+}

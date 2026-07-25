@@ -134,7 +134,7 @@ async function handlePublish() {
     result.value = { code: res.code, manageUrl: res.manageUrl }
     publishedStore.add({ code: res.code, title: title.value.trim(), manageUrl: res.manageUrl, publishedAt: Date.now() })
   } catch (e: any) {
-    error.value = e.message || String(e)
+    error.value = e?.code === 'rate_limited' ? i18n.t('pubRateLimited') : e.message || String(e)
   } finally {
     publishing.value = false
   }
