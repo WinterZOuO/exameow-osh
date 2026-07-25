@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useJoinedStore } from '@/stores/joined'
-import { ChevronLeftIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const i18n = useI18nStore()
@@ -17,7 +17,7 @@ function fmtTime(ts: number): string {
   <div class="max-w-2xl mx-auto">
     <div class="flex items-center gap-2 mb-6">
       <button class="btn-icon" @click="router.push('/mine')">
-        <ChevronLeftIcon class="w-6 h-6" />
+        <ArrowLeftIcon class="w-5 h-5" />
       </button>
       <h1 class="text-display-sm">{{ i18n.t('mineJoined') }}</h1>
     </div>

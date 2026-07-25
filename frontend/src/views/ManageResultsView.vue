@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchResults, RelayError } from '@/api/relay'
 import type { ExamResultEntry, ExamResultsResponse, Question } from '@exameow/shared'
+import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
+const router = useRouter()
 const i18n = useI18nStore()
 
 const code = (route.params.code as string || '').toUpperCase()
@@ -63,7 +65,12 @@ onMounted(async () => {
     </div>
 
     <template v-else-if="data">
-      <h1 class="text-display-sm mb-1">{{ i18n.t('manageTitle') }}</h1>
+      <div class="flex items-center gap-2 mb-1">
+        <button class="btn-icon" @click="router.push('/mine/published')">
+          <ArrowLeftIcon class="w-5 h-5" />
+        </button>
+        <h1 class="text-display-sm">{{ i18n.t('manageTitle') }}</h1>
+      </div>
       <p class="text-body-lg mb-4" style="color: rgb(var(--md-on-surface-variant))">
         {{ data.title }} · {{ code }}
       </p>

@@ -4,7 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchExam, submitExam, RelayError } from '@/api/relay'
 import { useJoinedStore } from '@/stores/joined'
+import ProgressBar from '@/components/practice/ProgressBar.vue'
 import type { PublishedExamInfo, SubmitExamResponse } from '@exameow/shared'
+import { CheckIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,12 +26,25 @@ const startedAt = ref(0)
 const submitting = ref(false)
 const submitError = ref('')
 const result = ref<SubmitExamResponse | null>(null)
+const currentIndex = ref(0)
+const showSheet = ref(false)
+const showSubmitConfirm = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 
-const unansweredCount = computed(() => {
+const optionLabels = 'ABCDEFGH'.split('')
+const isMulti = (t: string) => t === 'multi_choice'
+const isChoice = (t: string) => ['single_choice', 'multi_choice', 'true_false'].includes(t)
+
+const currentQuestion = computed(() => exam.value?.questions[currentIndex.value] ?? null)
+const isFirst = computed(() => currentIndex.value <= 0)
+const isLast = computed(() => !!exam.value && currentIndex.value >= exam.value.questions.length - 1)
+
+const answeredCount = computed(() => {
   if (!exam.value) return 0
-  return exam.value.questions.filter((q) => !(answers.value[q.id] || '').trim()).length
+  return exam.value.questions.filter((q) => (answers.value[q.id] || '').trim()).length
 })
+
+const unansweredCount = computed(() => (exam.value ? exam.value.questions.length - answeredCount.value : 0))
 
 const timeText = computed(() => {
   const s = Math.max(0, remainingSec.value)
@@ -39,6 +54,17 @@ const timeText = computed(() => {
   const pad = (n: number) => String(n).padStart(2, '0')
   return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 })
+
+const typeLabel = (t: string): string => {
+  const labels: Record<string, string> = {
+    single_choice: i18n.t('typeSingle'),
+    multi_choice: i18n.t('typeMulti'),
+    true_false: i18n.t('typeTrueFalse'),
+    fill_blank: i18n.t('typeFillBlank'),
+    short_answer: i18n.t('typeShortAnswer'),
+  }
+  return labels[t] ?? t
+}
 
 function isSelected(qid: string, label: string, multi: boolean): boolean {
   const a = answers.value[qid] || ''
@@ -55,6 +81,27 @@ function select(qid: string, label: string, multi: boolean) {
   const cur = answers.value[qid] || ''
   const next = cur.includes(label) ? cur.replace(label, '') : (cur + label).split('').sort().join('')
   answers.value[qid] = next
+}
+
+function optionStyle(qid: string, label: string, multi: boolean) {
+  const sel = isSelected(qid, label, multi)
+  return {
+    borderColor: sel ? 'rgb(var(--md-primary))' : 'rgb(var(--md-outline-variant))',
+    backgroundColor: sel ? 'rgba(var(--md-primary), 0.08)' : 'transparent',
+  }
+}
+
+function badgeStyle(qid: string, label: string, multi: boolean) {
+  const sel = isSelected(qid, label, multi)
+  return {
+    backgroundColor: sel ? 'rgb(var(--md-primary))' : 'rgb(var(--md-surface-container-highest))',
+    color: sel ? 'rgb(var(--md-on-primary))' : 'rgb(var(--md-on-surface-variant))',
+  }
+}
+
+function goTo(i: number) {
+  if (!exam.value) return
+  if (i >= 0 && i < exam.value.questions.length) currentIndex.value = i
 }
 
 async function doSubmit() {
@@ -74,12 +121,16 @@ async function doSubmit() {
     else submitError.value = e instanceof Error ? e.message : String(e)
   } finally {
     submitting.value = false
+    showSubmitConfirm.value = false
   }
 }
 
 function handleSubmitClick() {
-  if (unansweredCount.value > 0 && !window.confirm(i18n.t('takeSubmitConfirm', { n: unansweredCount.value }))) return
-  doSubmit()
+  if (unansweredCount.value > 0) {
+    showSubmitConfirm.value = true
+  } else {
+    doSubmit()
+  }
 }
 
 onMounted(async () => {
@@ -113,10 +164,6 @@ onMounted(async () => {
 onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
-
-const optionLabels = 'ABCDEFGH'.split('')
-const isMulti = (t: string) => t === 'multi_choice'
-const isChoice = (t: string) => ['single_choice', 'multi_choice', 'true_false'].includes(t)
 </script>
 
 <template>
@@ -132,76 +179,196 @@ const isChoice = (t: string) => ['single_choice', 'multi_choice', 'true_false'].
       <button class="btn-tonal" @click="router.push('/')">{{ i18n.t('takeBackHome') }}</button>
     </div>
 
-    <template v-else-if="exam && !result">
-      <div class="sticky top-0 z-10 card-filled p-4 mb-4 flex items-center justify-between elevation-1">
-        <div>
-          <h1 class="text-title-md">{{ exam.title }}</h1>
-          <p class="text-label-sm">{{ studentName }}</p>
+    <template v-else-if="exam && !result && currentQuestion">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="min-w-0">
+          <h1 class="text-display-sm mb-1 truncate">{{ exam.title }}</h1>
+          <p class="text-body-lg" style="color: rgb(var(--md-on-surface-variant))">{{ studentName }}</p>
         </div>
-        <div class="text-right">
-          <div class="text-label-sm">{{ i18n.t('takeTimeLeft') }}</div>
-          <div class="text-title-md tabular-nums" style="color: rgb(var(--md-primary))">{{ timeText }}</div>
+        <div
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0"
+          style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
+        >
+          <ClockIcon class="w-4 h-4" />
+          <span class="text-sm font-bold tabular-nums">{{ timeText }}</span>
         </div>
       </div>
 
-      <div v-for="(q, i) in exam.questions" :key="q.id" class="card-outlined p-4 mb-3">
-        <p class="text-sm mb-3"><span class="font-bold mr-1">{{ i + 1 }}.</span>{{ q.stem }}</p>
-        <div v-if="isChoice(q.type)" class="space-y-2">
+      <!-- Progress -->
+      <div class="card-outlined p-3 mb-4">
+        <ProgressBar
+          mode="mock"
+          :current="currentIndex + 1"
+          :total="exam.questions.length"
+          :answered-count="answeredCount"
+          @open-sheet="showSheet = true"
+        />
+      </div>
+
+      <!-- Question Card -->
+      <div class="card-elevated p-4 sm:p-6 mb-4" :key="currentIndex">
+        <div class="flex items-center gap-2 mb-4">
+          <span
+            class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold"
+            style="background-color: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container))"
+          >{{ currentIndex + 1 }}</span>
+          <span
+            class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium"
+            style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
+          >{{ typeLabel(currentQuestion.type) }}</span>
+        </div>
+
+        <div class="text-body-lg mb-5" style="color: rgb(var(--md-on-surface))">{{ currentQuestion.stem }}</div>
+
+        <div v-if="isChoice(currentQuestion.type)" class="space-y-2">
           <button
-            v-for="(opt, oi) in q.options"
+            v-for="(opt, oi) in currentQuestion.options"
             :key="oi"
-            class="w-full text-left px-3 py-2 rounded-xl text-sm transition-colors"
-            :style="isSelected(q.id, optionLabels[oi]!, isMulti(q.type))
-              ? { backgroundColor: 'rgb(var(--md-primary))', color: 'rgb(var(--md-on-primary))' }
-              : { backgroundColor: 'rgba(var(--md-primary) / 0.08)' }"
-            @click="select(q.id, optionLabels[oi]!, isMulti(q.type))"
+            class="w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3"
+            :style="optionStyle(currentQuestion.id, optionLabels[oi]!, isMulti(currentQuestion.type))"
+            @click="select(currentQuestion.id, optionLabels[oi]!, isMulti(currentQuestion.type))"
           >
-            {{ optionLabels[oi] }}. {{ opt }}
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              :style="badgeStyle(currentQuestion.id, optionLabels[oi]!, isMulti(currentQuestion.type))"
+            >{{ optionLabels[oi] }}</div>
+            <span class="text-sm" style="color: rgb(var(--md-on-surface))">{{ opt }}</span>
           </button>
         </div>
         <input
-          v-else-if="q.type === 'fill_blank'"
-          v-model="answers[q.id]"
+          v-else-if="currentQuestion.type === 'fill_blank'"
+          v-model="answers[currentQuestion.id]"
           class="input-outlined w-full"
+          :placeholder="i18n.t('practiceInputAnswerShort')"
         />
-        <textarea v-else v-model="answers[q.id]" rows="3" class="input-outlined w-full" />
+        <textarea
+          v-else
+          v-model="answers[currentQuestion.id]"
+          rows="4"
+          class="input-outlined w-full !min-h-[100px]"
+          :placeholder="i18n.t('practiceInputAnswer')"
+        />
       </div>
 
-      <div
-        v-if="submitError"
-        class="px-4 py-3 rounded-2xl text-sm mb-3 flex items-start justify-between gap-2"
-        style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
-      >
-        <span>{{ i18n.t('takeSubmitFailed') }}: {{ submitError }}</span>
-        <button class="shrink-0" @click="submitError = ''">✕</button>
+      <!-- Navigation -->
+      <div class="flex items-center gap-3 mb-4">
+        <button class="btn-tonal flex-1" :disabled="isFirst" @click="goTo(currentIndex - 1)">
+          {{ i18n.t('practicePrevBtn') }}
+        </button>
+        <button v-if="!isLast" class="btn-filled flex-1" @click="goTo(currentIndex + 1)">
+          {{ i18n.t('practiceNextBtn') }}
+          <span class="text-xs opacity-60">({{ answeredCount }}/{{ exam.questions.length }})</span>
+        </button>
+        <button v-else class="btn-filled flex-1" :disabled="submitting" @click="handleSubmitClick">
+          <CheckIcon class="w-4 h-4" />
+          {{ submitting ? i18n.t('takeSubmitting') : i18n.t('takeSubmit') }}
+        </button>
       </div>
 
-      <button class="btn-filled w-full !h-12 mb-8" :disabled="submitting" @click="handleSubmitClick">
-        {{ submitting ? i18n.t('takeSubmitting') : i18n.t('takeSubmit') }}
-      </button>
+      <Transition name="scale">
+        <div
+          v-if="submitError"
+          class="mb-4 px-4 py-3 rounded-2xl text-sm"
+          style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+        >
+          {{ i18n.t('takeSubmitFailed') }}: {{ submitError }}
+        </div>
+      </Transition>
     </template>
 
+    <!-- Result View -->
     <template v-else-if="result">
-      <div class="card-filled p-6 text-center mb-4">
-        <div class="text-label-sm">{{ i18n.t('takeScore') }}</div>
-        <div class="text-5xl font-bold my-2" style="color: rgb(var(--md-primary))">
-          {{ result.score }} / {{ result.totalScore }}
+      <div class="card-filled p-5 sm:p-6 text-center mb-4">
+        <div
+          class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 elevation-1"
+          style="background-color: rgb(var(--md-primary))"
+        >
+          <span class="text-2xl font-bold" style="color: rgb(var(--md-on-primary))">{{ result.score }}</span>
         </div>
-        <p v-if="result.pendingCount > 0" class="text-sm" style="color: rgb(var(--md-on-surface-variant))">
+        <h2 class="text-headline-sm mb-1" style="color: rgb(var(--md-on-surface))">{{ i18n.t('takeScore') }}</h2>
+        <p class="text-body-md" style="color: rgb(var(--md-on-surface-variant))">{{ result.score }} / {{ result.totalScore }}</p>
+        <p v-if="result.pendingCount > 0" class="text-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">
           {{ i18n.t('takePendingReview', { n: result.pendingCount }) }}
         </p>
       </div>
-      <div v-for="(g, i) in result.graded" :key="g.question.id" class="card-outlined p-4 mb-3">
-        <p class="text-sm mb-2"><span class="font-bold mr-1">{{ i + 1 }}.</span>{{ g.question.stem }}</p>
-        <div class="text-label-sm">{{ i18n.t('takeYourAnswer') }}</div>
-        <div class="text-sm mb-2" :style="{ color: g.isCorrect === false ? 'rgb(var(--md-error))' : 'rgb(var(--md-on-surface))' }">
-          {{ g.userAnswer || i18n.t('takeUnanswered') }}
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="card-outlined p-4 text-center">
+          <CheckCircleIcon class="w-6 h-6 mx-auto mb-1" style="color: rgb(var(--md-primary))" />
+          <div class="text-title-md">{{ result.correctCount }}</div>
+          <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('practiceCorrect') }}</div>
         </div>
-        <div class="text-label-sm">{{ i18n.t('takeCorrectAnswer') }}</div>
-        <div class="text-sm mb-2" style="color: rgb(var(--md-primary))">{{ g.question.answer }}</div>
-        <div v-if="g.question.analysis" class="text-xs" style="color: rgb(var(--md-on-surface-variant))">{{ g.question.analysis }}</div>
+        <div class="card-outlined p-4 text-center">
+          <XCircleIcon class="w-6 h-6 mx-auto mb-1" style="color: rgb(var(--md-error))" />
+          <div class="text-title-md">{{ result.totalCount - result.correctCount - result.pendingCount }}</div>
+          <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('practiceIncorrect') }}</div>
+        </div>
       </div>
+
+      <div class="space-y-3 mb-5">
+        <div v-for="(g, i) in result.graded" :key="g.question.id" class="card-outlined p-4">
+          <div class="flex items-start gap-2 mb-2">
+            <span
+              class="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 mt-0.5"
+              :style="g.isCorrect === false
+                ? { backgroundColor: 'rgb(var(--md-error-container))', color: 'rgb(var(--md-on-error-container))' }
+                : { backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
+            >{{ i + 1 }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm mb-2" style="color: rgb(var(--md-on-surface))">{{ g.question.stem }}</div>
+              <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takeYourAnswer') }}</div>
+              <div class="text-sm mb-2" :style="{ color: g.isCorrect === false ? 'rgb(var(--md-error))' : 'rgb(var(--md-on-surface))' }">
+                {{ g.userAnswer || i18n.t('takeUnanswered') }}
+              </div>
+              <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takeCorrectAnswer') }}</div>
+              <div class="text-sm mb-2" style="color: rgb(var(--md-primary))">{{ g.question.answer }}</div>
+              <div v-if="g.question.analysis" class="text-xs" style="color: rgb(var(--md-on-surface-variant))">{{ g.question.analysis }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-tonal w-full mb-8" @click="router.push('/')">{{ i18n.t('takeBackHome') }}</button>
     </template>
+
+    <!-- Answer Sheet -->
+    <Transition name="scale">
+      <div v-if="showSheet && exam" class="scrim flex items-center justify-center p-4 z-50" @click.self="showSheet = false">
+        <div class="card-elevated w-full max-w-sm p-5">
+          <div class="text-title-sm mb-3">{{ i18n.t('practiceAnswerSheet') }}</div>
+          <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 mb-4">
+            <button
+              v-for="(q, i) in exam.questions"
+              :key="q.id"
+              class="aspect-square rounded-xl text-xs font-bold transition-all"
+              :style="[
+                (answers[q.id] || '').trim()
+                  ? { backgroundColor: 'rgb(var(--md-primary))', color: 'rgb(var(--md-on-primary))' }
+                  : { backgroundColor: 'rgb(var(--md-surface-container-highest))', color: 'rgb(var(--md-on-surface-variant))' },
+                i === currentIndex ? { outline: '2px solid rgb(var(--md-primary))', outlineOffset: '2px' } : {},
+              ]"
+              @click="goTo(i); showSheet = false"
+            >{{ i + 1 }}</button>
+          </div>
+          <button class="btn-tonal w-full" @click="showSheet = false">{{ i18n.t('pubClose') }}</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Submit Confirm -->
+    <Transition name="scale">
+      <div v-if="showSubmitConfirm" class="scrim flex items-center justify-center p-4 z-50" @click.self="showSubmitConfirm = false">
+        <div class="card-elevated w-full max-w-sm p-5 text-center">
+          <div class="text-title-sm mb-1">{{ i18n.t('takeSubmitConfirm', { n: unansweredCount }) }}</div>
+          <div class="flex gap-3 mt-4">
+            <button class="btn-outlined flex-1" @click="showSubmitConfirm = false">{{ i18n.t('pubCancel') }}</button>
+            <button class="btn-filled flex-1" :disabled="submitting" @click="doSubmit">
+              {{ submitting ? i18n.t('takeSubmitting') : i18n.t('takeSubmit') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>

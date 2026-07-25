@@ -12,6 +12,7 @@ export interface LocaleMessages {
   navMine: string
 
   // Mine
+  mineSubtitle: string
   mineAIConfig: string
   mineAIConfigDesc: string
   minePublished: string
@@ -412,6 +413,7 @@ export const zh: LocaleMessages = {
   navMine: '我的',
 
   // Mine
+  mineSubtitle: '管理我的 AI 算力与考试',
   mineAIConfig: '算力配置',
   mineAIConfigDesc: '模型服务商与密钥',
   minePublished: '我发起的考试',
@@ -425,7 +427,7 @@ export const zh: LocaleMessages = {
   pubViewResults: '查看成绩',
   pubDeleteRecord: '删除记录',
 
-  configTitle: '设置',
+  configTitle: '算力配置',
   configSubtitle: '连接 AI 后台，开始出题',
   configSectionEndpoint: '接口地址',
   configSectionAuth: '认证密钥',
@@ -800,6 +802,7 @@ export const en: LocaleMessages = {
   navMine: 'Mine',
 
   // Mine
+  mineSubtitle: 'Manage my AI compute and exams',
   mineAIConfig: 'AI Config',
   mineAIConfigDesc: 'Endpoint, key & model',
   minePublished: 'My Launched Exams',
@@ -813,7 +816,7 @@ export const en: LocaleMessages = {
   pubViewResults: 'Results',
   pubDeleteRecord: 'Delete',
 
-  configTitle: 'Settings',
+  configTitle: 'AI Config',
   configSubtitle: 'Connect your AI backend to get started',
   configSectionEndpoint: 'Endpoint',
   configSectionAuth: 'Authentication',

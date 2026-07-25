@@ -5,12 +5,11 @@ import { useConfigStore } from '@/stores/config'
 
 import { useI18nStore } from '@/stores/i18n'
 import { isCloudflare } from '@/utils/platform'
-import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, CloudIcon } from '@heroicons/vue/24/outline'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon } from '@heroicons/vue/24/outline'
 
 const configStore = useConfigStore()
 const router = useRouter()
 const i18n = useI18nStore()
-const version = import.meta.env.VITE_APP_VERSION
 
 const showKey = ref(false)
 const saveSuccess = ref(false)
@@ -39,11 +38,12 @@ async function handleSave() {
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-1">
+    <div class="flex items-center gap-2 mb-6">
+      <button class="btn-icon" @click="router.push('/mine')">
+        <ArrowLeftIcon class="w-5 h-5" />
+      </button>
       <h1 class="text-display-sm">{{ i18n.t('configTitle') }}</h1>
-      <span class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
     </div>
-    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSubtitle') }}</p>
 
     <!-- CF: Provider toggle -->
     <div v-if="isCloudflare()" class="card-filled p-4 mb-4">
