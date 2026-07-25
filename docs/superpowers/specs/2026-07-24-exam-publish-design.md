@@ -5,7 +5,7 @@
 
 ## 背景与目标
 
-Exameow 目前生成题目后只能本地练习或导出。本功能让教师可把生成的试卷发布到 Cloudflare 中转服务（`https://exam.superagentparty.com`），获得 6 位校验码；学生凭码参加限时考试；教师凭管理链接查看成绩。考试数据在 R2 缓存 7 天后自动删除。
+Exameow 目前生成题目后只能本地练习或导出。本功能让教师可把生成的试卷发布到 Cloudflare 中转服务（`https://exam.superagentparty.com`），获得 6 位校验码；学生凭码参加限时考试；教师凭管理链接查看成绩。考试数据在 D1 缓存 7 天后自动删除（2026-07-25 修订：原 R2 方案，因 R2 超额自动扣费且无法设硬上限，迁移至 D1 免费版——硬墙不扣费，且写额度超过 Worker 瓶颈）。
 
 三端（CF 网页版 / Tauri 桌面移动端 / Docker 版）通过纯 HTTPS 调用中转服务，均可使用。
 
@@ -14,7 +14,7 @@ Exameow 目前生成题目后只能本地练习或导出。本功能让教师可
 | 决策点 | 结论 |
 |--------|------|
 | 部署形态 | 同一个 exameow Worker 加自定义域 `exam.superagentparty.com`，不新建独立 Worker |
-| 存储 | **R2**（非 KV）：免费额度更高（约 640 场 50 人考试/天），生命周期规则实现 7 天 TTL |
+| 存储 | **D1**（2026-07-25 修订）：免费 10 万写行/500 万读行每天，硬墙不扣费、无需绑卡；SQL 事务防并发丢成绩 |
 | 学生身份 | 仅输入姓名，无账号体系；同名允许，按提交时间区分 |
 | 考试形态 | 限时模拟考，倒计时在学生本地 enforce；考试有开始/结束时间窗口（服务端校验） |
 | 答案可见性 | 学生交卷后即可看答案与解析 |
@@ -24,54 +24,25 @@ Exameow 目前生成题目后只能本地练习或导出。本功能让教师可
 
 ## 架构
 
-同一个 Worker 增加 R2 binding `EXAM_BUCKET`（bucket 名 `exameow-exams`），bucket 配置生命周期规则：对象创建 7 天后自动删除。Worker 通过 Cloudflare 自定义域绑定 `exam.superagentparty.com`。
+同一个 Worker 增加 D1 binding `EXAM_DB`（库名 `exameow-exams`）+ Cron Trigger 每日清理过期数据。Worker 通过 Cloudflare 自定义域绑定 `exam.superagentparty.com`。
 
 前端新增独立的 `api/relay.ts`，不经过 `api/index.ts` 的平台路由分发——任何平台都直接 fetch 中转域名（base URL 固定，可用 `VITE_EXAM_RELAY` 环境变量覆盖）。
 
-## R2 数据结构
+## D1 数据结构（2026-07-25 修订：由 R2 迁移至 D1，用户不启用 R2 以避免超额扣费）
 
-```
-exams/{code}.json      # 考试主体
-results/{code}.json    # 成绩聚合索引 { results: ExamResultEntry[] }（实现修订：由每生一对象改为单聚合对象，
-                       # 解决 R2 子请求上限与孤儿对象泄漏；提交时 CAS(onlyIf etag)重试 3 次合并写入）
-```
+两张表（schema 见 `workers/migrations/0001_init.sql`）：
 
-### exams/{code}.json
+- `exams`：`code` PK、`title`、`questions`(JSON 含答案）、`start_at`、`end_at`、`duration_minutes`、`created_at`、`admin_token_hash`
+- `results`：`id` PK、`code`（有索引）、`name`、`answers`(JSON)、`score`、`total_score`、`correct_count`、`total_count`、`pending_count`、`duration_sec`、`submitted_at`、`detail`(JSON，每题 isCorrect)
 
-```json
-{
-  "title": "期末模拟考",
-  "questions": [ "Question 完整对象，含 answer/analysis" ],
-  "startAt": 1721818800000,
-  "endAt": 1722423600000,
-  "durationMinutes": 60,
-  "createdAt": 1721810000000,
-  "adminTokenHash": "sha256(token) hex"
-}
-```
-
-### results/{code}/{submissionId}.json
-
-```json
-{
-  "name": "张三",
-  "answers": { "q1": "A", "q2": ["A", "C"] },
-  "score": 80,
-  "totalScore": 100,
-  "correctCount": 16,
-  "totalCount": 20,
-  "pendingCount": 0,
-  "durationSec": 2400,
-  "submittedAt": 1721820000000
-}
-```
+7 天过期双保险：读取时懒删（过期即 DELETE 两表对应行）+ Cron Trigger 每日批量清理 `created_at`/`submitted_at` 超过 7 天的行。D1 事务保证并发交卷不丢成绩；成绩查询走索引 `ORDER BY score DESC, submitted_at ASC LIMIT 500`。
 
 ## Worker API（4 个新端点）
 
 ### POST /api/exam/publish
 - 入参：`{ title, questions, startAt, endAt, durationMinutes }`
 - 校验：题目数 1–500，payload ≤ 5MB，窗口时长 ≤ 7 天，durationMinutes > 0
-- 生成 6 位码（字符集 `ABCDEFGHJKMNPQRSTUVWXYZ23456789`，31 字符，约 8.9 亿组合），R2 HEAD 查重，冲突则重试
+- 生成 6 位码（字符集 `ABCDEFGHJKMNPQRSTUVWXYZ23456789`，31 字符，约 8.9 亿组合），SELECT 查重，冲突则重试
 - 生成 128-bit 随机管理 token，仅存 SHA-256 哈希到考试对象
 - 返回：`{ code, adminToken, manageUrl }`
 
@@ -120,18 +91,18 @@ results/{code}.json    # 成绩聚合索引 { results: ExamResultEntry[] }（实
 
 - 答案永不下发给未交卷者（取题时服务端剥离）
 - 管理 token 只存 SHA-256 哈希；泄露 6 位码无法查看成绩
-- 6 位码 R2 查重生成，防碰撞
+- 6 位码查重生成，防碰撞
 - 窗口外取题/交卷返回 403 及明确文案
 
 ## 部署改动
 
-- `wrangler.toml`：R2 binding `EXAM_BUCKET` + 自定义域 route
-- `scripts/deploy-cf.sh`：幂等检查并创建 R2 bucket 与生命周期规则
+- `wrangler.toml`：D1 binding `EXAM_DB` + 自定义域 route + Cron Trigger
+- `scripts/deploy-cf.sh`：幂等创建 D1 库、注入 database_id、应用 migrations
 - 版本号四处同步 bump（root package.json、src-tauri/Cargo.toml、src-tauri/tauri.conf.json、workers/package.json）
 
-## 容量估算（R2 免费版）
+## 容量估算（D1 免费版）
 
-单场 50 人考试消耗约 52 Class A + 150 Class B 操作 → 免费额度（100 万 Class A/月）支撑约 **640 场/天**（约 3.2 万学生交卷）。Worker 免费版 10 万请求/天上限约 950 场/天。R2 非瓶颈。
+单场 50 人考试约 51 行写入 → 免费额度（10 万写行/天）支撑约 **1,960 场/天**；读（5 百万行/天）更远超需求。真正瓶颈是 Worker 免费版 10 万请求/天 ≈ **950 场/天**（约 4.7 万学生交卷）。D1 与 Worker 均为硬墙，超额报错不扣费。
 
 ## 验证方式
 

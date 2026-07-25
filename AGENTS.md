@@ -54,7 +54,8 @@ packages/
   shared/              TS shared types (@exameow/shared) src/types.ts
 
 src-tauri/             Tauri app; src/lib.rs = all Tauri commands; tauri.conf.json; capabilities/
-workers/               Cloudflare Worker; src/{index,ai,exam,parser,export,types}.ts; wrangler.toml
+workers/               Cloudflare Worker; src/{index,ai,exam,parser,export,types,relay}.ts; wrangler.toml; migrations/ (D1)
+                       relay.ts = exam publish/take relay (D1 EXAM_DB, cron cleanup; /api/exam/* routes)
 scripts/               deploy-cf.sh, docker-build.sh, start-android-emulator.sh
 .github/workflows/     release.yml (Tauri 3-OS builds + Docker to ghcr.io)
 ```
