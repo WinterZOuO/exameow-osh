@@ -189,6 +189,14 @@ exameow/
 └── docker-compose.yml
 ```
 
+## Disclaimer
+
+- This project is an **open-source learning tool**, intended for personal study, teaching, and internal training only.
+- **AI-generated content is not guaranteed to be accurate.** Questions and analyses may contain errors — review them before use. The authors accept no liability for consequences arising from the use of generated content.
+- **User-generated content (UGC) is the sole responsibility of its publisher.** Do not use the online exam feature to store or distribute unlawful, infringing, or sensitive material. The operator may remove violating content without notice. Report abuse via GitHub Issues.
+- The demo site (exam.superagentparty.com) is a free public service with **no guarantee of availability or data persistence** (exam data is retained for at most 7 days). Back up anything important.
+- By using this project you accept all associated risks and agree to comply with the laws of your jurisdiction.
+
 ## Support
 
 ### Please star us!
