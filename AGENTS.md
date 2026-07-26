@@ -134,6 +134,7 @@ Defined in `packages/shared/src/types.ts` (TS) and `packages/core/src/exam/types
 ## Conventions / Gotchas
 
 - **Rust ⇄ TS parity**: prompts, parsers, and XLSX export exist in both languages — change both.
+- **CF Worker 调用最小化**: Cloudflare Workers 按请求计费且有免费额度限制。新功能优先用纯前端实现（localStorage/sessionStorage/路由状态），不得新增非必要的 `/api/*` 请求、轮询或重复拉取；确需后端时合并请求、利用缓存，避免每次交互都触发 Worker 调用。
 - **XLSX has no library**: built manually as ZIP+XML in both `packages/core/src/export/xlsx.rs` and `workers/src/export.ts`.
 - **Hash-based SPA routing** (`createWebHashHistory`); CF Worker + Axum both serve SPA fallback.
 - **Material You theme** in `frontend/tailwind.config.js` (full tonal palette + custom animations).
