@@ -88,6 +88,13 @@
 
 ### 平台支持
 
+<p align="center">
+  <img src="./assets/readme/platform-zh.svg" width="100%" alt="平台支持:Windows、macOS、Linux、Android 与 Web 已支持;iOS 需自行打包">
+</p>
+
+<details>
+<summary><b>文字版表格</b></summary>
+
 | 平台 | 状态 | 下载格式 |
 |------|------|----------|
 | Windows | ✅ 已支持 | `.msi` 安装包 / 免安装 `.zip` |
@@ -96,6 +103,8 @@
 | Android（ARM64） | ✅ 已支持 | `.apk` |
 | iOS | ⚠️ 需自行打包 | 见下方说明 |
 | Web / Docker（自托管） | ✅ 已支持 | Docker 镜像 |
+
+</details>
 
 > **关于 iOS：** 苹果开发者证书需要付费（$99/年），因此暂不提供预编译的 iOS 安装包，需要使用 Xcode 自行打包（`pnpm tauri ios build`）。未来如果打赏收入足够支付证书费用，会在 GitHub Releases 上提供带证书的官方打包版本。
 
@@ -144,6 +153,13 @@ docker run -d -p 3000:3000 \
 
 ## 环境变量
 
+<p align="center">
+  <img src="./assets/readme/env-vars-zh.svg" width="100%" alt="环境变量:AI_ENDPOINT、AI_API_KEY、AI_MODEL、PORT、STATIC_DIR、ADMIN_TOKEN、EXAM_DB_PATH、ADMIN_TOKEN_FILE、RUST_LOG">
+</p>
+
+<details>
+<summary><b>文字版表格</b></summary>
+
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `AI_ENDPOINT` | `https://api.openai.com/v1` | OpenAI 兼容 API 地址 |
@@ -156,7 +172,16 @@ docker run -d -p 3000:3000 \
 | `ADMIN_TOKEN_FILE` | `/app/data/admin_token.txt` | 修改后的密钥持久化文件 |
 | `RUST_LOG` | `info` | 日志级别 |
 
+</details>
+
 ## API 接口
+
+<p align="center">
+  <img src="./assets/readme/api-zh.svg" width="100%" alt="API 接口:models、generate、export、export/xlsx、config/save、config/load">
+</p>
+
+<details>
+<summary><b>文字版表格</b></summary>
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -166,6 +191,8 @@ docker run -d -p 3000:3000 \
 | `POST` | `/api/export/xlsx` | 导出 XLSX |
 | `POST` | `/api/config/save` | 保存 AI 配置 |
 | `GET` | `/api/config/load` | 读取已保存的 AI 配置 |
+
+</details>
 
 ### 生成考题示例
 

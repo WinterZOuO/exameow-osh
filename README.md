@@ -88,6 +88,13 @@ Pre-built binaries for all platforms are available on the [GitHub Releases](http
 
 ### Platform Support
 
+<p align="center">
+  <img src="./assets/readme/platform.svg" width="100%" alt="Platform support: Windows, macOS, Linux, Android and Web supported; iOS self-build">
+</p>
+
+<details>
+<summary><b>Text table</b></summary>
+
 | Platform | Status | Download |
 |----------|--------|----------|
 | Windows | ✅ Supported | `.msi` installer / portable `.zip` |
@@ -96,6 +103,8 @@ Pre-built binaries for all platforms are available on the [GitHub Releases](http
 | Android (ARM64) | ✅ Supported | `.apk` |
 | iOS | ⚠️ Self-build required | See note below |
 | Web / Docker (self-hosted) | ✅ Supported | Docker image |
+
+</details>
 
 > **About iOS:** An Apple Developer certificate costs $99/year, so no pre-built iOS package is provided for now — you'll need to build it yourself with Xcode (`pnpm tauri ios build`). If future donations cover the certificate fee, an officially signed iOS build will be published on GitHub Releases.
 
@@ -144,6 +153,13 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 
 ## Environment Variables
 
+<p align="center">
+  <img src="./assets/readme/env-vars.svg" width="100%" alt="Environment variables: AI_ENDPOINT, AI_API_KEY, AI_MODEL, PORT, STATIC_DIR, ADMIN_TOKEN, EXAM_DB_PATH, ADMIN_TOKEN_FILE, RUST_LOG">
+</p>
+
+<details>
+<summary><b>Text table</b></summary>
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `AI_ENDPOINT` | `https://api.openai.com/v1` | OpenAI-compatible API endpoint |
@@ -156,7 +172,16 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 | `ADMIN_TOKEN_FILE` | `/app/data/admin_token.txt` | Where a changed admin token is persisted |
 | `RUST_LOG` | `info` | Log level |
 
+</details>
+
 ## API Endpoints
+
+<p align="center">
+  <img src="./assets/readme/api.svg" width="100%" alt="API endpoints: models, generate, export, export/xlsx, config/save, config/load">
+</p>
+
+<details>
+<summary><b>Text table</b></summary>
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -166,6 +191,8 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 | `POST` | `/api/export/xlsx` | Export questions as XLSX |
 | `POST` | `/api/config/save` | Save AI configuration |
 | `GET` | `/api/config/load` | Load saved AI configuration |
+
+</details>
 
 ### Generate Exam
 
