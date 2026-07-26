@@ -237,14 +237,25 @@ fn unique_download_path(dir: &std::path::Path, filename: &str) -> std::path::Pat
 }
 
 #[tauri::command]
-fn save_to_downloads(filename: String, content_base64: String) -> Result<String, CommandError> {
+fn save_to_downloads(
+    app: tauri::AppHandle,
+    filename: String,
+    content_base64: String,
+) -> Result<String, CommandError> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&content_base64)
         .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
-    let dir = std::path::Path::new("/storage/emulated/0/Download/Exameow");
-    std::fs::create_dir_all(dir)
+    #[cfg(target_os = "android")]
+    let dir = std::path::PathBuf::from("/storage/emulated/0/Download/Exameow");
+    #[cfg(not(target_os = "android"))]
+    let dir = app
+        .path()
+        .download_dir()
+        .map_err(|e| CommandError(format!("Download dir error: {e}")))?
+        .join("Exameow");
+    std::fs::create_dir_all(&dir)
         .map_err(|e| CommandError(format!("Create dir error: {e}")))?;
-    let path = unique_download_path(dir, &filename);
+    let path = unique_download_path(&dir, &filename);
     std::fs::write(&path, &bytes)
         .map_err(|e| CommandError(format!("Write error: {e}")))?;
     Ok(path.to_string_lossy().to_string())
