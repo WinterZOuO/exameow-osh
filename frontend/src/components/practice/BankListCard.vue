@@ -179,7 +179,7 @@ async function handleDownloadTemplate() {
       } catch {}
 
       try {
-        const savedPath = await tauriApi.saveToCache(filename, b64)
+        const savedPath = await tauriApi.saveToDownloads(filename, b64)
         templateExportSuccess.value = i18n.t('previewExportSaved') + savedPath
         templateExportFilePath.value = savedPath
       } catch (e: any) {

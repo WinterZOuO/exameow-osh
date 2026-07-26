@@ -216,6 +216,24 @@ fn save_to_cache(
     Ok(path.to_string_lossy().to_string())
 }
 
+fn unique_download_path(dir: &std::path::Path, filename: &str) -> std::path::PathBuf {
+    let path = dir.join(filename);
+    if !path.exists() {
+        return path;
+    }
+    let (stem, ext) = match filename.rsplit_once('.') {
+        Some((s, e)) if !s.is_empty() => (s.to_string(), format!(".{e}")),
+        _ => (filename.to_string(), String::new()),
+    };
+    for i in 2u32.. {
+        let candidate = dir.join(format!("{stem} ({i}){ext}"));
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    unreachable!()
+}
+
 #[tauri::command]
 fn save_to_downloads(filename: String, content_base64: String) -> Result<String, CommandError> {
     let bytes = base64::engine::general_purpose::STANDARD
@@ -224,7 +242,7 @@ fn save_to_downloads(filename: String, content_base64: String) -> Result<String,
     let dir = std::path::Path::new("/storage/emulated/0/Download/Exameow");
     std::fs::create_dir_all(dir)
         .map_err(|e| CommandError(format!("Create dir error: {e}")))?;
-    let path = dir.join(&filename);
+    let path = unique_download_path(dir, &filename);
     std::fs::write(&path, &bytes)
         .map_err(|e| CommandError(format!("Write error: {e}")))?;
     Ok(path.to_string_lossy().to_string())
