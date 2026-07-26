@@ -1,9 +1,9 @@
 use exameow_core::ai::{AIClient, ModelInfo};
 use exameow_core::config::{AIConfigData, ConfigStore};
 use exameow_core::exam::{
-    answer_question as core_answer_question,
+    answer_question as core_answer_question, explain_question as core_explain_question,
     generate_exam as core_generate_exam,
-    judge_answer as core_judge_answer, AnswerResult, ExamParams, JudgeResult, Question,
+    judge_answer as core_judge_answer, AnswerResult, ExamParams, ExplainResult, JudgeResult, Question,
 };
 use exameow_core::export::export_csv as core_export_csv;
 use exameow_core::export::export_xlsx as core_export_xlsx;
@@ -140,6 +140,25 @@ async fn judge_answer(
     )
     .await
     .map_err(|e| CommandError(format!("Judge error: {e}")))
+}
+
+#[tauri::command]
+async fn explain_question(
+    stem: String,
+    reference_answer: String,
+    analysis: String,
+    language: String,
+    endpoint: String,
+    api_key: String,
+    model: String,
+) -> Result<ExplainResult, CommandError> {
+    if stem.trim().is_empty() {
+        return Err(CommandError("Question is empty".to_string()));
+    }
+    let client = AIClient::new(&endpoint, &api_key);
+    core_explain_question(&client, &stem, &reference_answer, &analysis, &language, &model)
+        .await
+        .map_err(|e| CommandError(format!("Explain error: {e}")))
 }
 
 #[tauri::command]
@@ -667,6 +686,7 @@ pub fn run() {
             generate_exam,
             answer_question,
             judge_answer,
+            explain_question,
             parse_file_text,
             parse_file_bytes,
             export_csv,

@@ -97,6 +97,16 @@ export interface JudgeResult {
   feedback: string
 }
 
+export interface ExplainParams {
+  stem: string
+  reference_answer: string
+  analysis?: string
+}
+
+export interface ExplainResult {
+  explanation: string
+}
+
 export interface PublicQuestion {
   id: string
   type: QuestionType

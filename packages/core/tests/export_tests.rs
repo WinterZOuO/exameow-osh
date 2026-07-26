@@ -10,6 +10,8 @@ fn make_questions() -> Vec<Question> {
             options: vec!["3".to_string(), "4".to_string(), "5".to_string(), "6".to_string()],
             answer: "4".to_string(),
             analysis: "Basic arithmetic".to_string(),
+            ai_analysis: None,
+            score: None,
         },
         Question {
             id: "q2".to_string(),
@@ -18,6 +20,8 @@ fn make_questions() -> Vec<Question> {
             options: vec!["True".to_string(), "False".to_string()],
             answer: "True".to_string(),
             analysis: "".to_string(),
+            ai_analysis: None,
+            score: None,
         },
     ]
 }

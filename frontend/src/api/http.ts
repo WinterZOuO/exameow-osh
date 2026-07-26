@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, ExplainParams, ExplainResult, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -99,6 +99,30 @@ export const httpApi = {
         reference_answer: params.reference_answer,
         analysis: params.analysis,
         user_answer: params.user_answer,
+        language,
+        endpoint: config.endpoint,
+        api_key: config.api_key,
+        model: config.model,
+      }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    return res.json()
+  },
+
+  async explainQuestion(
+    params: ExplainParams,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<ExplainResult> {
+    const res = await fetch(`${BASE_URL}/api/explain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stem: params.stem,
+        reference_answer: params.reference_answer,
+        analysis: params.analysis,
         language,
         endpoint: config.endpoint,
         api_key: config.api_key,

@@ -69,6 +69,10 @@ export interface JudgeResult {
   feedback: string
 }
 
+export interface ExplainResult {
+  explanation: string
+}
+
 export const DEFAULT_MODEL = '@cf/openai/gpt-oss-120b'
 
 export interface PublicQuestion {

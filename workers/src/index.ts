@@ -5,6 +5,7 @@ import { generateExam } from './exam'
 import { handlePublish, handleGetExam, handleSubmit, handleResults, handleDeleteExam, handleReport, handleAdminReports, handleAdminDelete, handleAdminRestore } from './relay'
 import { answerQuestion } from './answer'
 import { judgeAnswer } from './judge'
+import { explainQuestion } from './explain'
 import { parseFile } from './parser'
 import { generateXlsxBuffer, generateCsvContent } from './export'
 import { Question, ExamParams, AVAILABLE_CF_MODELS } from './types'
@@ -212,6 +213,42 @@ app.post('/api/judge', async (c) => {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('AI judge error:', msg)
     return c.json({ error: `AI judge error: ${msg}` }, 502)
+  }
+})
+
+// POST /api/explain - AI explains why the reference answer is correct
+app.post('/api/explain', async (c) => {
+  let body: {
+    stem?: string
+    reference_answer?: string
+    analysis?: string
+    language?: string
+    model?: string
+  }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const stem = (body.stem || '').trim()
+  if (!stem) {
+    return c.json({ error: 'Question is empty' }, 400)
+  }
+
+  try {
+    const result = await explainQuestion(c.env.AI, {
+      stem,
+      referenceAnswer: body.reference_answer || '',
+      analysis: body.analysis || '',
+      language: body.language || 'Chinese',
+      model: body.model || undefined,
+    })
+    return c.json(result)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('AI explain error:', msg)
+    return c.json({ error: `AI explain error: ${msg}` }, 502)
   }
 })
 

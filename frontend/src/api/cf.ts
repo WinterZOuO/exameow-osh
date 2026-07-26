@@ -1,4 +1,4 @@
-import type { AIConfig, AnswerResult, ExamParams, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
+import type { AIConfig, AnswerResult, ExamParams, ExplainParams, ExplainResult, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 import { AVAILABLE_CF_MODELS } from './cf-models'
 
 export interface GenerateResult {
@@ -107,6 +107,28 @@ export const cfApi = {
         reference_answer: params.reference_answer,
         analysis: params.analysis,
         user_answer: params.user_answer,
+        language,
+        model: config.model,
+      }),
+      signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    return res.json()
+  },
+
+  async explainQuestion(
+    params: ExplainParams,
+    language: string,
+    config: AIConfig,
+    signal?: AbortSignal,
+  ): Promise<ExplainResult> {
+    const res = await fetch(`${getBaseUrl()}/api/explain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stem: params.stem,
+        reference_answer: params.reference_answer,
+        analysis: params.analysis,
         language,
         model: config.model,
       }),

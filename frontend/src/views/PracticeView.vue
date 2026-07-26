@@ -6,7 +6,7 @@ import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
 import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
-import type { JudgeResult, AnswerResult } from '@exameow/shared'
+import type { JudgeResult, ExplainResult } from '@exameow/shared'
 import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 import type { PracticeMode, MockExamConfig, WrongSort } from '@exameow/shared'
 import BankListCard from '@/components/practice/BankListCard.vue'
@@ -442,19 +442,23 @@ async function handleAiExplain() {
   const optionsText = q.options.length
     ? '\n' + q.options.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join('\n')
     : ''
-  const questionText = q.stem + optionsText
+  const params = {
+    stem: q.stem + optionsText,
+    reference_answer: q.answer,
+    analysis: q.analysis || undefined,
+  }
 
   try {
     const config = configStore.getConfig()
-    let result: AnswerResult
+    let result: ExplainResult
     if (isCloudflare() && configStore.aiProvider === 'custom') {
-      const { answerViaCustomAI } = await import('@/utils/answerClient')
-      result = await answerViaCustomAI(questionText, language, config, explainAbort.signal)
+      const { explainViaCustomAI } = await import('@/utils/answerClient')
+      result = await explainViaCustomAI(params, language, config, explainAbort.signal)
     } else {
-      result = await api.answerQuestion(questionText, language, config, explainAbort.signal)
+      result = await api.explainQuestion(params, language, config, explainAbort.signal)
     }
     if (practiceStore.session?.currentIndex !== qIndex) return
-    practiceStore.saveAiAnalysis(q.id, `${result.answer}\n\n${result.analysis}`)
+    practiceStore.saveAiAnalysis(q.id, result.explanation)
   } catch (e: any) {
     if (e?.name !== 'AbortError') aiExplainError.value = e?.message || String(e)
   } finally {
