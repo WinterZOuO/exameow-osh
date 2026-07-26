@@ -99,16 +99,8 @@ export async function aiChat(
       return text
     }
 
-    // Handle { response: [...content segments] } — some models return arrays
-    if (Array.isArray(result.response)) {
-      const text = result.response
-        .map((seg: any) => (typeof seg === 'string' ? seg : (seg?.text ?? seg?.content ?? '')))
-        .join('')
-      if (text.trim()) return text
-    }
-
     // Handle { response: { text | content } }
-    if (result.response && typeof result.response === 'object') {
+    if (result.response && typeof result.response === 'object' && !Array.isArray(result.response)) {
       const inner = result.response as any
       const text =
         typeof inner.text === 'string'
@@ -117,6 +109,13 @@ export async function aiChat(
             ? inner.content
             : ''
       if (text.trim()) return text
+    }
+
+    // When the model outputs valid JSON, CF returns it PARSED (array or object).
+    // Stringify it back — downstream parsers expect the JSON text.
+    if (result.response !== null && typeof result.response === 'object') {
+      const text = JSON.stringify(result.response)
+      if (text && text !== '{}' && text !== '[]') return text
     }
 
     // Some models might return { choices: [{ message: { content: "..." } }] }
