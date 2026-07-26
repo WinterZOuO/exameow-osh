@@ -1,7 +1,10 @@
 # Stage 1: Chef base (with cargo-chef preinstalled)
 FROM lukemathwalker/cargo-chef:latest-rust-1-alpine AS chef
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-RUN apk add --no-cache musl-dev perl
+RUN apk add --no-cache musl-dev perl || { \
+      sed -i 's/mirrors.tuna.tsinghua.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositories && \
+      apk add --no-cache musl-dev perl; \
+    }
 RUN mkdir -p /root/.cargo
 RUN <<CARGO_CONFIG cat > /root/.cargo/config.toml
 [registries.crates-io]
@@ -37,7 +40,10 @@ RUN cargo build --release -p exameow-server
 # Stage 4: Runtime
 FROM alpine:3.21
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates || { \
+      sed -i 's/mirrors.tuna.tsinghua.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositories && \
+      apk add --no-cache ca-certificates; \
+    }
 
 COPY --from=builder /app/target/release/exameow-server /app/server
 COPY frontend/dist /app/static
