@@ -34,6 +34,13 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 
 ## Features
 
+<p align="center">
+  <img src="./assets/readme/features.svg" width="100%" alt="Exameow features: AI question generation, practice modes, online exams, and search modes">
+</p>
+
+<details>
+<summary><b>Full feature list</b></summary>
+
 ### ✨ AI Question Generation
 - **Rich Input Formats** — PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML, images (PNG/JPG/WEBP/GIF/BMP), and any text/code file; multi-file upload with drag & drop
 - **5 Question Types** — Single choice, multiple choice, true/false, fill-in-the-blank, short answer, with per-type count control
@@ -72,6 +79,8 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **Self-Hosted Web** — One-command Docker deployment
 - **Local-First** — Question banks, practice records, and wrong questions stay on your device; API keys encrypted with AES-256-GCM on desktop
 - **Bilingual UI** — Auto-detects system language (Chinese / English), one-tap switch
+
+</details>
 
 ## Installation
 
@@ -168,24 +177,9 @@ curl -X POST http://localhost:3000/api/generate \
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Frontend (Vue 3 + Vite + Pinia)                    │
-│  Served as static files from the Rust server        │
-├─────────────────────────────────────────────────────┤
-│  Server (Rust / Axum)                               │
-│  ├── File Parser   (PDF, DOCX, XLSX, PPTX, EPUB…)  │
-│  ├── AI Client     (OpenAI-compatible API)          │
-│  ├── Exam Builder  (Prompt engineering + parsing)   │
-│  └── Export        (XLSX, CSV)                     │
-├─────────────────────────────────────────────────────┤
-│  Deploy Targets                                     │
-│  ├── Docker (self-hosted)                           │
-│  ├── Tauri Desktop (macOS / Windows / Linux)        │
-│  ├── Tauri Mobile (iOS / Android)                   │
-│  └── Cloudflare Pages + Worker                      │
-└─────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="./assets/readme/architecture.svg" width="100%" alt="Exameow architecture: Vue 3 frontend, Rust Axum server, and four deploy targets">
+</p>
 
 ## Development
 

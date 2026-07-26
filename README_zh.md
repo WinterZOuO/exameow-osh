@@ -34,6 +34,13 @@
 
 ## 功能
 
+<p align="center">
+  <img src="./assets/readme/features-zh.svg" width="100%" alt="过了喵 Exameow 功能:AI 出题、刷题模式、在线考试与搜题模式">
+</p>
+
+<details>
+<summary><b>完整功能清单</b></summary>
+
 ### ✨ AI 出题
 - **丰富的输入格式** — 支持 PDF、DOCX、XLSX、PPTX、EPUB、ODT、TXT、CSV、HTML、图片（PNG/JPG/WEBP/GIF/BMP）及任意文本/代码文件，支持多文件拖拽上传
 - **5 种题型** — 单选题、多选题、判断题、填空题、简答题，可按题型分别设置数量
@@ -72,6 +79,8 @@
 - **自托管网页版** — Docker 一键部署
 - **本地优先** — 题库、练习记录、错题本均保存在本机；桌面端 API 密钥使用 AES-256-GCM 加密存储
 - **中英双语** — 自动跟随系统语言，一键切换
+
+</details>
 
 ## 安装
 
@@ -168,24 +177,9 @@ curl -X POST http://localhost:3000/api/generate \
 
 ## 架构
 
-```
-┌─────────────────────────────────────────────────────┐
-│  前端 (Vue 3 + Vite + Pinia)                        │
-│  由 Rust 服务端作为静态文件托管                      │
-├─────────────────────────────────────────────────────┤
-│  服务端 (Rust / Axum)                               │
-│  ├── 文件解析   (PDF, DOCX, XLSX, PPTX, EPUB…)     │
-│  ├── AI 客户端  (OpenAI 兼容 API)                   │
-│  ├── 出题引擎   (Prompt 工程 + 解析)                │
-│  └── 导出       (XLSX, CSV)                        │
-├─────────────────────────────────────────────────────┤
-│  部署方式                                           │
-│  ├── Docker（自托管）                                │
-│  ├── Tauri 桌面端（macOS / Windows / Linux）         │
-│  ├── Tauri 移动端（iOS / Android）                   │
-│  └── Cloudflare Pages + Worker                      │
-└─────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="./assets/readme/architecture-zh.svg" width="100%" alt="过了喵 Exameow 架构:Vue 3 前端、Rust Axum 服务端与四种部署方式">
+</p>
 
 ## 开发
 
