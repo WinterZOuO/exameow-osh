@@ -17,6 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check OTA minShell covers new native commands
+        run: bash scripts/check-ota-minshell.sh "${GITHUB_REF_NAME#v}"
 
       - uses: pnpm/action-setup@v4
         with:
