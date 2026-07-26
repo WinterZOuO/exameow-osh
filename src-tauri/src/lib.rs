@@ -197,6 +197,26 @@ fn write_file(save_path: String, content_base64: String) -> Result<(), CommandEr
 }
 
 #[tauri::command]
+fn save_to_cache(
+    app: tauri::AppHandle,
+    filename: String,
+    content_base64: String,
+) -> Result<String, CommandError> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(&content_base64)
+        .map_err(|e| CommandError(format!("Base64 decode error: {e}")))?;
+    let dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| CommandError(format!("Cache dir error: {e}")))?
+        .join("Exameow");
+    std::fs::create_dir_all(&dir).map_err(|e| CommandError(format!("Create dir error: {e}")))?;
+    let path = dir.join(&filename);
+    std::fs::write(&path, &bytes).map_err(|e| CommandError(format!("Write error: {e}")))?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 fn save_to_downloads(filename: String, content_base64: String) -> Result<String, CommandError> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&content_base64)
@@ -615,6 +635,7 @@ pub fn run() {
             export_xlsx,
             export_xlsx_data,
             write_file,
+            save_to_cache,
             save_to_downloads,
             save_config,
             load_config,

@@ -115,29 +115,40 @@ async function handleDownloadTemplate() {
 
   try {
     const XLSX = await import('xlsx')
-    const typeLabel = (t: string) => {
-      const m: Record<string, string> = {
-        single_choice: '单选题', multi_choice: '多选题', true_false: '判断题',
-        fill_blank: '填空题', short_answer: '简答题',
-      }
-      return m[t] ?? t
-    }
-    const sample = {
-      '题型 （必填）': typeLabel('single_choice'),
-      '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
-      '选项 A': 'OpenAI 兼容 API',
-      '选项 B': 'WebSocket',
-      '选项 C': 'gRPC',
-      '选项 D': 'GraphQL',
-      '选项 E': '',
-      '选项 F': '',
-      '选项 G': '',
-      '选项 H': '',
-      '正确答案': 'A',
-      '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
-      '章节': '',
-      '难度': '',
-    }
+    const isZh = i18n.locale === 'zh'
+    const sample = isZh
+      ? {
+          '题型 （必填）': '单选题',
+          '题干（必填）': 'Exameow 的 AI 接口协议是什么类型？',
+          '选项 A': 'OpenAI 兼容 API',
+          '选项 B': 'WebSocket',
+          '选项 C': 'gRPC',
+          '选项 D': 'GraphQL',
+          '选项 E': '',
+          '选项 F': '',
+          '选项 G': '',
+          '选项 H': '',
+          '正确答案': 'A',
+          '解析': 'Exameow 兼容所有 OpenAI 格式的 API，支持对接任何 OpenAI 兼容的服务商。',
+          '章节': '',
+          '难度': '',
+        }
+      : {
+          'Type (required)': 'Single Choice',
+          'Question (required)': 'What type of AI API protocol does Exameow use?',
+          'Option A': 'OpenAI-compatible API',
+          'Option B': 'WebSocket',
+          'Option C': 'gRPC',
+          'Option D': 'GraphQL',
+          'Option E': '',
+          'Option F': '',
+          'Option G': '',
+          'Option H': '',
+          'Answer': 'A',
+          'Analysis': 'Exameow works with any OpenAI-compatible API provider.',
+          'Chapter': '',
+          'Difficulty': '',
+        }
     const ws = XLSX.utils.json_to_sheet([sample])
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
@@ -153,13 +164,14 @@ async function handleDownloadTemplate() {
         binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
       }
       const b64 = btoa(binary)
+      const { tauriApi } = await import('@/api/bridge')
+
       try {
         const mod: any = await import('@tauri-apps/plugin-dialog')
         const path = await mod.save({ defaultPath: filename, filters: [{ name: 'Excel File', extensions: ['xlsx'] }] })
         if (path === null) {
           return
         }
-        const { tauriApi } = await import('@/api/bridge')
         await tauriApi.writeFile(path, b64)
         templateExportSuccess.value = i18n.t('previewExportSaved') + path
         templateExportFilePath.value = path
@@ -167,8 +179,7 @@ async function handleDownloadTemplate() {
       } catch {}
 
       try {
-        const { tauriApi } = await import('@/api/bridge')
-        const savedPath = await tauriApi.saveToDownloads(filename, b64)
+        const savedPath = await tauriApi.saveToCache(filename, b64)
         templateExportSuccess.value = i18n.t('previewExportSaved') + savedPath
         templateExportFilePath.value = savedPath
       } catch (e: any) {

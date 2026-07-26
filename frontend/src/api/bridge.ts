@@ -63,6 +63,10 @@ export const tauriApi = {
     return invoke<void>('write_file', { savePath, contentBase64 })
   },
 
+  async saveToCache(filename: string, contentBase64: string): Promise<string> {
+    return invoke<string>('save_to_cache', { filename, contentBase64 })
+  },
+
   async saveToDownloads(filename: string, contentBase64: string): Promise<string> {
     return invoke<string>('save_to_downloads', { filename, contentBase64 })
   },
