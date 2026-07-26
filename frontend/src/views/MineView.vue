@@ -7,6 +7,7 @@ import {
   PencilSquareIcon,
   ChartBarIcon,
   ChevronRightIcon,
+  Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -18,6 +19,7 @@ const entries = [
   { key: 'mineRecords', descKey: 'mineRecordsDesc', path: '/mine/records', icon: ChartBarIcon },
   { key: 'minePublished', descKey: 'minePublishedDesc', path: '/mine/published', icon: PaperAirplaneIcon },
   { key: 'mineJoined', descKey: 'mineJoinedDesc', path: '/mine/joined', icon: PencilSquareIcon },
+  { key: 'mineSettings', descKey: 'mineSettingsDesc', path: '/mine/settings', icon: Cog6ToothIcon },
 ] as const
 </script>
 

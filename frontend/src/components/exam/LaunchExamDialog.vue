@@ -5,6 +5,7 @@ import { usePracticeStore } from '@/stores/practice'
 import { usePublishedStore } from '@/stores/published'
 import { publishExam, examLinkFor } from '@/api/relay'
 import ScheduleFields from '@/components/exam/ScheduleFields.vue'
+import BaseMultiSelect from '@/components/common/BaseMultiSelect.vue'
 import { QuestionType, type Question } from '@exameow/shared'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -60,6 +61,10 @@ const examLink = computed(() => examLinkFor(result.value?.code ?? ''))
 
 const banks = computed(() => practiceStore.banks)
 
+const bankOptions = computed(() =>
+  banks.value.map((b) => ({ value: b.id, label: b.name, hint: String(b.questions.length) })),
+)
+
 const selectedBanks = computed(() => banks.value.filter((b) => selectedBankIds.value.has(b.id)))
 
 const availableByType = computed(() => {
@@ -89,13 +94,6 @@ watch(selectedBanks, () => {
 const totalSelected = computed(() =>
   activeTypes.value.reduce((sum, t) => sum + Math.min(Math.max(0, counts.value[t] ?? 0), availableByType.value[t] ?? 0), 0),
 )
-
-function toggleBank(id: string) {
-  const next = new Set(selectedBankIds.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  selectedBankIds.value = next
-}
 
 function composeQuestions(): Question[] {
   const picked: Question[] = []
@@ -160,19 +158,13 @@ async function copy(text: string, which: string) {
           <p v-if="banks.length === 0" class="text-sm mt-1" style="color: rgb(var(--md-on-surface-variant))">
             {{ i18n.t('launchNoBanks') }}
           </p>
-          <div v-else class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              v-for="b in banks"
-              :key="b.id"
-              class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors"
-              :style="selectedBankIds.has(b.id)
-                ? { backgroundColor: 'rgba(var(--md-primary) / 0.15)', color: 'rgb(var(--md-primary))' }
-                : { backgroundColor: 'rgba(var(--md-primary) / 0.05)' }"
-              @click="toggleBank(b.id)"
-            >
-              <span class="truncate mr-2">{{ b.name }}</span>
-              <span class="shrink-0 text-xs">{{ b.questions.length }}</span>
-            </button>
+          <div v-else class="mt-1">
+            <BaseMultiSelect
+              :model-value="[...selectedBankIds]"
+              :options="bankOptions"
+              :placeholder="i18n.t('launchSelectBanks')"
+              @update:model-value="selectedBankIds = new Set($event)"
+            />
           </div>
         </div>
 

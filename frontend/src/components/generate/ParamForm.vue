@@ -2,7 +2,8 @@
 import { useExamStore } from '@/stores/exam'
 import { useI18nStore } from '@/stores/i18n'
 import { QuestionType, Difficulty } from '@exameow/shared'
-import { ChartBarIcon, LanguageIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import BaseSelect from '@/components/common/BaseSelect.vue'
+import { ChartBarIcon, LanguageIcon } from '@heroicons/vue/24/outline'
 
 const store = useExamStore()
 const i18n = useI18nStore()
@@ -83,28 +84,29 @@ function toggleType(type: QuestionType) {
       <div class="relative">
         <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genDifficulty') }}</label>
         <div class="relative">
-          <ChartBarIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
-          <select
-            v-model="store.difficulty"
-            class="input-outlined text-sm !py-2.5 !pl-10 appearance-none cursor-pointer"
-          >
-            <option v-for="d in difficultyOptions" :key="d.value" :value="d.value">
-              {{ i18n.t(d.title as any) }}
-            </option>
-          </select>
-          <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <ChartBarIcon class="absolute left-3 top-2.5 w-5 h-5 z-10 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <BaseSelect
+            :model-value="store.difficulty"
+            :options="difficultyOptions.map(d => ({ value: d.value, label: i18n.t(d.title as any) }))"
+            class="[&>button]:!pl-10"
+            @update:model-value="store.difficulty = $event"
+          />
         </div>
       </div>
 
       <div class="relative">
         <label class="text-label-md block mb-2" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genLanguage') }}</label>
         <div class="relative">
-          <LanguageIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
-          <select v-model="store.language" class="input-outlined text-sm !py-2.5 !pl-10 appearance-none cursor-pointer">
-            <option value="zh-CN">{{ i18n.t('practiceLangZh') }}</option>
-            <option value="en-US">{{ i18n.t('practiceLangEn') }}</option>
-          </select>
-          <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <LanguageIcon class="absolute left-3 top-2.5 w-5 h-5 z-10 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <BaseSelect
+            :model-value="store.language"
+            :options="[
+              { value: 'zh-CN', label: i18n.t('practiceLangZh') },
+              { value: 'en-US', label: i18n.t('practiceLangEn') },
+            ]"
+            class="[&>button]:!pl-10"
+            @update:model-value="store.language = $event"
+          />
         </div>
       </div>
 

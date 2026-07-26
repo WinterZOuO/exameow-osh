@@ -1,7 +1,8 @@
 import type { ModelInfo } from '@exameow/shared'
+import { normalizeEndpoint } from '@/utils/endpoint'
 
 export async function fetchModelsFromEndpoint(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
-  const url = `${endpoint.replace(/\/+$/, '')}/models`
+  const url = `${normalizeEndpoint(endpoint)}/models`
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
   })

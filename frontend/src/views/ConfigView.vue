@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 
 import { useI18nStore } from '@/stores/i18n'
-import { isCloudflare, isTauri, isMobileDevice, isDesktopTauri } from '@/utils/platform'
-import { useDesktopUpdater } from '@/composables/useDesktopUpdater'
-import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { isCloudflare } from '@/utils/platform'
+import BaseCombobox from '@/components/common/BaseCombobox.vue'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon } from '@heroicons/vue/24/outline'
 
 const configStore = useConfigStore()
 const router = useRouter()
@@ -35,46 +35,6 @@ async function handleSave() {
     setTimeout(() => saveSuccess.value = false, 2500)
   } catch (e: any) { saveError.value = e.message || String(e) }
 }
-
-const showOta = isTauri() && isMobileDevice()
-const otaBundle = ref('')
-const otaMessage = ref('')
-const otaBusy = ref(false)
-
-onMounted(async () => {
-  if (!showOta) return
-  try {
-    const { tauriApi } = await import('@/api/bridge')
-    const cur = await tauriApi.otaCurrent()
-    otaBundle.value = cur.status === 'ota' && cur.version ? `v${cur.version}` : i18n.t('otaBuiltin')
-  } catch {}
-})
-
-async function handleOtaCheck() {
-  if (otaBusy.value) return
-  otaBusy.value = true
-  otaMessage.value = i18n.t('otaChecking')
-  try {
-    const { tauriApi } = await import('@/api/bridge')
-    const r = await tauriApi.otaDownload()
-    if (r.status === 'staged' || r.status === 'alreadyStaged') {
-      otaMessage.value = i18n.t('otaStaged', { version: r.version ?? '' })
-    } else if (r.status === 'shellTooOld') {
-      otaMessage.value = i18n.t('otaShellTooOld', { version: r.version ?? '' })
-    } else if (r.status === 'upToDate' || r.status === 'downloading') {
-      otaMessage.value = i18n.t('otaUpToDate')
-    } else {
-      otaMessage.value = i18n.t('otaFailed') + (r.error ? `: ${r.error}` : '')
-    }
-  } catch (e: any) {
-    otaMessage.value = i18n.t('otaFailed') + ': ' + (e?.message ?? String(e))
-  } finally {
-    otaBusy.value = false
-  }
-}
-
-const showDesktopUpdate = isDesktopTauri()
-const updater = useDesktopUpdater()
 </script>
 
 <template>
@@ -122,7 +82,7 @@ const updater = useDesktopUpdater()
         <ServerIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
         <input
           v-model="configStore.endpoint"
-          :placeholder="i18n.t('configApiUrl')"
+          placeholder="https://<your_api_url>/v1"
           class="input-outlined !pl-10"
         />
       </div>
@@ -158,21 +118,14 @@ const updater = useDesktopUpdater()
           <CloudArrowDownIcon class="w-4 h-4" />
           {{ configFetching ? '...' : i18n.t('configFetchModels') }}
         </button>
-        <div class="flex-1 relative">
-          <CpuChipIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
-          <select
-            v-if="configStore.models.length > 0"
-            v-model="configStore.model"
-            class="input-outlined !pl-10 appearance-none cursor-pointer"
-          >
-            <option value="" disabled>{{ i18n.t('configSelectModel') }}</option>
-            <option v-for="m in configStore.models" :key="m.id" :value="m.id">{{ m.id }}</option>
-          </select>
-          <input
-            v-else
-            v-model="configStore.model"
+        <div class="flex-1 relative w-full">
+          <CpuChipIcon class="absolute left-3 top-2.5 w-5 h-5 z-10 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <BaseCombobox
+            :model-value="configStore.model"
+            :options="configStore.models.map(m => ({ value: m.id, label: m.id }))"
             :placeholder="i18n.t('configEnterModel')"
-            class="input-outlined !pl-10"
+            class="[&_input]:!pl-10"
+            @update:model-value="configStore.model = $event"
           />
         </div>
       </div>
@@ -187,64 +140,6 @@ const updater = useDesktopUpdater()
         <span>{{ configFetchError }}</span>
       </div>
     </Transition>
-
-    <!-- Mobile OTA update -->
-    <div v-if="showOta" class="card-filled p-5 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('otaCheckUpdate') }}</label>
-      <div class="flex flex-col sm:flex-row items-center gap-3">
-        <button class="btn-outlined shrink-0 text-sm" :disabled="otaBusy" @click="handleOtaCheck">
-          <ArrowPathIcon class="w-4 h-4" />
-          {{ i18n.t('otaCheckUpdate') }}
-        </button>
-        <div class="text-body-sm flex-1" style="color: rgb(var(--md-on-surface-variant))">
-          {{ i18n.t('otaCurrentBundle') }}: {{ otaBundle }}
-        </div>
-      </div>
-      <p v-if="otaMessage" class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">{{ otaMessage }}</p>
-    </div>
-
-    <!-- Desktop update check -->
-    <div v-if="showDesktopUpdate" class="card-filled p-5 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('updateCheckBtn') }}</label>
-      <div class="flex flex-col sm:flex-row items-center gap-3">
-        <button
-          class="btn-outlined shrink-0 text-sm"
-          :disabled="updater.stage.value === 'downloading'"
-          @click="updater.checkForUpdate(true)"
-        >
-          <ArrowPathIcon class="w-4 h-4" />
-          {{ i18n.t('updateCheckBtn') }}
-        </button>
-        <div class="text-body-sm flex-1" style="color: rgb(var(--md-on-surface-variant))">
-          <template v-if="updater.stage.value === 'available'">
-            {{ i18n.t('updateAvailableTitle', { version: updater.version.value }) }}
-          </template>
-          <template v-else-if="updater.stage.value === 'downloading'">
-            {{ i18n.t('updateDownloading') }} {{ updater.progress.value }}%
-          </template>
-          <template v-else-if="updater.stage.value === 'ready'">{{ i18n.t('updateReady') }}</template>
-          <template v-else-if="updater.stage.value === 'upToDate'">{{ i18n.t('updateUpToDate') }}</template>
-          <template v-else-if="updater.stage.value === 'failed'">
-            <span style="color: rgb(var(--md-error))">{{ i18n.t('updateFailed') }}</span>
-            <span v-if="updater.error.value" class="block text-xs mt-1 break-all">{{ updater.error.value }}</span>
-          </template>
-        </div>
-        <button
-          v-if="updater.stage.value === 'available'"
-          class="btn-filled shrink-0 text-sm"
-          @click="updater.startUpdate"
-        >
-          {{ i18n.t('updateNow') }}
-        </button>
-        <button
-          v-else-if="updater.stage.value === 'ready'"
-          class="btn-filled shrink-0 text-sm"
-          @click="updater.restart"
-        >
-          {{ i18n.t('updateRestart') }}
-        </button>
-      </div>
-    </div>
 
     <!-- ========= Unified Save + CTA ========= -->
     <div class="flex items-center justify-center gap-3 mt-6">

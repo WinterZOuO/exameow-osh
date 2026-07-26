@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { useTheme } from '@/composables/useTheme'
 import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
 import TitleBar from './TitleBar.vue'
 import CookieBanner from './CookieBanner.vue'
@@ -20,40 +21,8 @@ const router = useRouter()
 const route = useRoute()
 const i18n = useI18nStore()
 
-type Theme = 'system' | 'light' | 'dark'
-const THEME_KEY = 'exameow-theme'
-
-function loadTheme(): Theme {
-  const saved = localStorage.getItem(THEME_KEY)
-  if (saved === 'system' || saved === 'light' || saved === 'dark') return saved
-  const legacy = localStorage.getItem('exameow-dark')
-  if (legacy === '1') return 'dark'
-  if (legacy === '0') return 'light'
-  return 'system'
-}
-
-const theme = ref<Theme>(loadTheme())
-const media = window.matchMedia('(prefers-color-scheme: dark)')
+const { theme, cycleTheme } = useTheme()
 const isDesktopTauri = isTauri() && (isWindows() || isMacOS() || isLinux())
-
-function applyTheme() {
-  const dark = theme.value === 'dark' || (theme.value === 'system' && media.matches)
-  document.documentElement.classList.toggle('dark', dark)
-  localStorage.setItem(THEME_KEY, theme.value)
-  if (isTauri()) {
-    import('@tauri-apps/api/event')
-      .then(({ emit }) => emit('theme-changed', theme.value))
-      .catch(() => {})
-  }
-}
-
-function onMediaChange() {
-  if (theme.value === 'system') applyTheme()
-}
-
-function cycleTheme() {
-  theme.value = theme.value === 'system' ? 'light' : theme.value === 'light' ? 'dark' : 'system'
-}
 
 async function openGitHub() {
   const url = 'https://github.com/heshengtao/exameow'
@@ -64,10 +33,6 @@ async function openGitHub() {
     window.open(url, '_blank')
   }
 }
-
-watch(theme, applyTheme, { immediate: true })
-onMounted(() => media.addEventListener('change', onMediaChange))
-onUnmounted(() => media.removeEventListener('change', onMediaChange))
 
 const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },

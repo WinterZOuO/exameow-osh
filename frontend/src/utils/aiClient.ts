@@ -1,4 +1,5 @@
 import type { ExamParams, Question, QuestionType, Difficulty } from '@exameow/shared'
+import { normalizeEndpoint } from '@/utils/endpoint'
 
 interface AIConfig {
   endpoint: string
@@ -128,7 +129,7 @@ export async function callCustomAI(
   config: AIConfig,
   signal?: AbortSignal,
 ): Promise<Question[]> {
-  const endpoint = config.endpoint.replace(/\/+$/, '')
+  const endpoint = normalizeEndpoint(config.endpoint)
   const url = `${endpoint}/chat/completions`
 
   const body = {

@@ -375,6 +375,26 @@ export interface LocaleMessages {
   updateCheckBtn: string
   updateUpToDate: string
 
+  // System Settings
+  mineSettings: string
+  mineSettingsDesc: string
+  settingsTitle: string
+  settingsLanguage: string
+  settingsTheme: string
+  themeSystem: string
+  themeLight: string
+  themeDark: string
+  settingsUpdate: string
+  settingsCurrentVersion: string
+
+  // Common select
+  selectAll: string
+  selectSelected: string
+  selectSearch: string
+  selectSelectAll: string
+  selectClear: string
+  selectNoMatch: string
+
   pubPublish: string
   pubJoin: string
   pubDialogTitle: string
@@ -825,6 +845,26 @@ export const zh: LocaleMessages = {
   updateCheckBtn: '检查更新',
   updateUpToDate: '当前已是最新版本',
 
+  // System Settings
+  mineSettings: '系统设置',
+  mineSettingsDesc: '语言、主题与版本更新',
+  settingsTitle: '系统设置',
+  settingsLanguage: '语言',
+  settingsTheme: '主题',
+  themeSystem: '跟随系统',
+  themeLight: '浅色',
+  themeDark: '深色',
+  settingsUpdate: '版本更新',
+  settingsCurrentVersion: '当前版本',
+
+  // Common select
+  selectAll: '全部',
+  selectSelected: '已选 {n} 项',
+  selectSearch: '搜索…',
+  selectSelectAll: '全选',
+  selectClear: '清空',
+  selectNoMatch: '无匹配项',
+
   pubPublish: '发布考试',
   pubJoin: '参加考试',
   pubDialogTitle: '发布考试',
@@ -1274,6 +1314,26 @@ export const en: LocaleMessages = {
   // Desktop update (manual)
   updateCheckBtn: 'Check for updates',
   updateUpToDate: "You're on the latest version",
+
+  // System Settings
+  mineSettings: 'System Settings',
+  mineSettingsDesc: 'Language, theme and updates',
+  settingsTitle: 'System Settings',
+  settingsLanguage: 'Language',
+  settingsTheme: 'Theme',
+  themeSystem: 'System',
+  themeLight: 'Light',
+  themeDark: 'Dark',
+  settingsUpdate: 'Version Update',
+  settingsCurrentVersion: 'Current version',
+
+  // Common select
+  selectAll: 'All',
+  selectSelected: '{n} selected',
+  selectSearch: 'Search…',
+  selectSelectAll: 'Select all',
+  selectClear: 'Clear',
+  selectNoMatch: 'No matches',
 
   pubPublish: 'Publish Exam',
   pubJoin: 'Join Exam',

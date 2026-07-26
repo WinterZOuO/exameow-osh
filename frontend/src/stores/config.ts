@@ -6,11 +6,12 @@ import { isCloudflare } from '@/utils/platform'
 
 import { DEFAULT_CF_MODEL } from '@/api/cf-models'
 import { fetchModelsFromEndpoint } from '@/utils/modelList'
+import { normalizeEndpoint, withV1Suffix } from '@/utils/endpoint'
 
 export type AIProvider = 'cf-free' | 'custom'
 
 export const useConfigStore = defineStore('config', () => {
-  const endpoint = ref('https://api.openai.com/v1')
+  const endpoint = ref('')
   const apiKey = ref('')
   const model = ref('')
   const models = ref<ModelInfo[]>([])
@@ -51,11 +52,25 @@ export const useConfigStore = defineStore('config', () => {
     try {
       if (isCloudflare() && aiProvider.value === 'cf-free') {
         models.value = await api.getModels({ endpoint: '', api_key: '', model: '' })
-      } else if (isCloudflare() && aiProvider.value === 'custom') {
-        models.value = await fetchModelsFromEndpoint(endpoint.value, apiKey.value)
-      } else {
-        if (!endpoint.value || !apiKey.value) return
-        models.value = await api.getModels({ endpoint: endpoint.value, api_key: apiKey.value, model: '' })
+        return
+      }
+      endpoint.value = normalizeEndpoint(endpoint.value)
+      if (!endpoint.value || !apiKey.value) return
+      try {
+        if (isCloudflare() && aiProvider.value === 'custom') {
+          models.value = await fetchModelsFromEndpoint(endpoint.value, apiKey.value)
+        } else {
+          models.value = await api.getModels({ endpoint: endpoint.value, api_key: apiKey.value, model: '' })
+        }
+      } catch (firstError) {
+        const candidate = withV1Suffix(endpoint.value)
+        if (!candidate) throw firstError
+        if (isCloudflare() && aiProvider.value === 'custom') {
+          models.value = await fetchModelsFromEndpoint(candidate, apiKey.value)
+        } else {
+          models.value = await api.getModels({ endpoint: candidate, api_key: apiKey.value, model: '' })
+        }
+        endpoint.value = candidate
       }
     } catch (e: any) {
       throw new Error(e.message || String(e))
@@ -66,6 +81,7 @@ export const useConfigStore = defineStore('config', () => {
 
   async function save() {
     localStorage.setItem('exameow_ai_provider', aiProvider.value)
+    endpoint.value = normalizeEndpoint(endpoint.value)
     await api.saveConfig({ endpoint: endpoint.value, api_key: apiKey.value, model: model.value })
   }
 

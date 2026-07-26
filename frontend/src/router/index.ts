@@ -82,6 +82,12 @@ const router = createRouter({
       meta: { title: 'AI Config' },
     },
     {
+      path: '/mine/settings',
+      name: 'mine-settings',
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { title: 'System Settings' },
+    },
+    {
       path: '/mine/published',
       name: 'mine-published',
       component: () => import('@/views/MyPublishedView.vue'),

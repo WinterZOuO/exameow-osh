@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import type { ColumnMapping, ImportAnalysis } from '@/utils/importParser'
 import { splitOptionsCell } from '@/utils/importParser'
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import { ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -40,6 +41,11 @@ function columnLabel(i: number): string {
 const columnOptions = computed(() =>
   props.analysis.headers.map((_, i) => ({ index: i, label: columnLabel(i) }))
 )
+
+const colSelectOptions = computed(() => [
+  { value: null, label: i18n.t('practiceMapNone') },
+  ...columnOptions.value.map((c) => ({ value: c.index, label: c.label })),
+])
 
 const canApply = computed(() => {
   if (stem.value === null || answer.value === null) return false
@@ -104,10 +110,7 @@ const selectStyle = {
           <span class="text-[11px]">({{ i18n.t('practiceMapRequired') }})</span>
           <ExclamationCircleIcon v-if="missing.has('stem')" class="w-3.5 h-3.5" />
         </span>
-        <select v-model="stem" :class="selectClass" :style="selectStyle">
-          <option :value="null">{{ i18n.t('practiceMapNone') }}</option>
-          <option v-for="c in columnOptions" :key="c.index" :value="c.index">{{ c.label }}</option>
-        </select>
+        <BaseSelect v-model="stem" :options="colSelectOptions" :placeholder="i18n.t('practiceMapNone')" />
       </label>
 
       <label class="block">
@@ -116,30 +119,21 @@ const selectStyle = {
           <span class="text-[11px]">({{ i18n.t('practiceMapRequired') }})</span>
           <ExclamationCircleIcon v-if="missing.has('answer')" class="w-3.5 h-3.5" />
         </span>
-        <select v-model="answer" :class="selectClass" :style="selectStyle">
-          <option :value="null">{{ i18n.t('practiceMapNone') }}</option>
-          <option v-for="c in columnOptions" :key="c.index" :value="c.index">{{ c.label }}</option>
-        </select>
+        <BaseSelect v-model="answer" :options="colSelectOptions" :placeholder="i18n.t('practiceMapNone')" />
       </label>
 
       <label class="block">
         <span class="block text-body-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
           {{ i18n.t('practiceImportColType') }}
         </span>
-        <select v-model="type" :class="selectClass" :style="selectStyle">
-          <option :value="null">{{ i18n.t('practiceMapNone') }}</option>
-          <option v-for="c in columnOptions" :key="c.index" :value="c.index">{{ c.label }}</option>
-        </select>
+        <BaseSelect v-model="type" :options="colSelectOptions" :placeholder="i18n.t('practiceMapNone')" />
       </label>
 
       <label class="block">
         <span class="block text-body-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
           {{ i18n.t('practiceImportColAnalysis') }}
         </span>
-        <select v-model="analysisCol" :class="selectClass" :style="selectStyle">
-          <option :value="null">{{ i18n.t('practiceMapNone') }}</option>
-          <option v-for="c in columnOptions" :key="c.index" :value="c.index">{{ c.label }}</option>
-        </select>
+        <BaseSelect v-model="analysisCol" :options="colSelectOptions" :placeholder="i18n.t('practiceMapNone')" />
       </label>
     </div>
 
@@ -179,10 +173,7 @@ const selectStyle = {
           <span class="block text-body-sm mb-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
             {{ i18n.t('practiceMapFieldCombined') }}
           </span>
-          <select v-model="combinedCol" :class="selectClass" :style="selectStyle">
-            <option :value="null">{{ i18n.t('practiceMapNone') }}</option>
-            <option v-for="c in columnOptions" :key="c.index" :value="c.index">{{ c.label }}</option>
-          </select>
+          <BaseSelect v-model="combinedCol" :options="colSelectOptions" :placeholder="i18n.t('practiceMapNone')" />
         </label>
 
         <label class="block">

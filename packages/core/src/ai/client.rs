@@ -10,7 +10,13 @@ pub struct AIClient {
 
 impl AIClient {
     pub fn new(endpoint: &str, api_key: &str) -> Self {
-        let endpoint = endpoint.trim_end_matches('/').to_string();
+        let trimmed = endpoint.trim().trim_end_matches('/');
+        let stripped = trimmed
+            .to_lowercase()
+            .ends_with("/chat/completions")
+            .then(|| &trimmed[..trimmed.len() - "/chat/completions".len()])
+            .unwrap_or(trimmed);
+        let endpoint = stripped.trim_end_matches('/').to_string();
         let client = reqwest::Client::builder()
             .no_proxy()
             .build()
