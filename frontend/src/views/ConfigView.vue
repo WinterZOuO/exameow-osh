@@ -23,7 +23,10 @@ const configFetching = ref(false)
 async function handleFetchModels() {
   configFetchError.value = ''
   configFetching.value = true
-  try { await configStore.fetchModels() } catch (e: any) { configFetchError.value = e.message || String(e) } finally { configFetching.value = false }
+  try {
+    await configStore.fetchModels()
+    configStore.model = ''
+  } catch (e: any) { configFetchError.value = e.message || String(e) } finally { configFetching.value = false }
 }
 
 
