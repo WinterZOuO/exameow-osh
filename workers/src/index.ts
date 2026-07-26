@@ -334,7 +334,7 @@ app.post('/api/exam/admin/code/:code/restore', (c) => {
 
 // GET /api/health - health check
 app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', version: '1.3.4', runtime: 'cloudflare-worker' })
+  return c.json({ status: 'ok', version: '1.3.5', runtime: 'cloudflare-worker' })
 })
 
 // SPA fallback: serve index.html for all non-API, non-asset routes
