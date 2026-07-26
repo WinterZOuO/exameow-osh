@@ -94,6 +94,12 @@ const router = createRouter({
       meta: { title: 'My Joined Exams' },
     },
     {
+      path: '/mine/joined/wrong',
+      name: 'mine-joined-wrong',
+      component: () => import('@/views/JoinedWrongView.vue'),
+      meta: { title: 'Wrong Questions' },
+    },
+    {
       path: '/mine/records',
       name: 'mine-records',
       component: () => import('@/views/PracticeRecordsView.vue'),

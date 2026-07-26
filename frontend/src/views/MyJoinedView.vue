@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useJoinedStore } from '@/stores/joined'
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import type { JoinedRecord } from '@/stores/joined'
+import { ArrowLeftIcon, TrashIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const i18n = useI18nStore()
@@ -20,6 +21,15 @@ function toggle(code: string, name: string) {
   if (s.has(k)) s.delete(k)
   else s.add(k)
   expanded.value = s
+}
+
+function gradedCounts(rec: JoinedRecord) {
+  const graded = rec.graded ?? []
+  return {
+    correct: graded.filter((g) => g.isCorrect === true).length,
+    wrong: graded.filter((g) => g.isCorrect === false).length,
+    pending: graded.filter((g) => g.isCorrect === null).length,
+  }
 }
 
 function fmtTime(ts: number): string {
@@ -58,13 +68,21 @@ function fmtTime(ts: number): string {
         </div>
         <div class="flex flex-wrap gap-2 mt-3">
           <button
-            v-if="rec.submittedAt && rec.graded"
+            v-if="rec.submittedAt"
             class="btn-filled !h-8 !px-3 !text-xs"
             @click="toggle(rec.code, rec.name)"
           >
             {{ i18n.t('joinedViewResult') }}
           </button>
           <button
+            v-if="rec.submittedAt && rec.graded"
+            class="btn-tonal !h-8 !px-3 !text-xs"
+            @click="router.push({ path: '/mine/joined/wrong', query: { code: rec.code, name: rec.name } })"
+          >
+            {{ i18n.t('joinedViewWrong') }}
+          </button>
+          <button
+            v-if="!rec.submittedAt"
             class="btn-tonal !h-8 !px-3 !text-xs"
             @click="router.push({ path: `/take/${rec.code}`, query: { name: rec.name } })"
           >
@@ -75,25 +93,28 @@ function fmtTime(ts: number): string {
           </button>
         </div>
 
-        <div v-if="expanded.has(recKey(rec.code, rec.name)) && rec.graded" class="mt-4 space-y-3">
-          <div v-for="(g, i) in rec.graded" :key="g.question.id" class="card-filled p-4">
-            <div class="flex items-start gap-2">
-              <span
-                class="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 mt-0.5"
-                :style="g.isCorrect === false
-                  ? { backgroundColor: 'rgb(var(--md-error-container))', color: 'rgb(var(--md-on-error-container))' }
-                  : { backgroundColor: 'rgb(var(--md-primary-container))', color: 'rgb(var(--md-on-primary-container))' }"
-              >{{ i + 1 }}</span>
-              <div class="flex-1 min-w-0">
-                <div class="text-sm mb-2" style="color: rgb(var(--md-on-surface))">{{ g.question.stem }}</div>
-                <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takeYourAnswer') }}</div>
-                <div class="text-sm mb-2" :style="{ color: g.isCorrect === false ? 'rgb(var(--md-error))' : 'rgb(var(--md-on-surface))' }">
-                  {{ g.userAnswer || i18n.t('takeUnanswered') }}
-                </div>
-                <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takeCorrectAnswer') }}</div>
-                <div class="text-sm mb-2" style="color: rgb(var(--md-primary))">{{ g.question.answer }}</div>
-                <div v-if="g.question.analysis" class="text-xs" style="color: rgb(var(--md-on-surface-variant))">{{ g.question.analysis }}</div>
-              </div>
+        <div v-if="expanded.has(recKey(rec.code, rec.name)) && rec.submittedAt" class="mt-4 card-filled p-4">
+          <div class="text-center mb-4">
+            <div class="text-label-sm mb-1" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takeScore') }}</div>
+            <div class="text-3xl font-bold" style="color: rgb(var(--md-primary))">
+              {{ rec.score }}<span class="text-base font-normal" style="color: rgb(var(--md-on-surface-variant))"> / {{ rec.totalScore }}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 sm:gap-3">
+            <div class="card-outlined p-3 text-center">
+              <CheckCircleIcon class="w-5 h-5 mx-auto mb-1" style="color: rgb(var(--md-primary))" />
+              <div class="text-title-sm">{{ gradedCounts(rec).correct }}</div>
+              <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('practiceCorrect') }}</div>
+            </div>
+            <div class="card-outlined p-3 text-center">
+              <XCircleIcon class="w-5 h-5 mx-auto mb-1" style="color: rgb(var(--md-error))" />
+              <div class="text-title-sm">{{ gradedCounts(rec).wrong }}</div>
+              <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('practiceIncorrect') }}</div>
+            </div>
+            <div class="card-outlined p-3 text-center">
+              <ClockIcon class="w-5 h-5 mx-auto mb-1" style="color: rgb(var(--md-on-surface-variant))" />
+              <div class="text-title-sm">{{ gradedCounts(rec).pending }}</div>
+              <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('takePendingShort') }}</div>
             </div>
           </div>
         </div>

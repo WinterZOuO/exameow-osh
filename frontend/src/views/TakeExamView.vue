@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { fetchExam, submitExam, reportExam, RelayError } from '@/api/relay'
 import { useJoinedStore } from '@/stores/joined'
+import type { JoinedRecord } from '@/stores/joined'
 import ProgressBar from '@/components/practice/ProgressBar.vue'
 import type { PublishedExamInfo, SubmitExamResponse } from '@exameow/shared'
 import { CheckIcon, CheckCircleIcon, XCircleIcon, ClockIcon, FlagIcon } from '@heroicons/vue/24/outline'
@@ -28,6 +29,7 @@ const startedAt = ref(0)
 const submitting = ref(false)
 const submitError = ref('')
 const result = ref<SubmitExamResponse | null>(null)
+const priorSubmitted = ref<JoinedRecord | null>(null)
 const currentIndex = ref(0)
 const showSheet = ref(false)
 const showSubmitConfirm = ref(false)
@@ -122,7 +124,7 @@ function goTo(i: number) {
 }
 
 async function doSubmit() {
-  if (submitting.value || result.value || !exam.value) return
+  if (submitting.value || result.value || priorSubmitted.value || !exam.value) return
   if (timer) clearInterval(timer)
   submitError.value = ''
   submitting.value = true
@@ -227,12 +229,22 @@ async function loadExam() {
   }
 }
 
+function checkPriorSubmission(): boolean {
+  if (!studentName.value) return false
+  const rec = joinedStore.list.find((r) => r.code === code && r.name === studentName.value && r.submittedAt)
+  if (!rec) return false
+  priorSubmitted.value = rec
+  sessionStorage.removeItem(storageKey())
+  return true
+}
+
 function handleNameSubmit() {
   const n = nameInput.value.trim()
   if (!n) return
   studentName.value = n
   joinedStore.add(code, n)
   needsName.value = false
+  if (checkPriorSubmission()) return
   if (restore()) {
     beginTimer()
     return
@@ -243,6 +255,10 @@ function handleNameSubmit() {
 onMounted(async () => {
   if (!studentName.value) {
     if (restore()) {
+      if (checkPriorSubmission()) {
+        loading.value = false
+        return
+      }
       beginTimer()
       loading.value = false
       return
@@ -251,7 +267,15 @@ onMounted(async () => {
     loading.value = false
     return
   }
+  if (checkPriorSubmission()) {
+    loading.value = false
+    return
+  }
   if (restore()) {
+    if (checkPriorSubmission()) {
+      loading.value = false
+      return
+    }
     beginTimer()
     loading.value = false
     return
@@ -290,6 +314,33 @@ onUnmounted(() => {
       <button class="btn-filled w-full" :disabled="!nameInput.trim()" @click="handleNameSubmit">
         {{ i18n.t('joinConfirm') }}
       </button>
+    </div>
+
+    <!-- Already Submitted -->
+    <div v-else-if="priorSubmitted" class="card-filled p-6 text-center space-y-4 max-w-md mx-auto">
+      <div
+        class="w-16 h-16 rounded-full flex items-center justify-center mx-auto elevation-1"
+        style="background-color: rgb(var(--md-primary))"
+      >
+        <span class="text-2xl font-bold" style="color: rgb(var(--md-on-primary))">{{ priorSubmitted.score ?? '-' }}</span>
+      </div>
+      <h2 class="text-headline-sm" style="color: rgb(var(--md-on-surface))">{{ priorSubmitted.title || code }}</h2>
+      <p class="text-body-md" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('takeAlreadySubmitted') }}
+      </p>
+      <p v-if="priorSubmitted.score !== undefined" class="text-body-md" style="color: rgb(var(--md-primary))">
+        {{ priorSubmitted.score }} / {{ priorSubmitted.totalScore }}
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          v-if="priorSubmitted.graded"
+          class="btn-filled flex-1"
+          @click="router.push({ path: '/mine/joined/wrong', query: { code, name: studentName } })"
+        >
+          {{ i18n.t('joinedViewWrong') }}
+        </button>
+        <button class="btn-tonal flex-1" @click="router.push('/')">{{ i18n.t('takeBackHome') }}</button>
+      </div>
     </div>
 
     <template v-else-if="exam && !result && currentQuestion">

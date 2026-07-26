@@ -404,6 +404,10 @@ export interface LocaleMessages {
   manageLiveHint: string
   manageRefresh: string
   joinedViewResult: string
+  joinedViewWrong: string
+  joinedWrongTitle: string
+  joinedNoWrong: string
+  takeAlreadySubmitted: string
   takeEnterName: string
   reportBtn: string
   reportDialogTitle: string
@@ -846,6 +850,10 @@ export const zh: LocaleMessages = {
   manageLiveHint: '考试进行中，成绩将在结束后更新（结束后自动查询一次，节省资源）',
   manageRefresh: '刷新',
   joinedViewResult: '查看成绩',
+  joinedViewWrong: '查看错题',
+  joinedWrongTitle: '错题回顾',
+  joinedNoWrong: '本次考试没有错题，全部答对！',
+  takeAlreadySubmitted: '你已交卷，不能重复进入考试',
   takeEnterName: '请输入你的姓名',
   reportBtn: '举报',
   reportDialogTitle: '举报考试',
@@ -1288,6 +1296,10 @@ export const en: LocaleMessages = {
   manageLiveHint: 'Exam in progress. Results refresh after it ends (fetched once to save resources)',
   manageRefresh: 'Refresh',
   joinedViewResult: 'View Result',
+  joinedViewWrong: 'Wrong Questions',
+  joinedWrongTitle: 'Wrong Question Review',
+  joinedNoWrong: 'No wrong questions — perfect score!',
+  takeAlreadySubmitted: 'You have already submitted this exam and cannot re-enter',
   takeEnterName: 'Enter your name',
   reportBtn: 'Report',
   reportDialogTitle: 'Report Exam',
