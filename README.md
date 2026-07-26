@@ -1,15 +1,25 @@
-# Exameow
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Exameow — AI-powered exam question generator: upload study materials, get exam questions in seconds">
+</p>
 
-AI-powered exam question generator. Upload study materials, generate professional exam questions in seconds.
+<p align="center">
+  <a href="https://github.com/heshengtao/exameow/releases"><img src="https://img.shields.io/github/v/release/heshengtao/exameow?style=flat-square&color=1A6CFF" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1A6CFF?style=flat-square" alt="License: Apache-2.0"></a>
+  <img src="https://img.shields.io/badge/platforms-Windows%20/%20macOS%20/%20Linux%20/%20Android%20/%20Web-1A6CFF?style=flat-square" alt="Platforms: Windows, macOS, Linux, Android, Web">
+  <a href="https://hub.docker.com/r/ailm32442/exameow"><img src="https://img.shields.io/docker/pulls/ailm32442/exameow?style=flat-square&color=1A6CFF" alt="Docker pulls"></a>
+</p>
 
-<div align="center">
+<p align="center">
+  <b>English</b> · <a href="README_zh.md">中文</a>
+  <br>
+  <a href="https://exam.superagentparty.com/"><b>Live Demo</b></a> ·
+  <a href="https://github.com/heshengtao/exameow/releases">Download</a> ·
+  <a href="https://hub.docker.com/r/ailm32442/exameow">Docker Hub</a>
+</p>
 
-[![English](https://img.shields.io/badge/README-English-blue?style=for-the-badge)](README.md)
-[![中文](https://img.shields.io/badge/README-中文-red?style=for-the-badge)](README_zh.md)
-
-</div>
-
-![Exameow Screenshot](screenshots/Cover.png)
+<p align="center">
+  <a href="https://exam.superagentparty.com/"><img src="screenshots/Cover.png" width="100%" alt="Exameow desktop and mobile app interface"></a>
+</p>
 
 ## Live Demo
 
@@ -247,7 +257,7 @@ If you have any questions or issues with the project, you are welcome to join ou
 ## Contributors
 
 <a href="https://github.com/heshengtao/exameow/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=heshengtao/exameow" />
+  <img src="https://contrib.rocks/image?repo=heshengtao/exameow" alt="Contributors to heshengtao/exameow" />
 </a>
 
 ## License

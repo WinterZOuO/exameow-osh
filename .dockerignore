@@ -15,3 +15,5 @@ exameow.jks
 release.keystore
 .secrets
 pnpm-lock.yaml
+.agents
+skills-lock.json

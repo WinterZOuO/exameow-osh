@@ -22,3 +22,5 @@ docs/
 opencode.json
 release.keystore
 .secrets/
+.agents/
+skills-lock.json
