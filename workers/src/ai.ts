@@ -99,11 +99,38 @@ export async function aiChat(
       return text
     }
 
+    // Handle { response: [...content segments] } — some models return arrays
+    if (Array.isArray(result.response)) {
+      const text = result.response
+        .map((seg: any) => (typeof seg === 'string' ? seg : (seg?.text ?? seg?.content ?? '')))
+        .join('')
+      if (text.trim()) return text
+    }
+
+    // Handle { response: { text | content } }
+    if (result.response && typeof result.response === 'object') {
+      const inner = result.response as any
+      const text =
+        typeof inner.text === 'string'
+          ? inner.text
+          : typeof inner.content === 'string'
+            ? inner.content
+            : ''
+      if (text.trim()) return text
+    }
+
     // Some models might return { choices: [{ message: { content: "..." } }] }
     if (result.choices?.[0]?.message?.content) {
       return result.choices[0].message.content
     }
   }
 
-  throw new Error(`AI returned unexpected response: type=${typeof result} keys=${result ? Object.keys(result).join(',') : 'null'}`)
+  const payload = (() => {
+    try {
+      return JSON.stringify(result)?.slice(0, 500) ?? 'null'
+    } catch {
+      return String(result)
+    }
+  })()
+  throw new Error(`AI returned unexpected response: type=${typeof result} keys=${result ? Object.keys(result).join(',') : 'null'} payload=${payload}`)
 }
