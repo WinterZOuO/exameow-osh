@@ -1,3 +1,21 @@
+# Contributing to Exameow
+
+## How to Contribute
+
+1. **Fork** the repository and create a branch from `main`.
+2. Make your changes. Please follow the existing code style and conventions (see `AGENTS.md` for architecture notes).
+3. Before submitting, verify your changes:
+   - Frontend: `cd frontend && pnpm run type-check`
+   - Workers: `cd workers && pnpm typecheck`
+   - Rust: `cargo build`
+4. Keep commits focused; use concise conventional-style messages (e.g. `fix(practice): ...`, `docs: ...`).
+5. Open a **Pull Request** against `main` and describe what your change does and why.
+6. If you change generation prompts, file parsing, or export formats, remember the Rust (`packages/core`) and TypeScript (`workers/src`) implementations must stay in sync.
+
+By submitting a pull request, you agree to the Contributor License Agreement below.
+
+---
+
 # Contributor License Agreement (CLA)
 
 Thank you for your interest in contributing to **Exameow** (the "Project"). By contributing to this Project, you agree to the following terms and conditions:
@@ -22,7 +40,7 @@ You agree that your contributions may be used for commercial purposes, including
 
 **5. Future License Adjustments**
 
-You agree that the Project maintainer (heshengtao) may, in its sole discretion, relicense the Project under other open-source licenses that are compatible with the Apache 2.0 License (including but not limited to GPLv3, AGPLv3, MIT, or BSD), or under a dual-licensing scheme that includes a commercial license, provided that your contributions shall remain available under the Apache 2.0 License or a successor license that is at least as permissive. You agree that your contributions may be included in such relicensed versions.
+You agree that the Project maintainer (heshengtao) may, in its sole discretion, relicense the Project under other open-source licenses that are compatible with the Apache 2.0 License (including but not limited to GPLv3, AGPLv3, MIT, or BSD), or under a dual-licensing scheme that includes a commercial license, provided that your contributions shall remain available under the Apache 2.0 License or a successor license chosen under this section. You agree that your contributions may be included in such relicensed versions.
 
 **6. Representations and Warranties**
 
