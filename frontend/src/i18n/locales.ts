@@ -346,6 +346,9 @@ export interface LocaleMessages {
   practiceAiJudging: string
   practiceAiFeedback: string
   practiceRegradeHint: string
+  practiceAiExplain: string
+  practiceAiExplaining: string
+  practiceAiRegenerate: string
 
   // Cookie consent
   cookieBannerText: string
@@ -816,6 +819,9 @@ export const zh: LocaleMessages = {
   practiceAiJudging: 'AI 判卷中…',
   practiceAiFeedback: 'AI 评语',
   practiceRegradeHint: '对判定结果不满意？可人工改判',
+  practiceAiExplain: 'AI 解析',
+  practiceAiExplaining: 'AI 正在生成解析…',
+  practiceAiRegenerate: '重新生成',
 
   // Cookie consent
   cookieBannerText: '我们使用本地存储保存您的偏好、题库与考试记录;在线考试数据在服务器最多保留 7 天。不使用追踪 Cookie。',
@@ -1286,6 +1292,9 @@ export const en: LocaleMessages = {
   practiceAiJudging: 'AI grading…',
   practiceAiFeedback: 'AI feedback',
   practiceRegradeHint: 'Disagree with the verdict? Regrade manually',
+  practiceAiExplain: 'AI Explanation',
+  practiceAiExplaining: 'AI is generating an explanation…',
+  practiceAiRegenerate: 'Regenerate',
 
   // Cookie consent
   cookieBannerText: 'We use local storage for your preferences, question banks, and exam records. Online exam data is kept on our server for at most 7 days. No tracking cookies.',

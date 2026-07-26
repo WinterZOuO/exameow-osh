@@ -6,7 +6,7 @@ import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
 import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
 import { isCloudflare } from '@/utils/platform'
-import type { JudgeResult } from '@exameow/shared'
+import type { JudgeResult, AnswerResult } from '@exameow/shared'
 import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 import type { PracticeMode, MockExamConfig, WrongSort } from '@exameow/shared'
 import BankListCard from '@/components/practice/BankListCard.vue'
@@ -53,6 +53,9 @@ const aiJudging = ref(false)
 const aiFeedback = ref<string | null>(null)
 const aiJudgeError = ref<string | null>(null)
 let judgeAbort: AbortController | null = null
+const aiExplaining = ref(false)
+const aiExplainError = ref<string | null>(null)
+let explainAbort: AbortController | null = null
 const elapsedText = ref('')
 const showWrongSortDialog = ref(false)
 const wrongSort = ref<WrongSort>('count-desc')
@@ -200,11 +203,16 @@ watch(
     aiJudging.value = false
     aiFeedback.value = null
     aiJudgeError.value = null
+    explainAbort?.abort()
+    explainAbort = null
+    aiExplaining.value = false
+    aiExplainError.value = null
   },
 )
 
 onUnmounted(() => {
   judgeAbort?.abort()
+  explainAbort?.abort()
   if (swipeContainer.value) {
     detach(swipeContainer.value)
   }
@@ -410,6 +418,49 @@ function handleRegrade(correct: boolean) {
 
 function handleAiCancel() {
   judgeAbort?.abort()
+  explainAbort?.abort()
+}
+
+async function handleAiExplain() {
+  const item = practiceStore.currentQuestion
+  if (!item || !item.submitted || aiExplaining.value) return
+
+  if (!configStore.configured) {
+    await configStore.loadSaved()
+    if (!configStore.configured) {
+      aiExplainError.value = i18n.t('searchNotConfigured')
+      return
+    }
+  }
+
+  aiExplaining.value = true
+  aiExplainError.value = null
+  explainAbort = new AbortController()
+  const language = i18n.locale === 'zh' ? 'Chinese' : 'English'
+  const qIndex = practiceStore.session?.currentIndex
+  const q = item.question
+  const optionsText = q.options.length
+    ? '\n' + q.options.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join('\n')
+    : ''
+  const questionText = q.stem + optionsText
+
+  try {
+    const config = configStore.getConfig()
+    let result: AnswerResult
+    if (isCloudflare() && configStore.aiProvider === 'custom') {
+      const { answerViaCustomAI } = await import('@/utils/answerClient')
+      result = await answerViaCustomAI(questionText, language, config, explainAbort.signal)
+    } else {
+      result = await api.answerQuestion(questionText, language, config, explainAbort.signal)
+    }
+    if (practiceStore.session?.currentIndex !== qIndex) return
+    practiceStore.saveAiAnalysis(q.id, `${result.answer}\n\n${result.analysis}`)
+  } catch (e: any) {
+    if (e?.name !== 'AbortError') aiExplainError.value = e?.message || String(e)
+  } finally {
+    aiExplaining.value = false
+    explainAbort = null
+  }
 }
 
 async function handleAiJudge() {
@@ -709,8 +760,11 @@ function handleBack() {
             :ai-judging="aiJudging"
             :ai-feedback="aiFeedback"
             :ai-judge-error="aiJudgeError"
+            :ai-explaining="aiExplaining"
+            :ai-explain-error="aiExplainError"
             @ai-judge="handleAiJudge"
             @ai-cancel="handleAiCancel"
+            @ai-explain="handleAiExplain"
             @regrade="handleRegrade"
             @submit="handleSubmit"
             @select="handleSelect"

@@ -25,6 +25,8 @@ const props = defineProps<{
   aiJudging?: boolean
   aiFeedback?: string | null
   aiJudgeError?: string | null
+  aiExplaining?: boolean
+  aiExplainError?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +36,7 @@ const emit = defineEmits<{
   (e: 'removeWrong'): void
   (e: 'aiJudge'): void
   (e: 'aiCancel'): void
+  (e: 'aiExplain'): void
   (e: 'regrade', correct: boolean): void
 }>()
 
@@ -559,6 +562,57 @@ function getBadgeStyle(opt: string) {
       <div class="px-3 py-2.5 rounded-xl text-sm" :style="{ backgroundColor: 'rgb(var(--md-surface-container-low))', color: 'rgb(var(--md-on-surface-variant))' }">
         <span class="text-label-sm mr-2" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">{{ i18n.t('practiceReviewAnalysis') }}：</span>
         {{ question.analysis }}
+      </div>
+    </div>
+
+    <!-- AI analysis (submitted, non-mock modes) -->
+    <div v-if="submitted && mode !== 'mock'" class="mt-3">
+      <div class="px-3 py-2.5 rounded-xl text-sm" :style="{ backgroundColor: 'rgb(var(--md-surface-container-low))' }">
+        <div class="flex items-center justify-between gap-2" :class="{ 'mb-1': question.aiAnalysis || aiExplaining }">
+          <span class="text-label-sm flex items-center gap-1" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+            <SparklesIcon class="w-3.5 h-3.5" />
+            {{ i18n.t('practiceAiExplain') }}
+          </span>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="aiExplaining"
+              class="btn-outlined !h-7 !px-3 text-xs shrink-0"
+              @click="emit('aiCancel')"
+            >
+              {{ i18n.t('searchCancel') }}
+            </button>
+            <button
+              v-else
+              class="btn-tonal !h-7 !px-3 text-xs shrink-0"
+              :disabled="!aiConfigured"
+              @click="emit('aiExplain')"
+            >
+              <SparklesIcon class="w-3.5 h-3.5" />
+              {{ question.aiAnalysis ? i18n.t('practiceAiRegenerate') : i18n.t('practiceAiExplain') }}
+            </button>
+          </div>
+        </div>
+        <div v-if="aiExplaining" class="text-sm" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">
+          {{ i18n.t('practiceAiExplaining') }}
+        </div>
+        <div v-else-if="question.aiAnalysis" class="whitespace-pre-wrap" :style="{ color: 'rgb(var(--md-on-surface))' }">
+          {{ question.aiAnalysis }}
+        </div>
+        <div
+          v-if="aiExplainError"
+          class="mt-2 text-sm"
+          :style="{ color: 'rgb(var(--md-error))' }"
+        >
+          {{ aiExplainError }}
+        </div>
+        <button
+          v-if="!aiConfigured"
+          class="text-xs mt-1 flex items-center gap-1 underline"
+          :style="{ color: 'rgb(var(--md-error))' }"
+          @click="goConfig"
+        >
+          {{ i18n.t('searchNotConfigured') }}
+        </button>
       </div>
     </div>
   </div>

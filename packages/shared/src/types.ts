@@ -19,6 +19,7 @@ export interface Question {
   options: string[]
   answer: string
   analysis: string
+  aiAnalysis?: string
   score?: number
 }
 

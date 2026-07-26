@@ -64,6 +64,8 @@ pub struct Question {
     pub answer: String,
     #[serde(default)]
     pub analysis: String,
+    #[serde(default, rename = "aiAnalysis", skip_serializing_if = "Option::is_none")]
+    pub ai_analysis: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score: Option<f64>,
 }

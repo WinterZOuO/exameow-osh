@@ -265,6 +265,24 @@ export const usePracticeStore = defineStore('practice', () => {
     saveSession(session.value)
   }
 
+  function saveAiAnalysis(questionId: string, text: string) {
+    const originalId = questionId.replace(/-s\d+$/, '')
+    const bank = session.value ? getBank(session.value.bankId) : undefined
+    const original = bank?.questions.find(q => q.id === originalId)
+    if (original) {
+      original.aiAnalysis = text
+      saveBanks(banks.value)
+    }
+    if (session.value) {
+      for (const item of session.value.questions) {
+        if (item.question.id.replace(/-s\d+$/, '') === originalId) {
+          item.question.aiAnalysis = text
+        }
+      }
+      saveSession(session.value)
+    }
+  }
+
   function nextQuestion() {
     if (!session.value) return
     if (session.value.currentIndex < session.value.questions.length - 1) {
@@ -425,6 +443,7 @@ export const usePracticeStore = defineStore('practice', () => {
     setAnswer,
     submitAnswer,
     selfCheck,
+    saveAiAnalysis,
     nextQuestion,
     prevQuestion,
     goToQuestion,
