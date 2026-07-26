@@ -43,6 +43,15 @@ onMounted(async () => {
     return
   }
   await configStore.loadSaved()
+
+  const { isTauri, isMobileDevice } = await import('@/utils/platform')
+  if (isTauri() && isMobileDevice()) {
+    try {
+      const { tauriApi } = await import('@/api/bridge')
+      await tauriApi.otaNotifyReady()
+      tauriApi.otaDownload().catch(() => {})
+    } catch { /* OTA unavailable */ }
+  }
 })
 </script>
 

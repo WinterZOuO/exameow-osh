@@ -5,6 +5,12 @@ export interface GenerateResult {
   questions: Question[]
 }
 
+export interface OtaStatus {
+  status: string
+  version: string | null
+  error: string | null
+}
+
 export const tauriApi = {
   async parseFileText(filePath: string): Promise<string> {
     return invoke<string>('parse_file_text', { filePath })
@@ -65,6 +71,26 @@ export const tauriApi = {
 
   async saveToCache(filename: string, contentBase64: string): Promise<string> {
     return invoke<string>('save_to_cache', { filename, contentBase64 })
+  },
+
+  async otaCheck(): Promise<OtaStatus> {
+    return invoke<OtaStatus>('ota_check')
+  },
+
+  async otaDownload(): Promise<OtaStatus> {
+    return invoke<OtaStatus>('ota_download')
+  },
+
+  async otaNotifyReady(): Promise<void> {
+    return invoke<void>('ota_notify_ready')
+  },
+
+  async otaCurrent(): Promise<OtaStatus> {
+    return invoke<OtaStatus>('ota_current')
+  },
+
+  async otaReset(): Promise<void> {
+    return invoke<void>('ota_reset')
   },
 
   async saveToDownloads(filename: string, contentBase64: string): Promise<string> {

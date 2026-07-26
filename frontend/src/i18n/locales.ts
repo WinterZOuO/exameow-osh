@@ -361,6 +361,16 @@ export interface LocaleMessages {
   updateRestart: string
   updateFailed: string
 
+  // Mobile OTA
+  otaCheckUpdate: string
+  otaCurrentBundle: string
+  otaBuiltin: string
+  otaChecking: string
+  otaUpToDate: string
+  otaStaged: string
+  otaShellTooOld: string
+  otaFailed: string
+
   pubPublish: string
   pubJoin: string
   pubDialogTitle: string
@@ -793,6 +803,16 @@ export const zh: LocaleMessages = {
   updateRestart: '重启应用',
   updateFailed: '更新失败，请稍后在 GitHub Release 页手动下载',
 
+  // Mobile OTA
+  otaCheckUpdate: '检查更新',
+  otaCurrentBundle: '当前界面包',
+  otaBuiltin: '内置',
+  otaChecking: '正在检查…',
+  otaUpToDate: '已是最新',
+  otaStaged: 'v{version} 已下载，重启应用后生效',
+  otaShellTooOld: 'v{version} 需要升级 APP 本体，请前往 Release 页下载安装',
+  otaFailed: '检查更新失败',
+
   pubPublish: '发布考试',
   pubJoin: '参加考试',
   pubDialogTitle: '发布考试',
@@ -1224,6 +1244,16 @@ export const en: LocaleMessages = {
   updateReady: 'Update ready. Restart the app to apply.',
   updateRestart: 'Restart',
   updateFailed: 'Update failed. Please download manually from GitHub Releases later.',
+
+  // Mobile OTA
+  otaCheckUpdate: 'Check for updates',
+  otaCurrentBundle: 'Current UI bundle',
+  otaBuiltin: 'built-in',
+  otaChecking: 'Checking…',
+  otaUpToDate: 'Up to date',
+  otaStaged: 'v{version} downloaded; takes effect after restarting the app',
+  otaShellTooOld: 'v{version} requires a newer app build; please install it from Releases',
+  otaFailed: 'Update check failed',
 
   pubPublish: 'Publish Exam',
   pubJoin: 'Join Exam',

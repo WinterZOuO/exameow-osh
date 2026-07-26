@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 
 import { useI18nStore } from '@/stores/i18n'
-import { isCloudflare } from '@/utils/platform'
-import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon } from '@heroicons/vue/24/outline'
+import { isCloudflare, isTauri, isMobileDevice } from '@/utils/platform'
+import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 const configStore = useConfigStore()
 const router = useRouter()
@@ -33,6 +33,43 @@ async function handleSave() {
     saveSuccess.value = true
     setTimeout(() => saveSuccess.value = false, 2500)
   } catch (e: any) { saveError.value = e.message || String(e) }
+}
+
+const showOta = isTauri() && isMobileDevice()
+const otaBundle = ref('')
+const otaMessage = ref('')
+const otaBusy = ref(false)
+
+onMounted(async () => {
+  if (!showOta) return
+  try {
+    const { tauriApi } = await import('@/api/bridge')
+    const cur = await tauriApi.otaCurrent()
+    otaBundle.value = cur.status === 'ota' && cur.version ? `v${cur.version}` : i18n.t('otaBuiltin')
+  } catch {}
+})
+
+async function handleOtaCheck() {
+  if (otaBusy.value) return
+  otaBusy.value = true
+  otaMessage.value = i18n.t('otaChecking')
+  try {
+    const { tauriApi } = await import('@/api/bridge')
+    const r = await tauriApi.otaDownload()
+    if (r.status === 'staged' || r.status === 'alreadyStaged') {
+      otaMessage.value = i18n.t('otaStaged', { version: r.version ?? '' })
+    } else if (r.status === 'shellTooOld') {
+      otaMessage.value = i18n.t('otaShellTooOld', { version: r.version ?? '' })
+    } else if (r.status === 'upToDate' || r.status === 'downloading') {
+      otaMessage.value = i18n.t('otaUpToDate')
+    } else {
+      otaMessage.value = i18n.t('otaFailed') + (r.error ? `: ${r.error}` : '')
+    }
+  } catch (e: any) {
+    otaMessage.value = i18n.t('otaFailed') + ': ' + (e?.message ?? String(e))
+  } finally {
+    otaBusy.value = false
+  }
 }
 </script>
 
@@ -146,6 +183,21 @@ async function handleSave() {
         <span>{{ configFetchError }}</span>
       </div>
     </Transition>
+
+    <!-- Mobile OTA update -->
+    <div v-if="showOta" class="card-filled p-5 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('otaCheckUpdate') }}</label>
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <button class="btn-outlined shrink-0 text-sm" :disabled="otaBusy" @click="handleOtaCheck">
+          <ArrowPathIcon class="w-4 h-4" />
+          {{ i18n.t('otaCheckUpdate') }}
+        </button>
+        <div class="text-body-sm flex-1" style="color: rgb(var(--md-on-surface-variant))">
+          {{ i18n.t('otaCurrentBundle') }}: {{ otaBundle }}
+        </div>
+      </div>
+      <p v-if="otaMessage" class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">{{ otaMessage }}</p>
+    </div>
 
     <!-- ========= Unified Save + CTA ========= -->
     <div class="flex items-center justify-center gap-3 mt-6">

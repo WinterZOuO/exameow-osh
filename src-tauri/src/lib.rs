@@ -10,6 +10,8 @@ use exameow_core::export::export_xlsx as core_export_xlsx;
 use exameow_core::parser::parse_file;
 use serde::Serialize;
 use std::fmt;
+
+mod ota;
 #[cfg(target_os = "macos")]
 fn make_webview_transparent(win: &tauri::WebviewWindow) {
     use objc::runtime::{Class, Object, NO};
@@ -604,6 +606,13 @@ fn resize_record_overlay(_app: tauri::AppHandle, _w: f64, _h: f64) -> Result<(),
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[allow(unused_mut)]
+    let mut context = tauri::generate_context!();
+    #[cfg(mobile)]
+    {
+        let embedded = context.set_assets(Box::new(ota::OtaAssets::uninit()));
+        context.set_assets(Box::new(ota::OtaAssets::new(embedded)));
+    }
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -666,7 +675,12 @@ pub fn run() {
             create_record_windows,
             close_record_windows,
             resize_record_overlay,
+            ota::ota_check,
+            ota::ota_download,
+            ota::ota_notify_ready,
+            ota::ota_current,
+            ota::ota_reset,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }

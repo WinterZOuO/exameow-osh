@@ -81,10 +81,23 @@ jobs:
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
 
+      - name: Package OTA bundle
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          MIN_SHELL=$(python3 -c "import json;print(json.load(open('ota.json'))['minShell'])")
+          tar -czf mobile-dist.tar.gz -C frontend/dist .
+          SHA=$(sha256sum mobile-dist.tar.gz | cut -d' ' -f1)
+          SIZE=$(stat -c%s mobile-dist.tar.gz)
+          printf '{\n  "version": "%s",\n  "minShell": "%s",\n  "url": "https://github.com/%s/releases/download/%s/mobile-dist.tar.gz",\n  "sha256": "%s",\n  "size": %s\n}\n' \
+            "$VERSION" "$MIN_SHELL" "${{ github.repository }}" "$TAG" "$SHA" "$SIZE" > mobile-ota.json
+          cat mobile-ota.json
+          mv mobile-dist.tar.gz mobile-ota.json dist/
+
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: dist/*.apk
+          path: dist/*
 
   release:
     needs: build-android
