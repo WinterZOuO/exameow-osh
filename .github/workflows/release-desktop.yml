@@ -154,6 +154,7 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+          pattern: desktop-*
 
       - name: Generate latest.json for updater
         run: |

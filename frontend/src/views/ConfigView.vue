@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 
 import { useI18nStore } from '@/stores/i18n'
-import { isCloudflare, isTauri, isMobileDevice } from '@/utils/platform'
+import { isCloudflare, isTauri, isMobileDevice, isDesktopTauri } from '@/utils/platform'
+import { useDesktopUpdater } from '@/composables/useDesktopUpdater'
 import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 const configStore = useConfigStore()
@@ -71,6 +72,9 @@ async function handleOtaCheck() {
     otaBusy.value = false
   }
 }
+
+const showDesktopUpdate = isDesktopTauri()
+const updater = useDesktopUpdater()
 </script>
 
 <template>
@@ -197,6 +201,49 @@ async function handleOtaCheck() {
         </div>
       </div>
       <p v-if="otaMessage" class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">{{ otaMessage }}</p>
+    </div>
+
+    <!-- Desktop update check -->
+    <div v-if="showDesktopUpdate" class="card-filled p-5 mb-4">
+      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('updateCheckBtn') }}</label>
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <button
+          class="btn-outlined shrink-0 text-sm"
+          :disabled="updater.stage.value === 'downloading'"
+          @click="updater.checkForUpdate(true)"
+        >
+          <ArrowPathIcon class="w-4 h-4" />
+          {{ i18n.t('updateCheckBtn') }}
+        </button>
+        <div class="text-body-sm flex-1" style="color: rgb(var(--md-on-surface-variant))">
+          <template v-if="updater.stage.value === 'available'">
+            {{ i18n.t('updateAvailableTitle', { version: updater.version.value }) }}
+          </template>
+          <template v-else-if="updater.stage.value === 'downloading'">
+            {{ i18n.t('updateDownloading') }} {{ updater.progress.value }}%
+          </template>
+          <template v-else-if="updater.stage.value === 'ready'">{{ i18n.t('updateReady') }}</template>
+          <template v-else-if="updater.stage.value === 'upToDate'">{{ i18n.t('updateUpToDate') }}</template>
+          <template v-else-if="updater.stage.value === 'failed'">
+            <span style="color: rgb(var(--md-error))">{{ i18n.t('updateFailed') }}</span>
+            <span v-if="updater.error.value" class="block text-xs mt-1 break-all">{{ updater.error.value }}</span>
+          </template>
+        </div>
+        <button
+          v-if="updater.stage.value === 'available'"
+          class="btn-filled shrink-0 text-sm"
+          @click="updater.startUpdate"
+        >
+          {{ i18n.t('updateNow') }}
+        </button>
+        <button
+          v-else-if="updater.stage.value === 'ready'"
+          class="btn-filled shrink-0 text-sm"
+          @click="updater.restart"
+        >
+          {{ i18n.t('updateRestart') }}
+        </button>
+      </div>
     </div>
 
     <!-- ========= Unified Save + CTA ========= -->

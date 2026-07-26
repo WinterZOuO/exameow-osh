@@ -371,6 +371,10 @@ export interface LocaleMessages {
   otaShellTooOld: string
   otaFailed: string
 
+  // Desktop update (manual)
+  updateCheckBtn: string
+  updateUpToDate: string
+
   pubPublish: string
   pubJoin: string
   pubDialogTitle: string
@@ -817,6 +821,10 @@ export const zh: LocaleMessages = {
   otaShellTooOld: 'v{version} 需要升级 APP 本体，请前往 Release 页下载安装',
   otaFailed: '检查更新失败',
 
+  // Desktop update (manual)
+  updateCheckBtn: '检查更新',
+  updateUpToDate: '当前已是最新版本',
+
   pubPublish: '发布考试',
   pubJoin: '参加考试',
   pubDialogTitle: '发布考试',
@@ -1262,6 +1270,10 @@ export const en: LocaleMessages = {
   otaStaged: 'v{version} downloaded; takes effect after restarting the app',
   otaShellTooOld: 'v{version} requires a newer app build; please install it from Releases',
   otaFailed: 'Update check failed',
+
+  // Desktop update (manual)
+  updateCheckBtn: 'Check for updates',
+  updateUpToDate: "You're on the latest version",
 
   pubPublish: 'Publish Exam',
   pubJoin: 'Join Exam',
