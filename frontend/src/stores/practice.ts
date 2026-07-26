@@ -65,6 +65,7 @@ function shuffleOptions(questions: Question[]): Question[] {
       const answerMap: Record<string, number> = {}
       q.options.forEach((opt, i) => { answerMap[String.fromCharCode(65 + i)] = i })
       const newAnswer = q.answer
+        .toUpperCase()
         .split('')
         .filter(ch => /[A-H]/.test(ch))
         .map(ch => {
@@ -75,6 +76,7 @@ function shuffleOptions(questions: Question[]): Question[] {
           }
           return ch
         })
+        .sort()
         .join('')
       return { ...q, options: newOptions, answer: newAnswer }
     }
@@ -235,8 +237,8 @@ export const usePracticeStore = defineStore('practice', () => {
 
     const q = item.question
     if (q.type === 'single_choice' || q.type === 'multi_choice') {
-      const userAns = (answer ?? '').trim().toUpperCase().replace(/[^A-H]/g, '')
-      const correctAns = q.answer.trim().toUpperCase().replace(/[^A-H]/g, '')
+      const userAns = (answer ?? '').trim().toUpperCase().replace(/[^A-H]/g, '').split('').sort().join('')
+      const correctAns = q.answer.trim().toUpperCase().replace(/[^A-H]/g, '').split('').sort().join('')
       item.isCorrect = userAns === correctAns
     } else if (q.type === 'true_false') {
       const userAns = normalizeTF(answer ?? '')
