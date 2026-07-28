@@ -17,6 +17,14 @@
   <a href="https://hub.docker.com/r/ailm32442/exameow">Docker Hub</a>
 </p>
 
+## What is Exameow?
+
+**Exameow (过了喵)** is an **open-source AI exam question generator** that turns your study materials into exam-quality questions in seconds. Upload PDFs, Word documents, PowerPoint slides, images, or text — the AI reads the content and generates multiple-choice, true/false, fill-in-the-blank, and short-answer questions tailored to your needs.
+
+Unlike other AI quiz generators that require accounts, subscriptions, or send your data to the cloud, Exameow is **local-first and privacy-focused**. Your question banks, practice records, and wrong-question history stay on your device. Desktop and mobile apps work **fully offline** with your own OpenAI-compatible API key (OpenAI, DeepSeek, Qwen, GLM, or any self-hosted model).
+
+For teachers and trainers, Exameow includes a built-in **online exam relay** — publish exams from your local question banks, share a 6-digit code, and students join from any browser. Instant scoring, teacher dashboard, and anti-abuse protections included. Self-host the entire stack with one Docker command.
+
 <p align="center">
   <a href="https://exam.superagentparty.com/"><img src="screenshots/Cover.png" width="100%" alt="Exameow desktop and mobile app interface"></a>
 </p>
@@ -34,14 +42,10 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 
 ## Features
 
-<p align="center">
-  <img src="./assets/readme/features.svg" width="100%" alt="Exameow features: AI question generation, practice modes, online exams, and search modes">
-</p>
+### ✨ AI Question Generation — Upload Files, Get Exam Questions
 
-<details>
-<summary><b>Full feature list</b></summary>
+Exameow parses study materials in **10+ file formats** — PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML, and images (PNG/JPG/WEBP/GIF/BMP). Upload one file or drag-and-drop multiple files at once. The AI generates questions across **5 question types**: single choice, multiple choice, true/false, fill-in-the-blank, and short answer. Control question count per type, difficulty level (easy/medium/hard), output language, and topic/chapter filtering. Large documents are automatically split and generated in batches with deduplication. Works with any OpenAI-compatible API — OpenAI, DeepSeek, Qwen, GLM, or use the built-in free Cloudflare AI on the demo site. Export results as XLSX or CSV.
 
-### ✨ AI Question Generation
 - **Rich Input Formats** — PDF, DOCX, XLSX, PPTX, EPUB, ODT, TXT, CSV, HTML, images (PNG/JPG/WEBP/GIF/BMP), and any text/code file; multi-file upload with drag & drop
 - **5 Question Types** — Single choice, multiple choice, true/false, fill-in-the-blank, short answer, with per-type count control
 - **Fine-Tuned Control** — Difficulty (easy/medium/hard), output language, and topic/chapter filtering
@@ -49,7 +53,10 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **Any OpenAI-Compatible API** — OpenAI, DeepSeek, Qwen, GLM, etc.; or use the built-in free Cloudflare AI on the demo site
 - **Export** — Download results as XLSX or CSV
 
-### 📚 Practice Modes
+### 📚 Practice Modes — Study Smarter, Not Harder
+
+Turn generated questions into interactive study sessions. Practice sequentially, shuffle questions and options randomly, or take a timed mock exam with auto-generated papers. Wrong questions are automatically tracked and reviewed — answer a question correctly several times in a row and it clears from the wrong-question list. Flip between exam mode (answer blind) and flashcard mode (answers visible). Short-answer questions are graded by AI against reference answers, with manual regrading supported. Import and export question banks via XLSX/CSV with smart column mapping.
+
 - **Sequential Practice** — Go through a question bank in order
 - **Random Practice** — Questions and options shuffled for better retention
 - **Mock Exam** — Auto-generate a randomized exam paper from any bank with configurable type counts
@@ -58,7 +65,10 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **AI Grading** — Short-answer questions graded by AI against reference answers, with feedback; manual regrading supported
 - **Question Bank Management** — Import banks from XLSX/CSV with smart column mapping; export anytime
 
-### 📝 Online Exams
+### 📝 Online Exams — Publish and Invite Students
+
+Compose exams from multiple local question banks with configurable per-type question counts and point values. Set a title, start time, and exam duration. Share a **6-digit code** or exam link — students join from any device browser, no app install required. A local countdown timer with auto-submit keeps sessions fair; progress survives page refresh. Objective questions are graded server-side on submission with answers and analysis displayed instantly. The teacher dashboard shows score-sorted results with per-question drill-down. Exam data is automatically deleted after 7 days for privacy. Anti-abuse: 20 publishes per IP per day, one-tap student reports auto-suspend at 3 distinct-IP reports. The **Docker image is fully self-contained** — online exam relay runs on SQLite with zero dependency on the demo site.
+
 - **Launch Exams from Banks** — Compose exams from multiple local banks with per-type question counts and point values; set title, start time, and duration
 - **6-Digit Code + Exam Link** — Students join from any device browser, no app install required
 - **Timed Sessions** — Local countdown with auto-submit; progress survives page refresh (resume where you left off)
@@ -68,32 +78,29 @@ For unlimited usage, self-host with Docker or use the desktop/mobile apps with y
 - **Anti-Abuse** — 20 publishes per IP per day; one-tap student reports auto-suspend an exam at 3 distinct-IP reports; admins review, restore, or delete from the `#/admin` page
 - **Fully Self-Hosted** — The Docker image ships the same exam relay (SQLite), with zero dependency on the demo site; set `ADMIN_TOKEN` to secure the admin page (defaults to `pass`, must be changed on first visit to `#/admin`)
 
-### 🔍 Search Modes
+### 🔍 Search Modes — Find Answers Fast
+
+Search local question banks by typing or pasting a question — optional AI answering provides explanations. **Photo search** uses on-device OCR to recognize questions from your camera or uploaded images (processing happens locally in your browser, nothing uploaded). **Camera live search** points your camera at a screen or paper and AI watches for matching questions in real time. **Screen record search** lets you draw a capture frame over any window — AI monitors it and shows answers in a floating overlay (Windows/macOS/Linux/Android; unavailable on iOS due to system restrictions).
+
 - **Text Search** — Type or paste a question to find matches in your local banks, with optional AI answering
 - **Photo Search** — Snap or upload a photo of a question; on-device OCR (runs locally in your browser, no upload)
 - **Camera Live Search** — Point your camera at the screen/paper; AI watches and matches questions in real time
 - **Screen Record Search** — Draw a capture frame over any window; AI monitors it and matches questions live, with a floating answer overlay (Windows / macOS / Linux / Android; not available on iOS due to system restrictions)
 
-### 🌐 Cross-Platform & Privacy
+### 🌐 Cross-Platform & Privacy — Your Data, Your Device
+
+Exameow runs on **Windows, macOS, Linux, Android, and Web** (iOS via self-build). Deploy the web version with **one Docker command**. All question banks, practice records, and wrong-question history are stored locally — nothing is uploaded to a server unless you choose to use the online exam relay. API keys are encrypted with **AES-256-GCM** on desktop. The UI auto-detects system language (Chinese/English) with one-tap switching.
+
 - **Desktop & Mobile** — Windows, macOS, Linux, Android (iOS self-build)
 - **Self-Hosted Web** — One-command Docker deployment
 - **Local-First** — Question banks, practice records, and wrong questions stay on your device; API keys encrypted with AES-256-GCM on desktop
 - **Bilingual UI** — Auto-detects system language (Chinese / English), one-tap switch
-
-</details>
 
 ## Installation
 
 Pre-built binaries for all platforms are available on the [GitHub Releases](https://github.com/heshengtao/exameow/releases) page.
 
 ### Platform Support
-
-<p align="center">
-  <img src="./assets/readme/platform.svg" width="100%" alt="Platform support: Windows, macOS, Linux, Android and Web supported; iOS self-build">
-</p>
-
-<details>
-<summary><b>Text table</b></summary>
 
 | Platform | Status | Download |
 |----------|--------|----------|
@@ -103,8 +110,6 @@ Pre-built binaries for all platforms are available on the [GitHub Releases](http
 | Android (ARM64) | ✅ Supported | `.apk` |
 | iOS | ⚠️ Self-build required | See note below |
 | Web / Docker (self-hosted) | ✅ Supported | Docker image |
-
-</details>
 
 > **About iOS:** An Apple Developer certificate costs $99/year, so no pre-built iOS package is provided for now — you'll need to build it yourself with Xcode (`pnpm tauri ios build`). If future donations cover the certificate fee, an officially signed iOS build will be published on GitHub Releases.
 
@@ -153,13 +158,6 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 
 ## Environment Variables
 
-<p align="center">
-  <img src="./assets/readme/env-vars.svg" width="100%" alt="Environment variables: AI_ENDPOINT, AI_API_KEY, AI_MODEL, PORT, STATIC_DIR, ADMIN_TOKEN, EXAM_DB_PATH, ADMIN_TOKEN_FILE, RUST_LOG">
-</p>
-
-<details>
-<summary><b>Text table</b></summary>
-
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `AI_ENDPOINT` | `https://api.openai.com/v1` | OpenAI-compatible API endpoint |
@@ -172,16 +170,7 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 | `ADMIN_TOKEN_FILE` | `/app/data/admin_token.txt` | Where a changed admin token is persisted |
 | `RUST_LOG` | `info` | Log level |
 
-</details>
-
 ## API Endpoints
-
-<p align="center">
-  <img src="./assets/readme/api.svg" width="100%" alt="API endpoints: models, generate, export, export/xlsx, config/save, config/load">
-</p>
-
-<details>
-<summary><b>Text table</b></summary>
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -191,8 +180,6 @@ If `ADMIN_TOKEN` is not set, it defaults to `pass` and must be changed on first 
 | `POST` | `/api/export/xlsx` | Export questions as XLSX |
 | `POST` | `/api/config/save` | Save AI configuration |
 | `GET` | `/api/config/load` | Load saved AI configuration |
-
-</details>
 
 ### Generate Exam
 
@@ -204,9 +191,39 @@ curl -X POST http://localhost:3000/api/generate \
 
 ## Architecture
 
-<p align="center">
-  <img src="./assets/readme/architecture.svg" width="100%" alt="Exameow architecture: Vue 3 frontend, Rust Axum server, and four deploy targets">
-</p>
+Exameow has a **three-backend architecture** sharing one Vue 3 frontend. The same SPA auto-detects the platform at runtime and routes to the appropriate backend:
+
+- **Tauri (desktop/mobile)**: Rust commands in `src-tauri/` invoke the Rust core library directly
+- **Cloudflare Workers**: TypeScript in `workers/` calls Cloudflare AI + D1 for online exam relay
+- **Axum (self-hosted/Docker)**: Rust HTTP server in `packages/server/` with SQLite for exam relay
+
+Core logic (file parsing, AI client, exam generation, export) lives in the shared `packages/core/` Rust crate, duplicated in TypeScript for the Workers path.
+
+## FAQ
+
+### How do I generate exam questions from a PDF?
+
+Upload your PDF via drag-and-drop on the [demo site](https://exam.superagentparty.com/) or in the desktop app. Select question types (single choice, multiple choice, true/false, fill-blank, short answer), set the number of questions and difficulty, then click Generate. The AI reads your document and produces questions in seconds. Results can be exported as XLSX or CSV.
+
+### Is Exameow really free?
+
+Yes. Exameow is open source under Apache 2.0 and 100% free. No paid plans, no enterprise tiers, no feature gates. The demo site provides free AI generation (with daily quota limits from Cloudflare's free tier). Desktop/mobile apps require your own AI API key, which you pay to your AI provider directly — Exameow never charges you.
+
+### Can I use Exameow offline?
+
+Yes. The desktop and mobile apps work fully offline. Question banks, practice records, and wrong-question history are stored locally. You only need an internet connection when calling the AI API to generate questions.
+
+### What AI models does Exameow support?
+
+Any OpenAI-compatible API works: OpenAI (GPT-4o, GPT-4, GPT-3.5), DeepSeek, Qwen, GLM, and self-hosted models via Ollama or similar. You can also use the built-in free Cloudflare AI on the demo site.
+
+### How does the online exam feature work?
+
+Teachers publish exams from local question banks with a 6-digit code. Students join from any browser using that code or a shared link. The exam is timed with auto-submit. Objective questions are graded instantly. Exam data auto-deletes after 7 days. Self-hosters get the same relay via Docker.
+
+### Is my data private?
+
+Yes. By default, all data (question banks, practice records, API keys) stays on your device. API keys are encrypted with AES-256-GCM. The only exception is online exam data, which is temporarily stored on Cloudflare D1 (7-day auto-delete) or your self-hosted SQLite.
 
 ## Development
 

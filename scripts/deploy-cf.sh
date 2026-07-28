@@ -26,6 +26,23 @@ rm -f public/assets/ort-wasm-simd-threaded*
 echo "  Removed local OCR assets (CF uses CDN)."
 echo "  Files copied to workers/public/"
 
+# Step 2.1: Copy CF-only SEO files (if present)
+echo ""
+echo "[2.1/3] Copying CF SEO files..."
+if [ -d "$PROJECT_DIR/scripts/cf-seo" ]; then
+  cp "$PROJECT_DIR/scripts/cf-seo/robots.txt" public/ 2>/dev/null || true
+  cp "$PROJECT_DIR/scripts/cf-seo/llms.txt" public/ 2>/dev/null || true
+  cp "$PROJECT_DIR/scripts/cf-seo/pricing.md" public/ 2>/dev/null || true
+  if [ -f "$PROJECT_DIR/scripts/cf-seo/okf/index.md" ]; then
+    mkdir -p public/okf
+    cp "$PROJECT_DIR/scripts/cf-seo/okf/index.md" public/okf/
+  fi
+  cp "$PROJECT_DIR/scripts/cf-seo/sitemap.xml" public/ 2>/dev/null || true
+  echo "  robots.txt, llms.txt, pricing.md, sitemap.xml, okf/ copied."
+else
+  echo "  cf-seo/ not found — skipping."
+fi
+
 # Step 2.5: Ensure D1 database exists (idempotent)
 echo ""
 echo "[2.5/3] Ensuring D1 database exists..."

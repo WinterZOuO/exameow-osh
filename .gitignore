@@ -24,3 +24,4 @@ release.keystore
 .secrets/
 .agents/
 skills-lock.json
+scripts/cf-seo/
