@@ -103,7 +103,7 @@ function toggleType(type: QuestionType) {
             :model-value="store.language"
             :options="SUPPORTED_LOCALES.map(l => ({
               value: l.code === 'zh' ? 'zh-CN' : l.code === 'en' ? 'en-US' : l.code,
-              label: `${l.flag} ${l.nativeName}`
+              label: l.nativeName
             }))"
             class="[&>button]:!pl-10 [&>button]:!rounded-xl"
             @update:model-value="store.language = $event"

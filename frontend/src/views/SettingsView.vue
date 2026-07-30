@@ -102,7 +102,7 @@ async function handleOtaCheck() {
       <div class="max-w-[280px] mx-auto">
         <BaseSelect
           :model-value="i18n.locale"
-          :options="SUPPORTED_LOCALES.map(l => ({ value: l.code, label: `${l.flag} ${l.nativeName}` }))"
+          :options="SUPPORTED_LOCALES.map(l => ({ value: l.code, label: l.nativeName }))"
           @update:model-value="i18n.setLocale($event)"
         />
       </div>

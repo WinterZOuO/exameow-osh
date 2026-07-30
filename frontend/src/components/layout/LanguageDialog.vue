@@ -66,7 +66,6 @@ function select(code: Locale) {
           @click="select(item.code); $emit('close')"
         >
           <div class="flex items-center gap-3">
-            <span class="text-xl">{{ item.flag }}</span>
             <div>
               <div class="text-sm font-bold leading-tight">{{ item.nativeName }}</div>
               <div
