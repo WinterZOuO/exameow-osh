@@ -105,9 +105,11 @@ const typeLabel = computed(() => {
 
 const trueFalseOptions = computed(() => {
   const locale = i18n.locale
+  const trueLabel = locale === 'zh' ? '对 (True)' : locale === 'zh-TW' ? '對 (True)' : locale === 'ja' ? '正しい (True)' : locale === 'ko' ? '참 (True)' : locale === 'es' ? 'Verdadero (True)' : locale === 'fr' ? 'Vrai (True)' : locale === 'de' ? 'Richtig (True)' : locale === 'ru' ? 'Верно (True)' : 'True'
+  const falseLabel = locale === 'zh' ? '错 (False)' : locale === 'zh-TW' ? '錯 (False)' : locale === 'ja' ? '誤り (False)' : locale === 'ko' ? '거짓 (False)' : locale === 'es' ? 'Falso (False)' : locale === 'fr' ? 'Faux (False)' : locale === 'de' ? 'Falsch (False)' : locale === 'ru' ? 'Неверно (False)' : 'False'
   return [
-    { label: locale === 'zh' ? 'A. 对 (True)' : 'A. True', value: 'A' },
-    { label: locale === 'zh' ? 'B. 错 (False)' : 'B. False', value: 'B' },
+    { label: `A. ${trueLabel}`, value: 'A' },
+    { label: `B. ${falseLabel}`, value: 'B' },
   ]
 })
 
@@ -300,31 +302,31 @@ function getBadgeStyle(opt: string) {
     </div>
 
     <!-- Choice / TrueFalse Options -->
-    <div v-if="isChoiceType" class="space-y-2 mb-4">
+    <div v-if="isChoiceType" class="space-y-2.5 mb-5">
       <template v-if="question.type === 'true_false'">
         <button
           v-for="opt in trueFalseOptions"
           :key="opt.value"
-          class="w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3"
+          class="w-full text-left p-3.5 rounded-[20px] border transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center gap-3.5 cursor-pointer active:scale-[0.98] shadow-xs"
           :disabled="!interactive"
           :style="getOptionStyle(opt.value, 0)"
           @click="selectOption(opt.value)"
         >
           <div
-            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 transition-transform duration-200"
             :style="getBadgeStyle(opt.value)"
           >{{ opt.value }}</div>
-          <span class="text-sm" :style="{ color: 'rgb(var(--md-on-surface))' }">
+          <span class="text-sm font-medium flex-1" :style="{ color: 'rgb(var(--md-on-surface))' }">
             {{ opt.label.replace(/^[A-Z]\.\s*/, '') }}
           </span>
           <CheckCircleIcon
             v-if="(submitted || showFlashcardPreview) && correctAnswerSet.has(opt.value)"
-            class="w-5 h-5 ml-auto"
+            class="w-5 h-5 ml-auto animate-spring-pop shrink-0"
             :style="{ color: 'rgb(var(--md-primary))' }"
           />
           <XCircleIcon
             v-if="submitted && !correctAnswerSet.has(opt.value) && selectedSet.has(opt.value)"
-            class="w-5 h-5 ml-auto"
+            class="w-5 h-5 ml-auto animate-spring-pop shrink-0"
             :style="{ color: 'rgb(var(--md-error))' }"
           />
         </button>
@@ -333,28 +335,29 @@ function getBadgeStyle(opt: string) {
         <button
           v-for="(opt, idx) in question.options"
           :key="idx"
-          class="w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3"
+          class="w-full text-left p-3.5 rounded-[20px] border transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center gap-3.5 cursor-pointer active:scale-[0.98] shadow-xs"
           :disabled="!interactive"
           :style="getOptionStyle(optionLabels[idx]!, idx)"
           @click="selectOption(optionLabels[idx]!)"
         >
           <div
-            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 transition-transform duration-200"
             :style="getBadgeStyle(optionLabels[idx]!)"
           >{{ optionLabels[idx] }}</div>
-          <span class="text-sm" :style="{ color: 'rgb(var(--md-on-surface))' }">{{ opt }}</span>
+          <span class="text-sm font-medium flex-1" :style="{ color: 'rgb(var(--md-on-surface))' }">{{ opt }}</span>
           <CheckCircleIcon
             v-if="(submitted || showFlashcardPreview) && correctAnswerSet.has(optionLabels[idx]!)"
-            class="w-5 h-5 ml-auto"
+            class="w-5 h-5 ml-auto animate-spring-pop shrink-0"
             :style="{ color: 'rgb(var(--md-primary))' }"
           />
           <XCircleIcon
             v-if="submitted && !correctAnswerSet.has(optionLabels[idx]!) && selectedSet.has(optionLabels[idx]!)"
-            class="w-5 h-5 ml-auto"
+            class="w-5 h-5 ml-auto animate-spring-pop shrink-0"
             :style="{ color: 'rgb(var(--md-error))' }"
           />
         </button>
       </template>
+    </div>
 
       <!-- Multi-choice confirm button -->
       <div v-if="question.type === 'multi_choice' && interactive" class="mt-3">
@@ -376,7 +379,6 @@ function getBadgeStyle(opt: string) {
       <div v-if="autoAdvancing" class="text-xs mt-1 text-center font-medium" :style="{ color: 'rgb(var(--md-primary))' }">
         {{ i18n.t('practiceCorrectAdvancing') }}
       </div>
-    </div>
 
     <!-- Fill Blank / Short Answer -->
     <div v-if="isSelfCheckType" class="mb-4">

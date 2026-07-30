@@ -1,30 +1,71 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { zh, en, type LocaleMessages } from '@/i18n/locales'
+import {
+  zh,
+  zhTW,
+  en,
+  ja,
+  ko,
+  es,
+  fr,
+  de,
+  ru,
+  SUPPORTED_LOCALES,
+  type Locale,
+  type LocaleMessages,
+} from '@/i18n/locales'
 
-export type Locale = 'zh' | 'en'
+export type { Locale }
 
 const LOCALE_KEY = 'exameow-locale'
 
+const localeMap: Record<Locale, LocaleMessages> = {
+  zh,
+  'zh-TW': zhTW,
+  en,
+  ja,
+  ko,
+  es,
+  fr,
+  de,
+  ru,
+}
+
 function detectLocale(): Locale {
-  const saved = localStorage.getItem(LOCALE_KEY)
-  if (saved === 'zh' || saved === 'en') return saved
+  const saved = localStorage.getItem(LOCALE_KEY) as Locale
+  if (saved && localeMap[saved]) return saved
   const lang = (navigator.language || '').toLowerCase()
-  return lang.startsWith('zh') ? 'zh' : 'en'
+  if (lang.startsWith('zh-tw') || lang.startsWith('zh-hk') || lang.startsWith('zh-hant')) return 'zh-TW'
+  if (lang.startsWith('zh')) return 'zh'
+  if (lang.startsWith('ja')) return 'ja'
+  if (lang.startsWith('ko')) return 'ko'
+  if (lang.startsWith('es')) return 'es'
+  if (lang.startsWith('fr')) return 'fr'
+  if (lang.startsWith('de')) return 'de'
+  if (lang.startsWith('ru')) return 'ru'
+  return 'en'
 }
 
 export const useI18nStore = defineStore('i18n', () => {
   const locale = ref<Locale>(detectLocale())
 
-  const messages = computed<LocaleMessages>(() => (locale.value === 'zh' ? zh : en))
+  const messages = computed<LocaleMessages>(() => localeMap[locale.value] || en)
+
+  function setLocale(newLocale: Locale) {
+    if (localeMap[newLocale]) {
+      locale.value = newLocale
+      localStorage.setItem(LOCALE_KEY, newLocale)
+    }
+  }
 
   function toggle() {
-    locale.value = locale.value === 'zh' ? 'en' : 'zh'
-    localStorage.setItem(LOCALE_KEY, locale.value)
+    const list: Locale[] = ['zh', 'zh-TW', 'en', 'ja', 'ko', 'es', 'fr', 'de', 'ru']
+    const nextIdx = (list.indexOf(locale.value) + 1) % list.length
+    setLocale(list[nextIdx]!)
   }
 
   function t(key: keyof LocaleMessages, params?: Record<string, string | number>): string {
-    let text = messages.value[key] || key
+    let text = messages.value[key] || en[key] || String(key)
     if (params) {
       for (const [k, v] of Object.entries(params)) {
         text = text.replace(`{${k}}`, String(v))
@@ -33,5 +74,5 @@ export const useI18nStore = defineStore('i18n', () => {
     return text
   }
 
-  return { locale, messages, toggle, t }
+  return { locale, messages, setLocale, toggle, t, supportedLocales: SUPPORTED_LOCALES }
 })

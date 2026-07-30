@@ -152,7 +152,7 @@ async function handleShare() {
           />
         </div>
         <div v-if="isBatched" class="mt-2 text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
-          {{ examStore.questions.length }} questions generated so far
+          {{ i18n.t('genProgressGeneratingBatch', { current: examStore.progress.current, total: examStore.progress.total }) }}
         </div>
         <button
           class="btn-outlined mt-3 text-sm !h-10"

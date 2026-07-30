@@ -112,6 +112,127 @@
     --md-elevation-3: 0 4px 8px 3px rgba(0 0 0 / 0.3), 0 1px 3px 0 rgba(0 0 0 / 0.15);
   }
 
+  /* ===== Material You Accent Color Palettes ===== */
+  [data-accent="green"] {
+    --md-source: 46 125 79;
+    --md-primary: 46 125 79;
+    --md-on-primary: 255 255 255;
+    --md-primary-container: 198 246 213;
+    --md-on-primary-container: 0 33 13;
+    --md-secondary: 82 99 85;
+    --md-on-secondary: 255 255 255;
+    --md-secondary-container: 213 233 216;
+    --md-on-secondary-container: 16 31 19;
+    --md-tertiary: 56 101 106;
+    --md-on-tertiary: 255 255 255;
+    --md-tertiary-container: 188 235 241;
+    --md-on-tertiary-container: 0 32 35;
+  }
+  .dark[data-accent="green"], [data-accent="green"].dark {
+    --md-primary: 160 216 177;
+    --md-on-primary: 0 57 26;
+    --md-primary-container: 24 81 44;
+    --md-on-primary-container: 198 246 213;
+    --md-secondary: 185 204 188;
+    --md-on-secondary: 38 53 41;
+    --md-secondary-container: 58 75 62;
+    --md-on-secondary-container: 213 233 216;
+    --md-tertiary: 160 207 213;
+    --md-on-tertiary: 0 54 59;
+    --md-tertiary-container: 30 77 82;
+    --md-on-tertiary-container: 188 235 241;
+  }
+
+  [data-accent="coral"] {
+    --md-source: 224 86 66;
+    --md-primary: 224 86 66;
+    --md-on-primary: 255 255 255;
+    --md-primary-container: 255 218 214;
+    --md-on-primary-container: 65 11 4;
+    --md-secondary: 119 86 82;
+    --md-on-secondary: 255 255 255;
+    --md-secondary-container: 255 218 214;
+    --md-on-secondary-container: 44 21 19;
+    --md-tertiary: 114 89 50;
+    --md-on-tertiary: 255 255 255;
+    --md-tertiary-container: 255 222 170;
+    --md-on-tertiary-container: 40 24 0;
+  }
+  .dark[data-accent="coral"], [data-accent="coral"].dark {
+    --md-primary: 255 180 169;
+    --md-on-primary: 96 21 14;
+    --md-primary-container: 134 52 40;
+    --md-on-primary-container: 255 218 214;
+    --md-secondary: 231 190 185;
+    --md-on-secondary: 68 41 38;
+    --md-secondary-container: 92 63 60;
+    --md-on-secondary-container: 255 218 214;
+    --md-tertiary: 225 194 144;
+    --md-on-tertiary: 64 44 8;
+    --md-tertiary-container: 88 66 28;
+    --md-on-tertiary-container: 255 222 170;
+  }
+
+  [data-accent="purple"] {
+    --md-source: 138 73 226;
+    --md-primary: 138 73 226;
+    --md-on-primary: 255 255 255;
+    --md-primary-container: 237 221 255;
+    --md-on-primary-container: 45 0 92;
+    --md-secondary: 102 90 119;
+    --md-on-secondary: 255 255 255;
+    --md-secondary-container: 236 222 254;
+    --md-on-secondary-container: 34 24 49;
+    --md-tertiary: 126 82 96;
+    --md-on-tertiary: 255 255 255;
+    --md-tertiary-container: 255 217 227;
+    --md-on-tertiary-container: 50 16 29;
+  }
+  .dark[data-accent="purple"], [data-accent="purple"].dark {
+    --md-primary: 211 184 255;
+    --md-on-primary: 74 0 140;
+    --md-primary-container: 107 43 192;
+    --md-on-primary-container: 237 221 255;
+    --md-secondary: 208 194 225;
+    --md-on-secondary: 54 44 70;
+    --md-secondary-container: 78 67 94;
+    --md-on-secondary-container: 236 222 254;
+    --md-tertiary: 240 187 202;
+    --md-on-tertiary: 74 37 49;
+    --md-tertiary-container: 97 58 71;
+    --md-on-tertiary-container: 255 217 227;
+  }
+
+  [data-accent="amber"] {
+    --md-source: 189 137 0;
+    --md-primary: 189 137 0;
+    --md-on-primary: 255 255 255;
+    --md-primary-container: 255 223 160;
+    --md-on-primary-container: 41 27 0;
+    --md-secondary: 104 94 65;
+    --md-on-secondary: 255 255 255;
+    --md-secondary-container: 240 226 191;
+    --md-on-secondary-container: 35 27 3;
+    --md-tertiary: 72 102 70;
+    --md-on-tertiary: 255 255 255;
+    --md-tertiary-container: 202 233 197;
+    --md-on-tertiary-container: 7 33 8;
+  }
+  .dark[data-accent="amber"], [data-accent="amber"].dark {
+    --md-primary: 235 194 77;
+    --md-on-primary: 58 41 0;
+    --md-primary-container: 86 61 0;
+    --md-on-primary-container: 255 223 160;
+    --md-secondary: 211 198 164;
+    --md-on-secondary: 56 47 21;
+    --md-secondary-container: 80 71 43;
+    --md-on-secondary-container: 240 226 191;
+    --md-tertiary: 174 205 169;
+    --md-on-tertiary: 27 54 26;
+    --md-tertiary-container: 48 78 47;
+    --md-on-tertiary-container: 202 233 197;
+  }
+
   * { box-sizing: border-box; }
 
   html {
@@ -121,8 +242,12 @@
   }
 
   body {
-    @apply m-0 font-sans antialiased;
-    background: rgb(var(--md-surface));
+    @apply m-0 font-sans antialiased min-h-screen;
+    background-color: rgb(var(--md-surface));
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(var(--md-primary) / 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(var(--md-tertiary) / 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
     color: rgb(var(--md-on-surface));
     transition: background-color 0.3s ease, color 0.3s ease;
   }
@@ -136,40 +261,43 @@
 
   /* Filled Button */
   .btn-filled {
-    @apply relative inline-flex items-center justify-center gap-2 px-6 h-10
+    @apply relative inline-flex items-center justify-center gap-2 px-6 h-11
            bg-[rgb(var(--md-primary))] text-[rgb(var(--md-on-primary))]
            font-medium text-sm leading-none rounded-full
-           transition-all duration-200 ease-out
-           disabled:opacity-40 disabled:pointer-events-none
-           overflow-hidden;
+           disabled:opacity-40 disabled:pointer-events-none disabled:transform-none
+           overflow-hidden select-none cursor-pointer;
     box-shadow: var(--md-elevation-1);
     letter-spacing: 0.1px;
-  }
-
-  .btn-filled:hover {
-    box-shadow: var(--md-elevation-2);
-    background-image: linear-gradient(rgba(var(--md-on-primary) / var(--md-state-hover-alpha)), rgba(var(--md-on-primary) / var(--md-state-hover-alpha)));
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-filled:active {
-    box-shadow: var(--md-elevation-1);
-    background-image: linear-gradient(rgba(var(--md-on-primary) / var(--md-state-press-alpha)), rgba(var(--md-on-primary) / var(--md-state-press-alpha)));
+    transform: scale(0.97);
+  }
+
+  .btn-filled:hover {
+    box-shadow: 0 4px 12px rgba(var(--md-primary) / 0.3);
+    background-image: linear-gradient(rgba(var(--md-on-primary) / var(--md-state-hover-alpha)), rgba(var(--md-on-primary) / var(--md-state-hover-alpha)));
   }
 
   .btn-filled:focus-visible {
-    outline: 3px solid rgb(var(--md-primary));
+    outline: 2px solid rgb(var(--md-primary));
     outline-offset: 2px;
   }
 
   /* Filled Tonal Button */
   .btn-tonal {
-    @apply relative inline-flex items-center justify-center gap-2 px-6 h-10
+    @apply relative inline-flex items-center justify-center gap-2 px-6 h-11
            bg-[rgb(var(--md-secondary-container))] text-[rgb(var(--md-on-secondary-container))]
            font-medium text-sm leading-none rounded-full
-           transition-all duration-200 ease-out
-           disabled:opacity-40 disabled:pointer-events-none
-           overflow-hidden;
+           disabled:opacity-40 disabled:pointer-events-none disabled:transform-none
+           overflow-hidden select-none cursor-pointer;
     letter-spacing: 0.1px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-tonal:active {
+    transform: scale(0.97);
   }
 
   .btn-tonal:hover {
@@ -177,95 +305,88 @@
     background-image: linear-gradient(rgba(var(--md-on-secondary-container) / var(--md-state-hover-alpha)), rgba(var(--md-on-secondary-container) / var(--md-state-hover-alpha)));
   }
 
-  .btn-tonal:active {
-    background-image: linear-gradient(rgba(var(--md-on-secondary-container) / var(--md-state-press-alpha)), rgba(var(--md-on-secondary-container) / var(--md-state-press-alpha)));
-  }
-
   .btn-tonal:focus-visible {
-    outline: 3px solid rgb(var(--md-primary));
+    outline: 2px solid rgb(var(--md-primary));
     outline-offset: 2px;
   }
 
   /* Outlined Button */
   .btn-outlined {
-    @apply relative inline-flex items-center justify-center gap-2 px-6 h-10
-           border border-[rgb(var(--md-outline))]
+    @apply relative inline-flex items-center justify-center gap-2 px-6 h-11
+           border border-[rgb(var(--md-outline-variant))]
            text-[rgb(var(--md-primary))] font-medium text-sm leading-none rounded-full
-           transition-all duration-200 ease-out
-           disabled:opacity-40 disabled:pointer-events-none
-           overflow-hidden;
+           disabled:opacity-40 disabled:pointer-events-none disabled:transform-none
+           overflow-hidden select-none cursor-pointer;
     letter-spacing: 0.1px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-outlined:active {
+    transform: scale(0.97);
   }
 
   .btn-outlined:hover {
     background-color: rgba(var(--md-primary) / var(--md-state-hover-alpha));
-    border-color: rgb(var(--md-outline));
-  }
-
-  .btn-outlined:active {
-    background-color: rgba(var(--md-primary) / var(--md-state-press-alpha));
-  }
-
-  .btn-outlined:focus-visible {
-    outline: 3px solid rgb(var(--md-primary));
-    outline-offset: 2px;
+    border-color: rgb(var(--md-primary));
   }
 
   /* Text Button */
   .btn-text {
-    @apply relative inline-flex items-center justify-center gap-2 px-3 h-10
+    @apply relative inline-flex items-center justify-center gap-2 px-4 h-10
            text-[rgb(var(--md-primary))] font-medium text-sm leading-none rounded-full
-           transition-all duration-200 ease-out
-           disabled:opacity-40 disabled:pointer-events-none
-           overflow-hidden;
+           disabled:opacity-40 disabled:pointer-events-none disabled:transform-none
+           overflow-hidden select-none cursor-pointer;
     letter-spacing: 0.1px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-text:active {
+    transform: scale(0.96);
   }
 
   .btn-text:hover { background-color: rgba(var(--md-primary) / var(--md-state-hover-alpha)); }
-  .btn-text:active { background-color: rgba(var(--md-primary) / var(--md-state-press-alpha)); }
-  .btn-text:focus-visible {
-    outline: 3px solid rgb(var(--md-primary));
-    outline-offset: 2px;
-  }
 
   /* Icon Button */
   .btn-icon {
     @apply relative inline-flex items-center justify-center w-10 h-10
            text-[rgb(var(--md-on-surface-variant))] rounded-full
-           transition-all duration-200 ease-out
-           overflow-hidden cursor-pointer;
+           overflow-hidden cursor-pointer select-none;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-icon:active {
+    transform: scale(0.90);
   }
 
   .btn-icon:hover { background-color: rgba(var(--md-on-surface-variant) / var(--md-state-hover-alpha)); }
-  .btn-icon:active { background-color: rgba(var(--md-on-surface-variant) / var(--md-state-press-alpha)); }
 
   /* ---- Cards ---- */
 
   /* Elevated Card */
   .card-elevated {
     @apply bg-[rgb(var(--md-surface-container-low))];
-    border-radius: 24px;
+    border-radius: 28px;
     box-shadow: var(--md-elevation-1);
-    transition: box-shadow 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.3s ease;
   }
 
   .card-elevated:hover {
-    box-shadow: var(--md-elevation-2);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
   }
 
   /* Filled Card */
   .card-filled {
     @apply bg-[rgb(var(--md-surface-container-highest))];
-    border-radius: 24px;
-    transition: background-color 0.3s ease;
+    border-radius: 28px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease;
   }
 
   /* Outlined Card */
   .card-outlined {
-    @apply border border-[rgb(var(--md-outline-variant))];
-    background: rgb(var(--md-surface));
-    border-radius: 24px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border: 1px solid rgb(var(--md-outline-variant) / 0.6);
+    background: rgb(var(--md-surface-container-lowest));
+    border-radius: 28px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 
   /* ---- Input Fields ---- */

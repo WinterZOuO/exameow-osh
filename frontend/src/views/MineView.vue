@@ -24,10 +24,10 @@ const entries = [
 </script>
 
 <template>
-  <div>
+  <div class="max-w-3xl mx-auto">
     <div class="flex items-center justify-between mb-1">
-      <h1 class="text-display-sm">{{ i18n.t('navMine') }}</h1>
-      <span class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
+      <h1 class="text-display-sm font-bold tracking-tight">{{ i18n.t('navMine') }}</h1>
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style="background-color: rgb(var(--md-surface-container-high)); color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
     </div>
     <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('mineSubtitle') }}</p>
 
@@ -35,33 +35,34 @@ const entries = [
       <button
         v-for="e in entries"
         :key="e.path"
-        class="card-outlined w-full flex items-center gap-4 p-4 sm:p-5 text-left transition-all duration-200 hover:elevation-1"
+        class="w-full flex items-center gap-4 p-4.5 sm:p-5 text-left rounded-[24px] border border-[rgb(var(--md-outline-variant)/0.4)] bg-[rgb(var(--md-surface-container-low))] hover:bg-[rgb(var(--md-surface-container))] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.98] shadow-xs cursor-pointer group"
         @click="router.push(e.path)"
       >
         <div
-          class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+          class="w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
           style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
         >
           <component :is="e.icon" class="w-6 h-6" />
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-title-sm">{{ i18n.t(e.key) }}</div>
-          <div class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t(e.descKey) }}</div>
+          <div class="text-title-sm font-bold" style="color: rgb(var(--md-on-surface))">{{ i18n.t(e.key) }}</div>
+          <div class="text-body-sm mt-0.5" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t(e.descKey) }}</div>
         </div>
-        <ChevronRightIcon class="w-5 h-5 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
+        <ChevronRightIcon class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" style="color: rgb(var(--md-on-surface-variant))" />
       </button>
     </div>
 
-    <div class="mt-8 flex items-center justify-center gap-4">
+    <div class="mt-8 flex items-center justify-center gap-6">
       <button
-        class="text-body-sm underline"
+        class="text-body-sm hover:underline font-medium"
         style="color: rgb(var(--md-on-surface-variant))"
         @click="router.push('/privacy')"
       >
         {{ i18n.t('privacyTitle') }}
       </button>
+      <span class="text-xs opacity-40">•</span>
       <button
-        class="text-body-sm underline"
+        class="text-body-sm hover:underline font-medium"
         style="color: rgb(var(--md-on-surface-variant))"
         @click="router.push('/terms')"
       >

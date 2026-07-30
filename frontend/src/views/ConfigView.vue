@@ -41,66 +41,68 @@ async function handleSave() {
 </script>
 
 <template>
-  <div>
-    <div class="flex items-center gap-2 mb-6">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
       <button class="btn-icon" @click="router.push('/mine')">
         <ArrowLeftIcon class="w-5 h-5" />
       </button>
-      <h1 class="text-display-sm">{{ i18n.t('configTitle') }}</h1>
+      <div>
+        <h1 class="text-display-sm font-bold tracking-tight">{{ i18n.t('configTitle') }}</h1>
+      </div>
     </div>
 
     <!-- CF: Provider toggle -->
-    <div v-if="isCloudflare()" class="card-filled p-4 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configAiProvider') }}</label>
+    <div v-if="isCloudflare()" class="card-filled p-5 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configAiProvider') }}</label>
       <div class="flex items-center gap-3">
         <button
-          class="btn-tonal text-sm !px-4 !py-2"
+          class="btn-tonal text-sm !px-5 !py-2.5"
           :class="{ 'btn-filled': configStore.aiProvider === 'cf-free' }"
           @click="configStore.setProvider('cf-free')"
         >
           <CloudIcon class="w-4 h-4" />
-          {{ i18n.t('configCfFree') }}
+          <span>{{ i18n.t('configCfFree') }}</span>
         </button>
         <button
-          class="btn-tonal text-sm !px-4 !py-2"
+          class="btn-tonal text-sm !px-5 !py-2.5"
           :class="{ 'btn-filled': configStore.aiProvider === 'custom' }"
           @click="configStore.setProvider('custom')"
         >
           <ServerIcon class="w-4 h-4" />
-          {{ i18n.t('configCustomApi') }}
+          <span>{{ i18n.t('configCustomApi') }}</span>
         </button>
       </div>
-      <p v-if="configStore.aiProvider === 'cf-free'" class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">
+      <p v-if="configStore.aiProvider === 'cf-free'" class="text-body-sm mt-3" style="color: rgb(var(--md-on-surface-variant))">
         {{ i18n.t('configCfFreeDesc') }}
       </p>
-      <p v-else class="text-body-sm mt-2" style="color: rgb(var(--md-on-surface-variant))">
+      <p v-else class="text-body-sm mt-3" style="color: rgb(var(--md-on-surface-variant))">
         {{ i18n.t('configCustomApiDesc') }}
       </p>
     </div>
 
     <!-- Endpoint (custom API or non-CF) -->
-    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionEndpoint') }}</label>
+    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionEndpoint') }}</label>
       <div class="relative">
-        <ServerIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
+        <ServerIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
         <input
           v-model="configStore.endpoint"
           placeholder="https://<your_api_url>/v1"
-          class="input-outlined !pl-10"
+          class="input-outlined !pl-11 !rounded-2xl !py-3"
         />
       </div>
     </div>
 
     <!-- Auth (custom API or non-CF) -->
-    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionAuth') }}</label>
+    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionAuth') }}</label>
       <div class="relative">
-        <KeyIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
+        <KeyIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
         <input
           v-model="configStore.apiKey"
           :type="showKey ? 'text' : 'password'"
           :placeholder="i18n.t('configApiKey')"
-          class="input-outlined !pl-10 !pr-10"
+          class="input-outlined !pl-11 !pr-11 !rounded-2xl !py-3"
         />
         <button class="absolute right-3 top-1/2 -translate-y-1/2 btn-icon !w-8 !h-8" @click="showKey = !showKey">
           <EyeSlashIcon v-if="showKey" class="w-4 h-4" />
@@ -110,24 +112,24 @@ async function handleSave() {
     </div>
 
     <!-- Model -->
-    <div class="card-filled p-5 mb-4">
-      <label class="text-label-md block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionModel') }}</label>
+    <div class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionModel') }}</label>
       <div class="flex flex-col sm:flex-row items-center gap-3">
         <button
-          class="btn-outlined shrink-0 text-sm"
+          class="btn-tonal shrink-0 text-sm !h-12 !px-4 !rounded-2xl"
           :disabled="(!isCloudflare() || configStore.aiProvider === 'custom') && (!configStore.endpoint || !configStore.apiKey)"
           @click="handleFetchModels"
         >
           <CloudArrowDownIcon class="w-4 h-4" />
-          {{ configFetching ? '...' : i18n.t('configFetchModels') }}
+          <span>{{ configFetching ? '...' : i18n.t('configFetchModels') }}</span>
         </button>
         <div class="flex-1 relative w-full">
-          <CpuChipIcon class="absolute left-3 top-2.5 w-5 h-5 z-10 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
+          <CpuChipIcon class="absolute left-3.5 top-3.5 w-5 h-5 z-10 pointer-events-none" style="color: rgb(var(--md-on-surface-variant))" />
           <BaseCombobox
             :model-value="configStore.model"
             :options="configStore.models.map(m => ({ value: m.id, label: m.id }))"
             :placeholder="i18n.t('configEnterModel')"
-            class="[&_input]:!pl-10"
+            class="[&_input]:!pl-11 [&_input]:!rounded-2xl [&_input]:!py-3"
             @update:model-value="configStore.model = $event"
           />
         </div>
@@ -145,19 +147,19 @@ async function handleSave() {
     </Transition>
 
     <!-- ========= Unified Save + CTA ========= -->
-    <div class="flex items-center justify-center gap-3 mt-6">
-      <button class="btn-filled" :disabled="!configStore.configured" @click="handleSave">
+    <div class="flex items-center justify-center gap-3 mt-8">
+      <button class="btn-filled !h-12 !px-8 shadow-md" :disabled="!configStore.configured" @click="handleSave">
         <CheckIcon class="w-5 h-5" />
-        {{ i18n.t('configSave') }}
+        <span>{{ i18n.t('configSave') }}</span>
       </button>
 
       <button
-        class="btn-filled"
+        class="btn-tonal !h-12 !px-8 shadow-sm"
         :disabled="!configStore.configured"
         @click="router.push('/generate')"
       >
+        <span>{{ i18n.t('configReadyCta') }}</span>
         <ArrowRightIcon class="w-5 h-5" />
-        {{ i18n.t('configReadyCta') }}
       </button>
 
       <Transition name="fade">

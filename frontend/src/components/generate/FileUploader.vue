@@ -98,10 +98,10 @@ function onCameraChange(event: Event) {
   if (!file) return
   input.value = ''
   const now = new Date()
-  const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
-  const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  const dateStr = now.toLocaleDateString(i18n.locale === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  const timeStr = now.toLocaleTimeString(i18n.locale === 'zh' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit' })
   const ext = file.name.split('.').pop() || 'jpg'
-  const name = `拍照 ${dateStr} ${timeStr}.${ext}`
+  const name = `${i18n.t('genTakePhoto')} ${dateStr} ${timeStr}.${ext}`
   const photoFile = new File([file], name, { type: file.type })
   webFiles.value.push(photoFile)
   addFileInputs([photoFile])
@@ -130,26 +130,26 @@ function onDrop(e: DragEvent) {
     <!-- Drop Zone -->
     <button
       v-if="fileNames.length === 0"
-      class="flex flex-col items-center gap-4 group cursor-pointer w-full h-full min-h-[180px] sm:min-h-[200px] justify-center rounded-3xl transition-all duration-300"
+      class="flex flex-col items-center gap-4 group cursor-pointer w-full h-full min-h-[200px] sm:min-h-[220px] justify-center rounded-[32px] transition-all duration-300 border-2"
       :style="{
-        border: isDragOver
-          ? '2px dashed rgb(var(--md-primary))'
-          : '2px dashed transparent',
+        borderColor: isDragOver
+          ? 'rgb(var(--md-primary))'
+          : 'rgb(var(--md-outline-variant) / 0.4)',
         backgroundColor: isDragOver
           ? 'rgba(var(--md-primary) / 0.08)'
-          : 'transparent',
+          : 'rgb(var(--md-surface-container-low))',
       }"
       @click="pick"
     >
       <div
-        class="w-20 h-20 rounded-[28px] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[var(--md-elevation-2)] group-active:scale-95"
+        class="w-20 h-20 rounded-[28px] flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-active:scale-95 shadow-md"
         :style="{ backgroundColor: 'rgb(var(--md-primary-container))' }"
       >
-        <DocumentArrowUpIcon class="w-10 h-10" style="color: rgb(var(--md-on-primary-container))" />
+        <DocumentArrowUpIcon class="w-10 h-10 transition-transform duration-300 group-hover:-translate-y-0.5" style="color: rgb(var(--md-on-primary-container))" />
       </div>
-      <div>
-        <div class="text-title-sm" style="color: rgb(var(--md-primary))">{{ i18n.t('genSelectFile') }}</div>
-        <div class="text-body-sm mt-1.5" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genFileHint') }}</div>
+      <div class="px-4">
+        <div class="text-title-md font-bold tracking-tight" style="color: rgb(var(--md-primary))">{{ i18n.t('genSelectFile') }}</div>
+        <div class="text-body-sm mt-1.5 font-medium" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('genFileHint') }}</div>
         <div class="text-[11px] mt-1" style="color: rgb(var(--md-on-surface-muted))">{{ i18n.t('practiceMultiFileHint') }}</div>
       </div>
 
@@ -174,7 +174,7 @@ function onDrop(e: DragEvent) {
 
     <button
       v-if="showCamera && fileNames.length === 0"
-      class="btn-tonal mt-3 gap-2"
+      class="btn-tonal mt-4 gap-2 shadow-sm"
       @click="pickCamera"
     >
       <CameraIcon class="w-5 h-5" />
@@ -183,36 +183,39 @@ function onDrop(e: DragEvent) {
 
     <!-- File List -->
     <div v-if="fileNames.length > 0" class="w-full">
-      <div class="flex items-center justify-between mb-2 px-1">
-        <span class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <span class="text-label-md font-semibold" style="color: rgb(var(--md-on-surface-variant))">
           {{ i18n.t('practiceFileCount', { n: fileNames.length }) }}
         </span>
-        <button v-if="showCamera" class="btn-text !h-8 !text-xs !px-3" @click="pickCamera">
-          <CameraIcon class="w-4 h-4" />
-        </button>
-        <button class="btn-text !h-8 !text-xs !px-3" @click="pick">{{ i18n.t('practiceAddFile') }}</button>
+        <div class="flex items-center gap-1">
+          <button v-if="showCamera" class="btn-tonal !h-8 !text-xs !px-3 gap-1" @click="pickCamera">
+            <CameraIcon class="w-3.5 h-3.5" />
+            <span>{{ i18n.t('genTakePhoto') }}</span>
+          </button>
+          <button class="btn-tonal !h-8 !text-xs !px-3" @click="pick">+ {{ i18n.t('practiceAddFile') }}</button>
+        </div>
       </div>
 
-      <TransitionGroup name="list" tag="div" class="space-y-1.5 max-h-[280px] overflow-y-auto px-1">
+      <TransitionGroup name="list" tag="div" class="space-y-2 max-h-[280px] overflow-y-auto px-0.5">
         <div
           v-for="(name, i) in fileNames"
           :key="i"
-          class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors duration-200"
-          :style="{ backgroundColor: 'rgb(var(--md-surface-container-high))' }"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-all duration-200 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]"
+          :style="{ backgroundColor: 'rgb(var(--md-surface-container))' }"
         >
-          <CameraIcon v-if="name.startsWith('拍照 ')" class="w-4 h-4 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
-          <DocumentTextIcon v-else class="w-4 h-4 shrink-0" style="color: rgb(var(--md-on-surface-variant))" />
+          <CameraIcon v-if="name.includes('Photo') || name.includes('拍照') || name.startsWith(i18n.t('genTakePhoto'))" class="w-4 h-4 shrink-0" style="color: rgb(var(--md-primary))" />
+          <DocumentTextIcon v-else class="w-4 h-4 shrink-0" style="color: rgb(var(--md-primary))" />
           <span class="text-sm font-medium truncate flex-1 text-left" style="color: rgb(var(--md-on-surface))">{{ name }}</span>
           <button
-            class="shrink-0 rounded-full p-1 transition-colors duration-200 hover:bg-black/10 dark:hover:bg-white/10"
+            class="shrink-0 rounded-full p-1.5 transition-colors duration-200 hover:bg-black/10 dark:hover:bg-white/10"
             @click.stop="clearOne(i)"
           >
-            <XMarkIcon class="w-3.5 h-3.5" style="color: rgb(var(--md-on-surface-variant))" />
+            <XMarkIcon class="w-4 h-4" style="color: rgb(var(--md-on-surface-variant))" />
           </button>
         </div>
       </TransitionGroup>
 
-      <div class="mt-3 flex justify-center gap-2">
+      <div class="mt-4 flex justify-center">
         <button class="btn-text !h-8 !text-xs !px-3" style="color: rgb(var(--md-error))" @click="clearAll">
            {{ i18n.t('practiceClearAll') }}
         </button>

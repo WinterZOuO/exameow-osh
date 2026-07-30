@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useTheme } from '@/composables/useTheme'
@@ -7,6 +7,7 @@ import { isTauri, isMacOS, isWindows, isLinux } from '@/utils/platform'
 import TitleBar from './TitleBar.vue'
 import CookieBanner from './CookieBanner.vue'
 import UpdateDialog from './UpdateDialog.vue'
+import LanguageDialog from './LanguageDialog.vue'
 import {
   SparklesIcon,
   SunIcon,
@@ -15,11 +16,13 @@ import {
   AcademicCapIcon,
   MagnifyingGlassIcon,
   UserCircleIcon,
+  LanguageIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const route = useRoute()
 const i18n = useI18nStore()
+const showLanguageDialog = ref(false)
 
 const { theme, cycleTheme } = useTheme()
 const isDesktopTauri = isTauri() && (isWindows() || isMacOS() || isLinux())
@@ -47,9 +50,41 @@ function isNavActive(item: { path: string }): boolean {
 
 const currentNavIndex = computed(() => navItems.findIndex(item => isNavActive(item)))
 
+// Measure active button offset & width for dynamic desktop sliding pill
+const desktopNavButtons = ref<(HTMLElement | null)[]>([])
+const pillStyle = ref<{ left: string; width: string }>({ left: '0px', width: '0px' })
+
+function updatePillPosition() {
+  nextTick(() => {
+    const idx = currentNavIndex.value
+    if (idx >= 0 && desktopNavButtons.value[idx]) {
+      const btn = desktopNavButtons.value[idx]!
+      pillStyle.value = {
+        left: `${btn.offsetLeft}px`,
+        width: `${btn.offsetWidth}px`,
+      }
+    }
+  })
+}
+
+watch([currentNavIndex, () => i18n.locale], () => {
+  updatePillPosition()
+})
+
+onMounted(() => {
+  updatePillPosition()
+  window.addEventListener('resize', updatePillPosition)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updatePillPosition)
+})
+
 const headerStyle = {
-  backgroundColor: 'rgb(var(--md-surface))',
-  borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.4)',
+  backgroundColor: 'rgba(var(--md-surface) / 0.86)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  borderBottom: '1px solid rgb(var(--md-outline-variant) / 0.3)',
 } as any
 </script>
 
@@ -69,32 +104,40 @@ const headerStyle = {
         <router-link
           v-if="!isDesktopTauri"
           to="/practice"
-          class="flex items-center gap-3 shrink-0 no-underline"
+          class="flex items-center gap-3 shrink-0 no-underline group"
         >
-          <img src="/logo.png" alt="Exameow" class="w-[38px] h-[38px] rounded-xl shrink-0" />
+          <img src="/logo.png" alt="Exameow" class="w-[38px] h-[38px] rounded-xl shrink-0 transition-transform duration-300 group-hover:scale-105" />
           <div class="hidden sm:block">
-            <div class="text-title-md leading-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
+            <div class="text-title-md leading-tight font-bold tracking-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t('appName') }}</div>
             <div class="text-label-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('appSubtitle') }}</div>
           </div>
         </router-link>
 
-        <!-- Desktop Nav — Segmented-like pills -->
+        <!-- Desktop Nav — Pixel Segmented sliding pill navigation -->
         <div class="hidden sm:flex items-center" :class="isDesktopTauri ? '' : 'ml-6'">
           <nav
-            class="flex items-center p-1 rounded-full gap-0.5"
+            class="relative flex items-center p-1 rounded-full gap-0.5 shadow-sm"
             style="background-color: rgb(var(--md-surface-container-high))"
           >
+            <!-- Sliding spring active background pill -->
+            <div
+              v-if="currentNavIndex >= 0"
+              class="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+              style="background-color: rgb(var(--md-secondary-container))"
+              :style="pillStyle"
+            />
             <button
-              v-for="item in navItems"
+              v-for="(item, idx) in navItems"
               :key="item.path"
-              class="relative flex items-center gap-1.5 px-4 h-9 rounded-full text-sm font-medium transition-all duration-300 ease-out"
-              :style="isNavActive(item)
-                ? { backgroundColor: 'rgb(var(--md-secondary-container))', color: 'rgb(var(--md-on-secondary-container))' }
-                : { color: 'rgb(var(--md-on-surface-variant))' }"
+              :ref="(el) => { if (el) desktopNavButtons[idx] = el as HTMLElement }"
+              class="relative z-10 flex items-center justify-center gap-2 px-4 h-9 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer select-none"
+              :style="{
+                color: isNavActive(item) ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))'
+              }"
               @click="router.push(item.path)"
             >
-              <component :is="item.icon" class="w-4 h-4" />
-              {{ i18n.t(item.key as any) }}
+              <component :is="item.icon" class="w-4 h-4 transition-transform duration-200" :class="{ 'scale-110': isNavActive(item) }" />
+              <span>{{ i18n.t(item.key as any) }}</span>
             </button>
           </nav>
         </div>
@@ -103,7 +146,7 @@ const headerStyle = {
         <div class="flex-1 self-stretch cursor-default" />
 
         <!-- Actions -->
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1.5">
           <button
             class="btn-icon"
             @click="openGitHub"
@@ -115,11 +158,12 @@ const headerStyle = {
             </svg>
           </button>
           <button
-            class="btn-icon text-xs !font-bold"
-            @click="i18n.toggle()"
+            class="btn-icon"
+            @click="showLanguageDialog = true"
+            title="Language / 语言"
             :style="{ color: 'rgb(var(--md-on-surface-variant))' }"
           >
-            {{ i18n.locale === 'zh' ? '中' : 'En' }}
+            <LanguageIcon class="w-5 h-5" />
           </button>
           <button class="btn-icon" @click="cycleTheme" :title="theme">
             <ComputerDesktopIcon v-if="theme === 'system'" class="w-5 h-5" />
@@ -132,7 +176,7 @@ const headerStyle = {
     </header>
 
     <!-- ====== Main Content ====== -->
-    <main class="flex-1 mx-auto w-full max-w-5xl xl:max-w-6xl px-3 sm:px-6 py-3 sm:py-6">
+    <main class="flex-1 mx-auto w-full max-w-5xl xl:max-w-6xl px-3 sm:px-6 py-4 sm:py-7">
       <router-view v-slot="{ Component }">
         <transition name="slide-up" mode="out-in">
           <component :is="Component" />
@@ -140,45 +184,52 @@ const headerStyle = {
       </router-view>
     </main>
 
-    <!-- ====== Bottom Navigation Bar (Mobile) ====== -->
+    <!-- ====== Bottom Navigation Bar (Mobile Pixel M3) ====== -->
     <nav
       class="sm:hidden sticky bottom-0 z-30 safe-bottom"
       :style="{
-        backgroundColor: 'rgba(var(--md-surface-container-low) / 0.92)',
+        backgroundColor: 'rgba(var(--md-surface-container-lowest) / 0.92)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderTop: '1px solid rgb(var(--md-outline-variant) / 0.3)',
+        borderTop: '1px solid rgb(var(--md-outline-variant) / 0.25)',
       }"
     >
-      <div class="flex items-center justify-around h-[72px] px-2">
-          <!-- Active indicator bar -->
-          <div class="relative flex items-center justify-around w-full">
-          <!-- Active indicator -->
-            <div
-                class="absolute top-0 h-8 rounded-2xl transition-all duration-400 ease-out"
-                style="background-color: rgb(var(--md-secondary-container))"
-                :style="{ width: `calc(100% / ${navItems.length})`, left: `calc(${(currentNavIndex >= 0 ? currentNavIndex : 0)} * 100% / ${navItems.length})` }"
-            />
+      <div class="flex items-center justify-around h-16 px-3">
+        <div class="relative flex items-center justify-around w-full">
+          <!-- Active spring pill indicator -->
+          <div
+            v-if="currentNavIndex >= 0"
+            class="absolute top-1/2 -translate-y-1/2 h-8 rounded-full transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+            style="background-color: rgb(var(--md-secondary-container))"
+            :style="{
+              width: `calc(100% / ${navItems.length})`,
+              left: `calc(${currentNavIndex} * 100% / ${navItems.length})`
+            }"
+          />
 
           <button
             v-for="item in navItems"
             :key="item.path"
-            class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-2"
-              :style="{
-                width: `calc(100% / ${navItems.length})`,
+            class="relative z-10 flex flex-col items-center justify-center gap-0.5 py-1 cursor-pointer select-none"
+            :style="{
+              width: `calc(100% / ${navItems.length})`,
               color: isNavActive(item) ? 'rgb(var(--md-on-secondary-container))' : 'rgb(var(--md-on-surface-variant))',
             }"
             @click="router.push(item.path)"
           >
-            <component :is="item.icon" class="w-6 h-6 transition-transform duration-300"
-                       :style="{ transform: isNavActive(item) ? 'scale(1.1)' : 'scale(1)' }" />
-            <span class="text-[11px] font-medium leading-none">{{ i18n.t(item.key as any) }}</span>
+            <component
+              :is="item.icon"
+              class="w-5 h-5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+              :style="{ transform: isNavActive(item) ? 'scale(1.15) translateY(-1px)' : 'scale(1)' }"
+            />
+            <span class="text-[11px] font-semibold leading-tight tracking-tight">{{ i18n.t(item.key as any) }}</span>
           </button>
         </div>
       </div>
     </nav>
     <CookieBanner />
     <UpdateDialog />
+    <LanguageDialog v-if="showLanguageDialog" @close="showLanguageDialog = false" />
   </div>
 </template>
 

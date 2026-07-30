@@ -38,11 +38,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
   <div ref="root" class="relative">
     <button
       type="button"
-      class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 cursor-pointer"
+      class="w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-sm font-medium outline-none transition-all duration-200 cursor-pointer shadow-xs"
       :style="{
-        border: `1.5px solid ${open ? 'rgb(var(--md-primary))' : 'rgb(var(--md-outline-variant))'}`,
+        border: `1.5px solid ${open ? 'rgb(var(--md-primary))' : 'rgb(var(--md-outline-variant)/0.5)'}`,
         color: 'rgb(var(--md-on-surface))',
-        backgroundColor: 'rgb(var(--md-surface-container-low))',
+        backgroundColor: 'rgb(var(--md-surface-container-lowest))',
       }"
       @click.stop="open = !open"
     >
@@ -50,7 +50,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
         {{ selected?.label ?? placeholder ?? '' }}
       </span>
       <ChevronDownIcon
-        class="w-4 h-4 shrink-0 transition-transform duration-200"
+        class="w-4 h-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
         :class="{ 'rotate-180': open }"
         style="color: rgb(var(--md-on-surface-variant))"
       />
@@ -59,22 +59,22 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     <Transition name="scale">
       <div
         v-if="open"
-        class="absolute left-0 right-0 top-full mt-1 z-30 max-h-64 overflow-y-auto rounded-2xl elevation-2 py-1.5"
+        class="absolute left-0 right-0 top-full mt-2 z-40 max-h-64 overflow-y-auto rounded-[24px] shadow-lg border border-[rgb(var(--md-outline-variant)/0.3)] py-2 backdrop-blur-md"
         style="background-color: rgb(var(--md-surface-container-high))"
       >
         <button
           v-for="o in options"
           :key="String(o.value)"
           type="button"
-          class="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-[rgb(var(--md-primary)/0.08)]"
+          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium transition-colors cursor-pointer hover:bg-[rgb(var(--md-primary)/0.08)]"
           :style="o.value === modelValue
-            ? { color: 'rgb(var(--md-primary))', backgroundColor: 'rgb(var(--md-primary) / 0.10)' }
+            ? { color: 'rgb(var(--md-primary))', backgroundColor: 'rgb(var(--md-primary) / 0.12)' }
             : { color: 'rgb(var(--md-on-surface))' }"
           @click.stop="pick(o.value)"
         >
           <span class="flex-1 min-w-0 truncate">{{ o.label }}</span>
           <span v-if="o.hint" class="text-xs shrink-0" style="color: rgb(var(--md-on-surface-variant))">{{ o.hint }}</span>
-          <CheckIcon v-if="o.value === modelValue" class="w-4 h-4 shrink-0" />
+          <CheckIcon v-if="o.value === modelValue" class="w-4 h-4 shrink-0 animate-spring-pop" />
         </button>
       </div>
     </Transition>

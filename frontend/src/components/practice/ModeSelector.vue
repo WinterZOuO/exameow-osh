@@ -68,30 +68,23 @@ function start() {
 
 <template>
   <div class="space-y-3">
-    <h3 class="text-title-sm" :style="{ color: 'rgb(var(--md-on-surface))' }">
+    <h3 class="text-title-md font-bold tracking-tight mb-2" :style="{ color: 'rgb(var(--md-on-surface))' }">
       {{ i18n.t('practiceSelectModeTitle') }}
     </h3>
     <button
       v-for="m in modes"
       :key="m.value"
-      class="w-full text-left p-4 rounded-xl border transition-all duration-200 flex items-start gap-4"
+      class="w-full text-left p-4.5 rounded-[24px] border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center gap-4 cursor-pointer active:scale-[0.98] shadow-sm"
       :class="[
         props.modelValue === m.value
-          ? 'border-[rgb(var(--md-primary))] bg-[rgba(var(--md-primary),0.08)]'
-          : ''
+          ? 'border-[rgb(var(--md-primary))] bg-[rgba(var(--md-primary),0.07)] shadow-md'
+          : 'border-[rgb(var(--md-outline-variant)/0.4)] bg-[rgb(var(--md-surface-container-low))] hover:bg-[rgb(var(--md-surface-container))]'
       ]"
-      :style="
-        props.modelValue === m.value
-          ? {}
-          : {
-              borderColor: 'rgb(var(--md-outline-variant))',
-              backgroundColor: 'rgb(var(--md-surface))',
-            }
-      "
       @click="select(m.value)"
     >
       <div
-        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+        class="w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+        :class="{ 'scale-105': props.modelValue === m.value }"
         :style="{
           backgroundColor:
             props.modelValue === m.value
@@ -101,7 +94,7 @@ function start() {
       >
         <component
           :is="m.icon"
-          class="w-5 h-5"
+          class="w-6 h-6 transition-colors duration-200"
           :style="{
             color:
               props.modelValue === m.value
@@ -111,11 +104,11 @@ function start() {
         />
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-title-sm" :style="{ color: 'rgb(var(--md-on-surface))' }">{{ m.title }}</div>
+        <div class="text-title-sm font-bold" :style="{ color: 'rgb(var(--md-on-surface))' }">{{ m.title }}</div>
         <div class="text-body-sm mt-0.5" :style="{ color: 'rgb(var(--md-on-surface-variant))' }">{{ m.desc }}</div>
       </div>
       <div
-        class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-1.5"
+        class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
         :style="{
           borderColor:
             props.modelValue === m.value
@@ -125,18 +118,18 @@ function start() {
       >
         <div
           v-if="props.modelValue === m.value"
-          class="w-2.5 h-2.5 rounded-full"
+          class="w-3 h-3 rounded-full animate-spring-pop"
           :style="{ backgroundColor: 'rgb(var(--md-primary))' }"
         />
       </div>
     </button>
     <button
-      class="btn-filled w-full mt-4"
+      class="btn-filled w-full mt-5 !h-12 !text-base !font-semibold shadow-md"
       :disabled="!props.modelValue"
       @click="start"
     >
-      <PlayIcon class="w-4 h-4" />
-      {{ props.modelValue === 'mock' ? i18n.t('practiceMockConfigTitle') : i18n.t('practiceStartBtn') }}
+      <PlayIcon class="w-5 h-5" />
+      <span>{{ props.modelValue === 'mock' ? i18n.t('practiceMockConfigTitle') : i18n.t('practiceStartBtn') }}</span>
     </button>
   </div>
 </template>
