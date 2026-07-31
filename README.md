@@ -10,8 +10,19 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README_zh.md">中文</a>
-  <br>
+  <a href="README_zh.md"><b>简体中文</b></a> ·
+  <a href="README_zh_TW.md"><b>繁體中文</b></a> ·
+  <a href="README.md"><b>English</b></a> ·
+  <a href="README_ja.md"><b>日本語</b></a> ·
+  <a href="README_ko.md"><b>한국어</b></a> ·
+  <a href="README_es.md"><b>Español</b></a> ·
+  <a href="README_fr.md"><b>Français</b></a> ·
+  <a href="README_de.md"><b>Deutsch</b></a> ·
+  <a href="README_ru.md"><b>Русский</b></a> ·
+  <a href="README_ar.md"><b>العربية</b></a>
+</p>
+
+<p align="center">
   <a href="https://exam.superagentparty.com/"><b>Live Demo</b></a> ·
   <a href="https://github.com/heshengtao/exameow/releases">Download</a> ·
   <a href="https://hub.docker.com/r/ailm32442/exameow">Docker Hub</a>
