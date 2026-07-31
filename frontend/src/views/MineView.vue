@@ -8,6 +8,7 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
+  UserIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -24,37 +25,62 @@ const entries = [
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto">
-    <div class="flex items-center justify-between mb-1">
-      <h1 class="text-display-sm font-bold tracking-tight">{{ i18n.t('navMine') }}</h1>
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style="background-color: rgb(var(--md-surface-container-high)); color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
+  <div class="max-w-3xl mx-auto pb-8">
+    <!-- Mine Header Profile Card -->
+    <div class="card-filled p-5 sm:p-6 mb-5 relative overflow-hidden">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-sm shrink-0"
+            style="background-color: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container))"
+          >
+            <UserIcon class="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2]" />
+          </div>
+          <div>
+            <h1 class="text-display-sm font-bold tracking-tight mb-1" style="color: rgb(var(--md-on-surface))">{{ i18n.t('navMine') }}</h1>
+            <p class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('mineSubtitle') }}</p>
+          </div>
+        </div>
+        <span
+          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide shrink-0 shadow-xs"
+          style="background-color: rgb(var(--md-surface-container-highest)); color: rgb(var(--md-primary))"
+        >
+          v{{ version }}
+        </span>
+      </div>
     </div>
-    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('mineSubtitle') }}</p>
 
-    <div class="space-y-3">
+    <!-- Menu Entries List -->
+    <div class="space-y-3.5">
       <button
         v-for="e in entries"
         :key="e.path"
-        class="w-full flex items-center gap-4 p-4.5 sm:p-5 text-left rounded-[24px] border border-[rgb(var(--md-outline-variant)/0.4)] bg-[rgb(var(--md-surface-container-low))] hover:bg-[rgb(var(--md-surface-container))] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.98] shadow-xs cursor-pointer group"
+        class="card-filled w-full flex items-center gap-4.5 p-4.5 sm:p-5 text-left transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.01] hover:shadow-md cursor-pointer border border-transparent hover:border-[rgb(var(--md-primary)/0.25)] group"
         @click="router.push(e.path)"
       >
         <div
-          class="w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+          class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 shadow-xs"
           style="background-color: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container))"
         >
-          <component :is="e.icon" class="w-6 h-6" />
+          <component :is="e.icon" class="w-6 h-6 stroke-[2]" />
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-title-sm font-bold" style="color: rgb(var(--md-on-surface))">{{ i18n.t(e.key) }}</div>
+          <div class="text-title-sm font-bold tracking-tight" style="color: rgb(var(--md-on-surface))">{{ i18n.t(e.key) }}</div>
           <div class="text-body-sm mt-0.5" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t(e.descKey) }}</div>
         </div>
-        <ChevronRightIcon class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" style="color: rgb(var(--md-on-surface-variant))" />
+        <div
+          class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1 shrink-0"
+          style="background-color: rgb(var(--md-surface-container-highest)); color: rgb(var(--md-on-surface-variant))"
+        >
+          <ChevronRightIcon class="w-4.5 h-4.5 stroke-[2.5]" />
+        </div>
       </button>
     </div>
 
+    <!-- Footer Links -->
     <div class="mt-8 flex items-center justify-center gap-6">
       <button
-        class="text-body-sm hover:underline font-medium"
+        class="text-body-sm hover:underline font-semibold"
         style="color: rgb(var(--md-on-surface-variant))"
         @click="router.push('/privacy')"
       >
@@ -62,7 +88,7 @@ const entries = [
       </button>
       <span class="text-xs opacity-40">•</span>
       <button
-        class="text-body-sm hover:underline font-medium"
+        class="text-body-sm hover:underline font-semibold"
         style="color: rgb(var(--md-on-surface-variant))"
         @click="router.push('/terms')"
       >
