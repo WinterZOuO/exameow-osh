@@ -23,8 +23,18 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: any[]): void }>()
 
 const i18n = useI18nStore()
 const open = ref(false)
+const dropup = ref(false)
 const query = ref('')
 const root = ref<HTMLElement | null>(null)
+
+function toggleOpen() {
+  if (!open.value && root.value) {
+    const rect = root.value.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    dropup.value = spaceBelow < 260 && rect.top > 200
+  }
+  open.value = !open.value
+}
 
 const allSelected = computed(() => props.options.length > 0 && props.modelValue.length >= props.options.length)
 
@@ -78,7 +88,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
         color: 'rgb(var(--md-on-surface))',
         backgroundColor: 'rgb(var(--md-surface-container-low))',
       }"
-      @click.stop="open = !open"
+      @click.stop="toggleOpen"
     >
       <span class="truncate" :style="modelValue.length === 0 ? { color: 'rgb(var(--md-on-surface-muted))' } : {}">
         {{ triggerText }}
@@ -93,7 +103,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     <Transition name="scale">
       <div
         v-if="open"
-        class="absolute left-0 right-0 top-full mt-1 z-30 rounded-2xl elevation-2 py-1.5"
+        class="absolute left-0 right-0 z-50 rounded-2xl shadow-xl py-1.5 border border-[rgb(var(--md-outline-variant)/0.3)]"
+        :class="dropup ? 'bottom-full mb-1.5' : 'top-full mt-1.5'"
         style="background-color: rgb(var(--md-surface-container-high))"
       >
         <div v-if="searchable && options.length > 5" class="px-3 pb-1.5">

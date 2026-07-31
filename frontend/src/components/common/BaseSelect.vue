@@ -17,7 +17,17 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', v: any): void }>()
 
 const open = ref(false)
+const dropup = ref(false)
 const root = ref<HTMLElement | null>(null)
+
+function toggleOpen() {
+  if (!open.value && root.value) {
+    const rect = root.value.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    dropup.value = spaceBelow < 260 && rect.top > 200
+  }
+  open.value = !open.value
+}
 
 const selected = computed(() => props.options.find((o) => o.value === props.modelValue))
 
@@ -44,7 +54,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
         color: 'rgb(var(--md-on-surface))',
         backgroundColor: 'rgb(var(--md-surface-container-lowest))',
       }"
-      @click.stop="open = !open"
+      @click.stop="toggleOpen"
     >
       <span class="truncate" :style="selected ? {} : { color: 'rgb(var(--md-on-surface-muted))' }">
         {{ selected?.label ?? placeholder ?? '' }}
@@ -59,7 +69,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     <Transition name="scale">
       <div
         v-if="open"
-        class="absolute left-0 right-0 top-full mt-2 z-40 max-h-64 overflow-y-auto rounded-[24px] shadow-lg border border-[rgb(var(--md-outline-variant)/0.3)] py-2 backdrop-blur-md"
+        class="absolute left-0 right-0 z-50 max-h-64 overflow-y-auto rounded-[24px] shadow-xl border border-[rgb(var(--md-outline-variant)/0.3)] py-2 backdrop-blur-md"
+        :class="dropup ? 'bottom-full mb-2' : 'top-full mt-2'"
         style="background-color: rgb(var(--md-surface-container-high))"
       >
         <button
