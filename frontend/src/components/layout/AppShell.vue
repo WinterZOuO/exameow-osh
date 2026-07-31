@@ -203,7 +203,9 @@ const headerStyle = {
             style="background-color: rgb(var(--md-secondary-container))"
             :style="{
               width: `calc(100% / ${navItems.length})`,
-              left: `calc(${currentNavIndex} * 100% / ${navItems.length})`
+              left: i18n.locale === 'ar'
+                ? `calc(${(navItems.length - 1 - currentNavIndex)} * 100% / ${navItems.length})`
+                : `calc(${currentNavIndex} * 100% / ${navItems.length})`
             }"
           />
 

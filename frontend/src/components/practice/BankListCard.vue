@@ -307,12 +307,12 @@ const hasExportMessage = computed(() => templateExportSuccess.value || templateE
         </div>
 
         <ArrowRightIcon
-          class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-1.5 transition-transform group-hover:translate-x-0.5"
+          class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-1.5 transition-transform group-hover:translate-x-0.5 rtl:rotate-180"
           :style="{ color: 'rgb(var(--md-on-surface-muted))' }"
         />
       </div>
 
-      <div class="flex items-center gap-2 mt-3">
+      <div class="flex flex-wrap items-center gap-2 mt-3">
         <div
           class="relative shrink-0"
           @mouseenter="openExportMenu(bank.id)"
@@ -356,22 +356,24 @@ const hasExportMessage = computed(() => templateExportSuccess.value || templateE
         >
           <TrashIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
-        <button
-          v-if="wrongStore.hasWrongQuestions(bank.id)"
-          class="btn-tonal !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0"
-          :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
-          @click.stop="emit('manageWrong', bank.id)"
-        >
-          <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          {{ i18n.t('practiceWrongPractice') }}
-        </button>
-        <button
-          class="btn-filled !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 ml-auto"
-          @click.stop="emit('select', bank.id)"
-        >
-          <ArrowRightIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          {{ i18n.t('practiceEnterBank') }}
-        </button>
+        <div class="flex items-center gap-2 ml-auto flex-wrap">
+          <button
+            v-if="wrongStore.hasWrongQuestions(bank.id)"
+            class="btn-tonal !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 max-w-full"
+            :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
+            @click.stop="emit('manageWrong', bank.id)"
+          >
+            <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span class="truncate">{{ i18n.t('practiceWrongPractice') }}</span>
+          </button>
+          <button
+            class="btn-filled !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 max-w-full"
+            @click.stop="emit('select', bank.id)"
+          >
+            <ArrowRightIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 rtl:rotate-180" />
+            <span class="truncate">{{ i18n.t('practiceEnterBank') }}</span>
+          </button>
+        </div>
       </div>
     </button>
   </div>

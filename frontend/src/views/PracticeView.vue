@@ -617,7 +617,7 @@ function handleBack() {
         class="btn-icon"
         @click="handleBack"
       >
-        <ArrowLeftIcon class="w-5 h-5" />
+        <ArrowLeftIcon class="w-5 h-5 rtl:rotate-180" />
       </button>
     </div>
 
@@ -654,7 +654,7 @@ function handleBack() {
             </div>
           </div>
         </div>
-        <div class="flex items-center gap-2 mt-3">
+        <div class="flex flex-wrap items-center gap-2 mt-3">
           <button
             class="btn-icon !w-7 !h-7 sm:!w-8 sm:!h-8 shrink-0"
             :style="{ color: 'rgb(var(--md-on-surface-variant))' }"
@@ -662,22 +662,24 @@ function handleBack() {
           >
             <TrashIcon class="w-4 h-4" />
           </button>
-          <button
-            v-if="resumeSessionHasWrong"
-            class="btn-tonal !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0"
-            :style="{
-              borderColor: 'rgb(var(--md-error))',
-              color: 'rgb(var(--md-error))',
-            }"
-            @click="handleWrongPracticeFromCard"
-          >
-            <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            {{ i18n.t('practiceWrongPractice') }}
-          </button>
-          <button class="btn-filled !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 ml-auto" @click="resumeSession">
-            <PlayIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            {{ i18n.t('practiceContinue') }}
-          </button>
+          <div class="flex items-center gap-2 ml-auto flex-wrap">
+            <button
+              v-if="resumeSessionHasWrong"
+              class="btn-tonal !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 max-w-full"
+              :style="{
+                borderColor: 'rgb(var(--md-error))',
+                color: 'rgb(var(--md-error))',
+              }"
+              @click="handleWrongPracticeFromCard"
+            >
+              <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span class="truncate">{{ i18n.t('practiceWrongPractice') }}</span>
+            </button>
+            <button class="btn-filled !h-8 sm:!h-9 text-xs sm:text-sm !px-3 sm:!px-4 shrink-0 max-w-full" @click="resumeSession">
+              <PlayIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span class="truncate">{{ i18n.t('practiceContinue') }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
