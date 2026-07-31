@@ -156,33 +156,35 @@ async function handleOtaCheck() {
         </div>
 
         <!-- 5 Dual-Tone Material You Color Wheels -->
-        <div class="grid grid-cols-5 gap-2 sm:gap-3">
+        <div class="grid grid-cols-5 gap-1.5 sm:gap-3">
           <button
             v-for="a in accentOptions"
             :key="a.value"
-            class="group relative flex flex-col items-center gap-2 p-2.5 sm:p-3.5 rounded-[24px] border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer"
+            class="group relative flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3.5 rounded-2xl sm:rounded-[24px] border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer"
             :style="{
               backgroundColor: accent === a.value ? 'rgb(var(--md-surface-container-highest))' : 'rgb(var(--md-surface-container-low))',
               borderColor: accent === a.value ? 'rgb(var(--md-primary))' : 'rgb(var(--md-outline-variant)/0.3)',
               boxShadow: accent === a.value ? '0 4px 16px rgba(var(--md-primary) / 0.18)' : 'none',
             }"
+            :title="i18n.t(a.key)"
             @click="setAccent(a.value)"
           >
             <!-- Dual-Tone Concentric Circle Swatch -->
             <div
-              class="w-10 h-10 sm:w-12 sm:h-12 rounded-full relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md overflow-hidden"
+              class="w-9 h-9 sm:w-12 sm:h-12 rounded-full relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md overflow-hidden shrink-0"
               :style="{ backgroundColor: a.primary }"
             >
               <div
-                class="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-xs"
+                class="w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-xs"
                 :style="{ backgroundColor: a.container }"
               >
-                <CheckIcon v-if="accent === a.value" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black stroke-[3]" />
+                <CheckIcon v-if="accent === a.value" class="w-3 h-3 sm:w-4 sm:h-4 text-black stroke-[3]" />
               </div>
             </div>
 
+            <!-- Hide text label on mobile, show on sm desktop screens -->
             <span
-              class="text-[11px] sm:text-xs font-bold tracking-tight truncate w-full text-center"
+              class="hidden sm:block text-xs font-bold tracking-tight truncate w-full text-center"
               :style="{ color: accent === a.value ? 'rgb(var(--md-primary))' : 'rgb(var(--md-on-surface-variant))' }"
             >
               {{ i18n.t(a.key) }}
