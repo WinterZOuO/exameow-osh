@@ -8,7 +8,6 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
-  UserIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -26,29 +25,11 @@ const entries = [
 
 <template>
   <div class="max-w-3xl mx-auto pb-8">
-    <!-- Mine Header Profile Card -->
-    <div class="card-filled p-5 sm:p-6 mb-5 relative overflow-hidden">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div
-            class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-sm shrink-0"
-            style="background-color: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container))"
-          >
-            <UserIcon class="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.2]" />
-          </div>
-          <div>
-            <h1 class="text-display-sm font-bold tracking-tight mb-1" style="color: rgb(var(--md-on-surface))">{{ i18n.t('navMine') }}</h1>
-            <p class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('mineSubtitle') }}</p>
-          </div>
-        </div>
-        <span
-          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide shrink-0 shadow-xs"
-          style="background-color: rgb(var(--md-surface-container-highest)); color: rgb(var(--md-primary))"
-        >
-          v{{ version }}
-        </span>
-      </div>
+    <div class="flex items-center justify-between mb-1">
+      <h1 class="text-display-sm font-bold tracking-tight">{{ i18n.t('navMine') }}</h1>
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style="background-color: rgb(var(--md-surface-container-high)); color: rgb(var(--md-on-surface-variant))">v{{ version }}</span>
     </div>
+    <p class="text-body-lg mb-6" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('mineSubtitle') }}</p>
 
     <!-- Menu Entries List -->
     <div class="space-y-3.5">
