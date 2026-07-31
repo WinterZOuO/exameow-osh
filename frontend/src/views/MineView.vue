@@ -53,7 +53,7 @@ const entries = [
           class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1 shrink-0"
           style="background-color: rgb(var(--md-surface-container-highest)); color: rgb(var(--md-on-surface-variant))"
         >
-          <ChevronRightIcon class="w-4.5 h-4.5 stroke-[2.5]" />
+          <ChevronRightIcon class="w-4.5 h-4.5 stroke-[2.5] rtl:rotate-180" />
         </div>
       </button>
     </div>

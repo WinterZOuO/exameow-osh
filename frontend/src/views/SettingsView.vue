@@ -88,7 +88,7 @@ async function handleOtaCheck() {
   <div>
     <div class="flex items-center gap-2 mb-6">
       <button class="btn-icon" @click="router.push('/mine')">
-        <ArrowLeftIcon class="w-5 h-5" />
+        <ArrowLeftIcon class="w-5 h-5 rtl:rotate-180" />
       </button>
       <h1 class="text-display-sm">{{ i18n.t('settingsTitle') }}</h1>
     </div>

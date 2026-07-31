@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   zh,
   zhTW,
@@ -10,6 +10,7 @@ import {
   fr,
   de,
   ru,
+  ar,
   SUPPORTED_LOCALES,
   type Locale,
   type LocaleMessages,
@@ -29,6 +30,7 @@ const localeMap: Record<Locale, LocaleMessages> = {
   fr,
   de,
   ru,
+  ar,
 }
 
 function detectLocale(): Locale {
@@ -43,11 +45,18 @@ function detectLocale(): Locale {
   if (lang.startsWith('fr')) return 'fr'
   if (lang.startsWith('de')) return 'de'
   if (lang.startsWith('ru')) return 'ru'
+  if (lang.startsWith('ar')) return 'ar'
   return 'en'
 }
 
 export const useI18nStore = defineStore('i18n', () => {
   const locale = ref<Locale>(detectLocale())
+
+  // Dynamic RTL / LTR document direction switching
+  watch(locale, (newLoc) => {
+    document.documentElement.dir = newLoc === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.lang = newLoc
+  }, { immediate: true })
 
   const messages = computed<LocaleMessages>(() => localeMap[locale.value] || en)
 
@@ -59,7 +68,7 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function toggle() {
-    const list: Locale[] = ['zh', 'zh-TW', 'en', 'ja', 'ko', 'es', 'fr', 'de', 'ru']
+    const list: Locale[] = ['zh', 'zh-TW', 'en', 'ja', 'ko', 'es', 'fr', 'de', 'ru', 'ar']
     const nextIdx = (list.indexOf(locale.value) + 1) % list.length
     setLocale(list[nextIdx]!)
   }
