@@ -195,10 +195,6 @@ class ScreenRecordPlugin(private val activity: Activity) : Plugin(activity), Ove
     ScreenRecordRuntime.send("exit")
   }
 
-  override fun onMinimizeClicked() {
-    ScreenRecordRuntime.overlay?.setMinimized(true)
-  }
-
   private fun teardown() {
     ScreenRecordRuntime.overlay?.removeAll()
     ScreenRecordRuntime.overlay = null

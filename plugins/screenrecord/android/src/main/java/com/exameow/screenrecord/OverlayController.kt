@@ -39,7 +39,6 @@ class OverlayController(
     fun onBeginClicked()
     fun onAdjustClicked()
     fun onExitClicked()
-    fun onMinimizeClicked()
   }
 
   private val wm = activity.getSystemService(Activity.WINDOW_SERVICE) as WindowManager
@@ -61,16 +60,6 @@ class OverlayController(
   private lateinit var emptyLabel: TextView
   private lateinit var beginCardButton: TextView
   private lateinit var adjustButton: ImageButton
-  private lateinit var minimizeButton: ImageButton
-  private lateinit var pillView: TextView
-  private lateinit var scrimContainer: FrameLayout
-  private lateinit var header: LinearLayout
-  private var minimized = false
-  private var scrimShown = false
-  private var found = false
-  private var paused = false
-  private var options: List<String> = emptyList()
-  private var bankName = ""
   private var everBegan = false
   private var currentDark = false
   private var titleView: TextView? = null
@@ -183,103 +172,10 @@ class OverlayController(
     }
   }
 
-  fun setMinimized(minimized: Boolean) {
-    this.minimized = minimized
-    mainHandler.post {
-      if (answerRoot == null) return@post
-      if (minimized) {
-        gripView?.visibility = View.GONE
-        header.visibility = View.GONE
-        beginCardButton.visibility = View.GONE
-        pausedChip.visibility = View.GONE
-        answerLabel.visibility = View.GONE
-        stemLabel.visibility = View.GONE
-        optionsLabel.visibility = View.GONE
-        bankLabel.visibility = View.GONE
-        emptyLabel.visibility = View.GONE
-        scrimContainer.visibility = View.GONE
-        scrimShown = false
-        updatePillText()
-        pillView.visibility = View.VISIBLE
-      } else {
-        pillView.visibility = View.GONE
-        scrimContainer.visibility = View.GONE
-        scrimShown = false
-        // 恢复完整卡片：按当前状态重放 updateAnswer 的可见性逻辑
-        if (paused || !everBegan) {
-          beginCardButton.visibility = View.VISIBLE
-          pausedChip.visibility = if (paused) View.VISIBLE else View.GONE
-        } else if (found) {
-          answerLabel.visibility = View.VISIBLE
-          stemLabel.visibility = View.VISIBLE
-          optionsLabel.visibility = if (options.isNotEmpty()) View.VISIBLE else View.GONE
-          bankLabel.visibility = if (bankName.isNotEmpty()) View.VISIBLE else View.GONE
-          emptyLabel.visibility = View.GONE
-        } else {
-          emptyLabel.visibility = View.VISIBLE
-        }
-        gripView?.visibility = View.VISIBLE
-        header.visibility = View.VISIBLE
-      }
-      answerParams?.let { p ->
-        try { wm.updateViewLayout(answerRoot!!, p) } catch (_: Exception) {}
-      }
-    }
-  }
-
-  private fun updatePillText() {
-    if (!::pillView.isInitialized) return
-    pillView.text = if (everBegan && ::answerLabel.isInitialized && answerLabel.text.isNotBlank()) answerLabel.text else "录屏搜题"
-  }
-
-  private inner class PillTouchListener : View.OnTouchListener {
-    private var startRawX = 0f
-    private var startRawY = 0f
-    private var startX = 0
-    private var startY = 0
-    private var moved = false
-
-    override fun onTouch(v: View, event: MotionEvent): Boolean {
-      val p = answerParams ?: return false
-      when (event.actionMasked) {
-        MotionEvent.ACTION_DOWN -> {
-          startRawX = event.rawX
-          startRawY = event.rawY
-          startX = p.x
-          startY = p.y
-          moved = false
-          return true
-        }
-        MotionEvent.ACTION_MOVE -> {
-          if (kotlin.math.abs(event.rawX - startRawX) + kotlin.math.abs(event.rawY - startRawY) > dp(8f)) moved = true
-          if (moved) {
-            p.x = (startX + (event.rawX - startRawX).toInt()).coerceIn(0, screenW - dp(48f))
-            p.y = (startY + (event.rawY - startRawY).toInt()).coerceIn(0, screenH - dp(48f))
-            answerRoot?.let { wm.updateViewLayout(it, p) }
-          }
-          return true
-        }
-        MotionEvent.ACTION_UP -> {
-          if (!moved && !scrimShown) {
-            scrimShown = true
-            scrimContainer.visibility = View.VISIBLE
-            pillView.visibility = View.GONE
-          } else if (!moved) {
-            // 遮罩已显示时点击空白区域收起遮罩
-            scrimShown = false
-            scrimContainer.visibility = View.GONE
-            pillView.visibility = View.VISIBLE
-          }
-          return true
-        }
-      }
-      return false
-    }
-  }
-
   // ==================== 录制框 ====================
 
-  private inner class FrameBorderView : View(activity) {    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+  private inner class FrameBorderView : View(activity) {
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
       color = Color.WHITE
       style = Paint.Style.STROKE
       strokeWidth = dp(2.5f).toFloat()
@@ -470,7 +366,7 @@ class OverlayController(
     gripLp.bottomMargin = dp(4f)
     root.addView(gripView!!, gripLp)
 
-    header = LinearLayout(activity).apply {
+    val header = LinearLayout(activity).apply {
       orientation = LinearLayout.HORIZONTAL
       gravity = Gravity.CENTER_VERTICAL
     }
@@ -481,7 +377,6 @@ class OverlayController(
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
     header.addView(titleView!!, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-    header.addView(iconButton(R.drawable.ic_minus) { listener.onMinimizeClicked() }.also { minimizeButton = it })
     header.addView(iconButton(R.drawable.ic_adjust) { listener.onAdjustClicked() }.also { adjustButton = it })
     header.addView(iconButton(R.drawable.ic_close, DANGER) { listener.onExitClicked() })
     root.addView(header)
@@ -577,75 +472,6 @@ class OverlayController(
       setPadding(0, dp(8f), 0, dp(6f))
     }
     root.addView(emptyLabel)
-
-    pillView = TextView(activity).apply {
-      text = "录屏搜题"
-      setTextColor(accent)
-      textSize = 14f
-      typeface = android.graphics.Typeface.DEFAULT_BOLD
-      gravity = Gravity.CENTER
-      setPadding(dp(16f), dp(10f), dp(16f), dp(10f))
-      background = GradientDrawable().apply {
-        setColor(cardBgColor)
-        cornerRadius = dp(20f).toFloat()
-      }
-      visibility = View.GONE
-    }
-    val pillLp = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-    pillLp.gravity = Gravity.CENTER_HORIZONTAL
-    root.addView(pillView, pillLp)
-    pillView.setOnTouchListener(PillTouchListener())
-
-    scrimContainer = FrameLayout(activity).apply {
-      background = GradientDrawable().apply {
-        setColor(0x99000000.toInt())
-        cornerRadius = dp(20f).toFloat()
-      }
-      visibility = View.GONE
-      if (Build.VERSION.SDK_INT >= 31) {
-        setRenderEffect(android.graphics.RenderEffect.createBlurEffect(
-          dp(10f).toFloat(), dp(10f).toFloat(), android.graphics.Shader.TileMode.CLAMP,
-        ))
-      }
-      val row = LinearLayout(activity).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER
-      }
-      val restoreBtn = TextView(activity).apply {
-        text = "还原"
-        setTextColor(Color.WHITE)
-        textSize = 12f
-        typeface = android.graphics.Typeface.DEFAULT_BOLD
-        gravity = Gravity.CENTER
-        setPadding(dp(16f), dp(8f), dp(16f), dp(8f))
-        background = GradientDrawable().apply {
-          setColor(accent)
-          cornerRadius = dp(20f).toFloat()
-        }
-        setOnClickListener { setMinimized(false) }
-      }
-      val closeBtn = TextView(activity).apply {
-        text = "关闭"
-        setTextColor(Color.WHITE)
-        textSize = 12f
-        typeface = android.graphics.Typeface.DEFAULT_BOLD
-        gravity = Gravity.CENTER
-        setPadding(dp(16f), dp(8f), dp(16f), dp(8f))
-        background = GradientDrawable().apply {
-          setColor(DANGER)
-          cornerRadius = dp(20f).toFloat()
-        }
-        setOnClickListener { listener.onExitClicked() }
-      }
-      val btnLp = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8f) }
-      row.addView(restoreBtn)
-      row.addView(closeBtn, btnLp)
-      addView(row, FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
-        gravity = Gravity.CENTER
-      })
-    }
-    val scrimLp = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-    root.addView(scrimContainer, scrimLp)
 
     val dragListener = DragTouchListener { p }
     gripView!!.setOnTouchListener(dragListener)
@@ -743,15 +569,6 @@ class OverlayController(
     if (::adjustButton.isInitialized) {
       adjustButton.setColorFilter(iconButtonColor, android.graphics.PorterDuff.Mode.SRC_IN)
     }
-    if (::minimizeButton.isInitialized) {
-      minimizeButton.setColorFilter(iconButtonColor, android.graphics.PorterDuff.Mode.SRC_IN)
-    }
-    if (::pillView.isInitialized) {
-      pillView.background = GradientDrawable().apply {
-        setColor(cardBgColor)
-        cornerRadius = dp(20f).toFloat()
-      }
-    }
   }
 
   fun updateAnswer(
@@ -764,10 +581,6 @@ class OverlayController(
   ) {
     mainHandler.post {
       if (answerRoot == null) return@post
-      this.paused = paused
-      this.found = found
-      this.options = options
-      this.bankName = bankName
       if (paused || !everBegan) {
         beginCardButton.visibility = View.VISIBLE
         beginCardButton.text = if (everBegan) "\u25B6 继续录制" else "\u25B6 开始录制"
@@ -831,7 +644,6 @@ class OverlayController(
       } else {
         bankLabel.visibility = View.GONE
       }
-      if (minimized) updatePillText()
     }
   }
 }
