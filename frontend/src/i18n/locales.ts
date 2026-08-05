@@ -260,6 +260,8 @@ export interface LocaleMessages {
   searchScreenRecordNoMatch: string
   searchScreenRecordLoading: string
   searchScreenRecordCollapse: string
+  searchScreenRecordMinimize: string
+  searchScreenRecordRestore: string
   searchScreenRecordAdjust: string
   searchScreenRecordExit: string
   searchScreenRecordAdjustHint: string
@@ -709,6 +711,8 @@ export const zh: LocaleMessages = {
   searchScreenRecordNoMatch: '未匹配到题目',
   searchScreenRecordLoading: '模型加载中…',
   searchScreenRecordCollapse: '收起',
+  searchScreenRecordMinimize: '最小化',
+  searchScreenRecordRestore: '还原',
   searchScreenRecordAdjust: '调整录制区域',
   searchScreenRecordExit: '退出录屏',
   searchScreenRecordAdjustHint: '拖拽移动录制框，框住题目区域',
@@ -1158,6 +1162,8 @@ export const zhTW: LocaleMessages = {
   searchScreenRecordNoMatch: '未匹配到題目',
   searchScreenRecordLoading: '模型加载中…',
   searchScreenRecordCollapse: '收起',
+  searchScreenRecordMinimize: '最小化',
+  searchScreenRecordRestore: '還原',
   searchScreenRecordAdjust: '调整录制区域',
   searchScreenRecordExit: '退出录屏',
   searchScreenRecordAdjustHint: '拖拽移动录制框，框住題目区域',
@@ -1607,6 +1613,8 @@ export const en: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'Minimize',
+  searchScreenRecordRestore: 'Restore',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -2056,6 +2064,8 @@ export const ja: LocaleMessages = {
   searchScreenRecordNoMatch: '該当する問題が見つかりません',
   searchScreenRecordLoading: '検索中...',
   searchScreenRecordCollapse: '折りたたむ',
+  searchScreenRecordMinimize: '最小化',
+  searchScreenRecordRestore: '戻す',
   searchScreenRecordAdjust: '範囲調整',
   searchScreenRecordExit: '終了',
   searchScreenRecordAdjustHint: '検索枠の位置を調整してください',
@@ -2505,6 +2515,8 @@ export const ko: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: '최소화',
+  searchScreenRecordRestore: '복원',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -2954,6 +2966,8 @@ export const es: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'Minimizar',
+  searchScreenRecordRestore: 'Restaurar',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -3403,6 +3417,8 @@ export const fr: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'Réduire',
+  searchScreenRecordRestore: 'Restaurer',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -3852,6 +3868,8 @@ export const de: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'Minimieren',
+  searchScreenRecordRestore: 'Wiederherstellen',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -4301,6 +4319,8 @@ export const ru: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'Свернуть',
+  searchScreenRecordRestore: 'Восстановить',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
@@ -4750,6 +4770,8 @@ export const ar: LocaleMessages = {
   searchScreenRecordNoMatch: 'No matching question found',
   searchScreenRecordLoading: 'Loading model…',
   searchScreenRecordCollapse: 'Collapse',
+  searchScreenRecordMinimize: 'تصغير',
+  searchScreenRecordRestore: 'استعادة',
   searchScreenRecordAdjust: 'Adjust area',
   searchScreenRecordExit: 'Exit recording',
   searchScreenRecordAdjustHint: 'Drag the frame to cover the question area',
