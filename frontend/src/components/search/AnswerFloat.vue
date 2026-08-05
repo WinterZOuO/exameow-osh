@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useScreenRecordStore } from '@/stores/screenRecord'
 import { useI18nStore } from '@/stores/i18n'
 import {
   ArrowsPointingOutIcon,
   CheckIcon,
   MagnifyingGlassIcon,
+  MinusIcon,
   PauseCircleIcon,
   VideoCameraIcon,
   XMarkIcon,
@@ -43,6 +44,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   for (const fn of unlistenFns) fn()
+  window.removeEventListener('mousemove', onPillMouseMove)
 })
 
 function onDragArea(e: MouseEvent) {
@@ -73,11 +75,84 @@ function isCorrect(idx: number): boolean {
   const letters = (q.answer ?? '').trim().toUpperCase().replace(/[^A-H]/g, '')
   return letters.includes(String.fromCharCode(65 + idx))
 }
+
+const scrimShown = ref(false)
+const collapsed = computed(() => store.collapsed)
+let prevSize: { w: number; h: number } | null = null
+let pillDrag: { sx: number; sy: number; px: number; py: number } | null = null
+let pillMoved = false
+let pillRaf = 0
+
+const pillText = computed(() => {
+  if (store.currentResult) {
+    return `${i18n.t('searchScreenRecordAnswer')}: ${store.currentResult.question.answer}`
+  }
+  return i18n.t('searchModeScreenRecord')
+})
+
+async function handleMinimize() {
+  scrimShown.value = false
+  store.setCollapsed(true)
+  try {
+    const sf = await win.scaleFactor()
+    const size = (await win.innerSize()).toLogical(sf)
+    prevSize = { w: size.width, h: size.height }
+    const { LogicalSize } = await import('@tauri-apps/api/dpi')
+    await win.setMinSize(new LogicalSize(200, 52))
+    await win.setSize(new LogicalSize(280, 52))
+  } catch { /* not in Tauri (dev browser) */ }
+}
+
+async function handleRestore() {
+  scrimShown.value = false
+  store.setCollapsed(false)
+  try {
+    const { LogicalSize } = await import('@tauri-apps/api/dpi')
+    await win.setMinSize(new LogicalSize(280, 200))
+    if (prevSize) await win.setSize(new LogicalSize(Math.round(prevSize.w), Math.round(prevSize.h)))
+  } catch { /* not in Tauri */ }
+}
+
+function onPillMouseDown(e: MouseEvent) {
+  if (e.button !== 0 || !win) return
+  e.preventDefault()
+  pillDrag = { sx: e.screenX, sy: e.screenY, px: 0, py: 0 }
+  pillMoved = false
+  window.addEventListener('mousemove', onPillMouseMove)
+  window.addEventListener('mouseup', onPillMouseUp, { once: true })
+}
+
+async function onPillMouseMove(e: MouseEvent) {
+  if (!pillDrag) return
+  if (!pillMoved && Math.hypot(e.screenX - pillDrag.sx, e.screenY - pillDrag.sy) > 4) {
+    pillMoved = true
+    const sf = await win.scaleFactor()
+    const pos = (await win.outerPosition()).toLogical(sf)
+    pillDrag.px = pos.x
+    pillDrag.py = pos.y
+  }
+  if (!pillMoved || pillRaf) return
+  const dx = e.screenX - pillDrag.sx
+  const dy = e.screenY - pillDrag.sy
+  pillRaf = requestAnimationFrame(async () => {
+    pillRaf = 0
+    if (!pillDrag) return
+    const { LogicalPosition } = await import('@tauri-apps/api/dpi')
+    await win.setPosition(new LogicalPosition(Math.round(pillDrag.px + dx), Math.round(pillDrag.py + dy)))
+  })
+}
+
+function onPillMouseUp() {
+  window.removeEventListener('mousemove', onPillMouseMove)
+  if (!pillMoved) scrimShown.value = true
+  pillDrag = null
+}
 </script>
 
 <template>
   <div class="w-full h-full select-none">
-    <div class="float-card w-full h-full flex flex-col">
+    <div class="float-card w-full h-full flex flex-col relative" :class="{ 'float-card-min': collapsed }">
+      <div v-if="!collapsed" class="flex flex-col h-full min-h-0">
       <div
         class="shrink-0 cursor-grab active:cursor-grabbing"
         @mousedown="onDragArea"
@@ -93,6 +168,14 @@ function isCorrect(idx: number): boolean {
             </span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
+            <button
+              class="float-btn"
+              @mousedown.stop
+              @click="handleMinimize"
+              :title="i18n.t('searchScreenRecordMinimize')"
+            >
+              <MinusIcon class="w-4 h-4" />
+            </button>
             <button
               class="float-btn"
               @mousedown.stop
@@ -191,6 +274,23 @@ function isCorrect(idx: number): boolean {
           </p>
         </div>
       </div>
+      </div>
+
+      <div v-else class="flex-1 flex items-center justify-center min-w-0" @mousedown="onPillMouseDown">
+        <CheckIcon class="w-3.5 h-3.5 shrink-0" style="color: rgb(var(--md-on-primary-container));" />
+        <span class="text-[13px] font-bold truncate ml-1.5" style="color: rgb(var(--md-on-primary-container));">
+          {{ pillText }}
+        </span>
+      </div>
+
+      <div v-if="collapsed && scrimShown" class="absolute inset-0 float-scrim flex items-center justify-center gap-2" @mousedown.stop>
+        <button class="float-scrim-btn" style="color: rgb(var(--md-on-primary)); background: rgb(var(--md-primary));" @click="handleRestore">
+          {{ i18n.t('searchScreenRecordRestore') }}
+        </button>
+        <button class="float-scrim-btn" style="color: rgb(var(--md-on-error)); background: rgb(var(--md-error));" @click="handleExit">
+          {{ i18n.t('searchScreenRecordExit') }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -246,6 +346,37 @@ html, body, #app {
 }
 .float-btn-danger {
   color: rgb(var(--md-error));
+}
+
+.float-card-min {
+  border-radius: 999px;
+  background: rgb(var(--md-primary-container));
+  justify-content: center;
+  align-items: center;
+}
+
+.float-scrim {
+  border-radius: 999px;
+  background: rgba(var(--md-scrim) / 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.float-scrim-btn {
+  min-width: 72px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.float-scrim-btn:hover {
+  filter: brightness(1.08);
+}
+.float-scrim-btn:active {
+  transform: scale(0.94);
 }
 
 .float-paused {
