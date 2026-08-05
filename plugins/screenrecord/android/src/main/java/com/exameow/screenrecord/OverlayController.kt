@@ -209,7 +209,6 @@ class OverlayController(
         if (paused || !everBegan) {
           beginCardButton.visibility = View.VISIBLE
           pausedChip.visibility = if (paused) View.VISIBLE else View.GONE
-          emptyLabel.visibility = View.GONE
         } else if (found) {
           answerLabel.visibility = View.VISIBLE
           stemLabel.visibility = View.VISIBLE
@@ -230,7 +229,7 @@ class OverlayController(
 
   private fun updatePillText() {
     if (!::pillView.isInitialized) return
-    pillView.text = if (everBegan && found && ::answerLabel.isInitialized && answerLabel.text.isNotBlank()) answerLabel.text else "录屏搜题"
+    pillView.text = if (everBegan && ::answerLabel.isInitialized && answerLabel.text.isNotBlank()) answerLabel.text else "录屏搜题"
   }
 
   private inner class PillTouchListener : View.OnTouchListener {
@@ -265,6 +264,11 @@ class OverlayController(
             scrimShown = true
             scrimContainer.visibility = View.VISIBLE
             pillView.visibility = View.GONE
+          } else if (!moved) {
+            // 遮罩已显示时点击空白区域收起遮罩
+            scrimShown = false
+            scrimContainer.visibility = View.GONE
+            pillView.visibility = View.VISIBLE
           }
           return true
         }
@@ -275,8 +279,7 @@ class OverlayController(
 
   // ==================== 录制框 ====================
 
-  private inner class FrameBorderView : View(activity) {
-    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+  private inner class FrameBorderView : View(activity) {    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
       color = Color.WHITE
       style = Paint.Style.STROKE
       strokeWidth = dp(2.5f).toFloat()
@@ -641,12 +644,7 @@ class OverlayController(
         gravity = Gravity.CENTER
       })
     }
-    scrimContainer.setOnClickListener {
-      scrimShown = false
-      scrimContainer.visibility = View.GONE
-      pillView.visibility = View.VISIBLE
-    }
-    val scrimLp = FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    val scrimLp = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
     root.addView(scrimContainer, scrimLp)
 
     val dragListener = DragTouchListener { p }
