@@ -45,6 +45,8 @@ onMounted(async () => {
 onUnmounted(() => {
   for (const fn of unlistenFns) fn()
   window.removeEventListener('mousemove', onPillMouseMove)
+  window.removeEventListener('mouseup', onPillMouseUp)
+  if (pillRaf) cancelAnimationFrame(pillRaf)
 })
 
 function onDragArea(e: MouseEvent) {
@@ -124,7 +126,7 @@ function onPillMouseDown(e: MouseEvent) {
 
 async function onPillMouseMove(e: MouseEvent) {
   if (!pillDrag) return
-  if (!pillMoved && Math.hypot(e.screenX - pillDrag.sx, e.screenY - pillDrag.sy) > 4) {
+  if (!pillMoved && Math.hypot(e.screenX - pillDrag.sx, e.screenY - pillDrag.sy) >= 4) {
     pillMoved = true
     const sf = await win.scaleFactor()
     const pos = (await win.outerPosition()).toLogical(sf)
@@ -135,10 +137,13 @@ async function onPillMouseMove(e: MouseEvent) {
   const dx = e.screenX - pillDrag.sx
   const dy = e.screenY - pillDrag.sy
   pillRaf = requestAnimationFrame(async () => {
-    pillRaf = 0
-    if (!pillDrag) return
+    if (!pillDrag) {
+      pillRaf = 0
+      return
+    }
     const { LogicalPosition } = await import('@tauri-apps/api/dpi')
     await win.setPosition(new LogicalPosition(Math.round(pillDrag.px + dx), Math.round(pillDrag.py + dy)))
+    pillRaf = 0
   })
 }
 
