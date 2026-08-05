@@ -481,7 +481,7 @@ class OverlayController(
     wm.addView(root, p)
   }
 
-  private fun iconButton(iconRes: Int, color: Int = TEXT_PRIMARY, onClick: () -> Unit): ImageButton {
+  private fun iconButton(iconRes: Int, color: Int = iconButtonColor, onClick: () -> Unit): ImageButton {
     return ImageButton(activity).apply {
       setImageResource(iconRes)
       setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
@@ -566,6 +566,9 @@ class OverlayController(
     optionsLabel.setTextColor(textSecondary)
     bankLabel.setTextColor(textSecondary)
     emptyLabel.setTextColor(textSecondary)
+    if (::adjustButton.isInitialized) {
+      adjustButton.setColorFilter(iconButtonColor, android.graphics.PorterDuff.Mode.SRC_IN)
+    }
   }
 
   fun updateAnswer(
