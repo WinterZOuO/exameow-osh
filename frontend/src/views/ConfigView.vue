@@ -32,7 +32,6 @@ const fetchModelsDisabled = computed(() => {
   return !configStore.endpoint || !configStore.apiKey
 })
 
-
 async function handleFetchModels() {
   configFetchError.value = ''
   configFetching.value = true

@@ -54,7 +54,7 @@ export const useConfigStore = defineStore('config', () => {
     if (isTauri()) return
     serverInfo.value = await api.getServerInfo()
     const storedProvider = localStorage.getItem('exameow_ai_provider')
-    if (storedProvider === 'server') {
+    if (storedProvider === 'server' && serverInfo.value?.has_env_ai) {
       aiProvider.value = 'server'
       if (!model.value && serverInfo.value?.model) model.value = serverInfo.value.model
       return

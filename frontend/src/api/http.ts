@@ -166,7 +166,7 @@ export const httpApi = {
   async getServerInfo(): Promise<ServerConfigInfo | null> {
     try {
       const res = await fetch(`${BASE_URL}/api/config/server`)
-      if (res.ok) return res.json()
+      if (res.ok) return await res.json()
     } catch {}
     return null
   },
