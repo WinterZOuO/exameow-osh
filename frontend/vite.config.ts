@@ -22,6 +22,9 @@ export default defineConfig({
   server: {
     port: 5273,
     strictPort: true,
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
   envPrefix: ['VITE_', 'TAURI_'],
 })

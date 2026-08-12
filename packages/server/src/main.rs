@@ -17,7 +17,6 @@ async fn main() {
         eprintln!("Warning: could not init config store, using transient store");
         ConfigStore::new("ExameowServerTransient").unwrap()
     });
-
     let db_path = std::env::var("EXAM_DB_PATH").unwrap_or_else(|_| "./exameow.db".to_string());
     let relay = relay::init_db(&db_path).unwrap_or_else(|e| panic!("failed to init exam db at {db_path}: {e}"));
     let admin_token = relay::load_admin_token();
@@ -76,6 +75,6 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();
-    println!("Exameow server running on http://localhost:{port}");
+    println!("Exameow server running on http://0.0.0.0:{port}");
     axum::serve(listener, app).await.unwrap();
 }
