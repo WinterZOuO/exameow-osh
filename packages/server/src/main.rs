@@ -54,6 +54,7 @@ async fn main() {
         .route("/api/export/xlsx", post(routes::export_xlsx_handler))
         .route("/api/config/save", post(routes::save_config_handler))
         .route("/api/config/load", get(routes::load_config_handler))
+        .route("/api/config/server", get(routes::server_config_info_handler))
         .route("/api/exam/publish", post(relay::publish_handler))
         .route("/api/exam/code/{code}", get(relay::get_exam_handler).delete(relay::delete_exam_handler))
         .route("/api/exam/code/{code}/submit", post(relay::submit_handler))

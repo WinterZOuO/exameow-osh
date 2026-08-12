@@ -365,3 +365,21 @@ pub async fn explain_handler(
     .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
     Ok(Json(result))
 }
+
+#[derive(Serialize)]
+pub struct ServerConfigInfo {
+    pub has_env_ai: bool,
+    pub endpoint: String,
+    pub model: String,
+}
+
+pub async fn server_config_info_handler() -> Json<ServerConfigInfo> {
+    let endpoint = ai_endpoint();
+    let api_key = ai_api_key();
+    let model = ai_model();
+    Json(ServerConfigInfo {
+        has_env_ai: !endpoint.is_empty() && !api_key.is_empty(),
+        endpoint,
+        model,
+    })
+}
