@@ -6,6 +6,12 @@ export interface GenerateResult {
   questions: Question[]
 }
 
+export interface ServerConfigInfo {
+  has_env_ai: boolean
+  endpoint: string
+  model: string
+}
+
 export const httpApi = {
   async getModels(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
     const url = `${BASE_URL}/api/models?endpoint=${encodeURIComponent(endpoint)}&api_key=${encodeURIComponent(apiKey)}`
@@ -155,6 +161,14 @@ export const httpApi = {
     } catch {}
     const stored = localStorage.getItem('exameow_config')
     return stored ? JSON.parse(stored) : null
+  },
+
+  async getServerInfo(): Promise<ServerConfigInfo | null> {
+    try {
+      const res = await fetch(`${BASE_URL}/api/config/server`)
+      if (res.ok) return res.json()
+    } catch {}
+    return null
   },
 };
 

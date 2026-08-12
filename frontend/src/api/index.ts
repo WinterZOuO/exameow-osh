@@ -1,6 +1,6 @@
 import type { AIConfig, AnswerResult, ExamParams, ExplainParams, ExplainResult, JudgeParams, JudgeResult, ModelInfo } from '@exameow/shared'
 import { tauriApi, type GenerateResult as TauriGenerateResult } from './bridge'
-import { httpApi, type GenerateResult as HttpGenerateResult } from './http'
+import { httpApi, type GenerateResult as HttpGenerateResult, type ServerConfigInfo } from './http'
 import { cfApi } from './cf'
 
 let _isTauri: boolean | null = null
@@ -156,6 +156,11 @@ export const api = {
       return cfApi.loadConfig()
     }
     return httpApi.loadConfig()
+  },
+
+  async getServerInfo(): Promise<ServerConfigInfo | null> {
+    if (isTauri() || isCloudflare()) return null
+    return httpApi.getServerInfo()
   },
 
   async captureScreen(x: number, y: number, w: number, h: number, force = false): Promise<Uint8Array> {
