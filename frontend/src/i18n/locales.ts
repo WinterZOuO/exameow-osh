@@ -60,6 +60,8 @@ export interface LocaleMessages {
   configCustomApi: string
   configCfFreeDesc: string
   configCustomApiDesc: string
+  configServerAi: string
+  configServerAiDesc: string
   genTitle: string
   genSubtitle: string
   genCancel: string
@@ -509,6 +511,8 @@ export const zh: LocaleMessages = {
   configCustomApi: '自定义 API',
   configCfFreeDesc: '免费套餐，无需 API Key。每日有限额。',
   configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 存在浏览器本地不会泄露。',
+  configServerAi: '服务器内置 AI',
+  configServerAiDesc: '使用服务器环境变量提供的 AI 接口，无需填写密钥。',
   genTitle: '出题',
   genSubtitle: '上传文档，设置出题参数',
   genCancel: '取消生成',
@@ -958,6 +962,8 @@ export const zhTW: LocaleMessages = {
   configCustomApi: '自定义 API',
   configCfFreeDesc: '免费套餐，无需 API Key。每日有限额。',
   configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 存在浏览器本地不会泄露。',
+  configServerAi: '伺服器內建 AI',
+  configServerAiDesc: '使用伺服器環境變數提供的 AI 介面，無需填寫金鑰。',
   genTitle: '出題',
   genSubtitle: '上傳文档，設定出題参数',
   genCancel: '取消生成',
@@ -1407,6 +1413,8 @@ export const en: LocaleMessages = {
   configCustomApi: 'Custom API',
   configCfFreeDesc: 'Free tier — no API key needed. Daily limits apply.',
   configCustomApiDesc: 'Use your own OpenAI / DeepSeek API. Key stays in your browser.',
+  configServerAi: 'Server built-in AI',
+  configServerAiDesc: 'Uses the AI configured via server environment variables. No API key needed.',
   genTitle: 'Generate',
   genSubtitle: 'Upload a document and configure exam parameters',
   genCancel: 'Cancel generation',
@@ -1856,6 +1864,8 @@ export const ja: LocaleMessages = {
   configCustomApi: 'カスタム API',
   configCfFreeDesc: '無料プラン、APIキー不要。',
   configCustomApiDesc: '独自のOpenAI / DeepSeek APIを使用。キーはブラウザに安全に保存されます。',
+  configServerAi: 'サーバー内蔵AI',
+  configServerAiDesc: 'サーバーの環境変数で設定されたAIを使用します。APIキーは不要です。',
   genTitle: 'AI問題作成',
   genSubtitle: '資料をアップロードして問題を自動生成',
   genCancel: '生成をキャンセル',
@@ -2305,6 +2315,8 @@ export const ko: LocaleMessages = {
   configCustomApi: '사용자 지정 API',
   configCfFreeDesc: '무료 요금제, API 키 불필요. 일일 제한 있음.',
   configCustomApiDesc: '자신의 OpenAI / DeepSeek API 키를 사용하세요.',
+  configServerAi: '서버 내장 AI',
+  configServerAiDesc: '서버 환경 변수로 설정된 AI를 사용합니다. API 키가 필요 없습니다.',
   genTitle: 'AI 문제 생성',
   genSubtitle: '학습 자료를 업로드하여 시험 문제를 자동으로 생성하세요',
   genCancel: '생성 취소',
@@ -2754,6 +2766,8 @@ export const es: LocaleMessages = {
   configCustomApi: 'API Personalizada',
   configCfFreeDesc: 'Plan gratuito sin API key. Límite diario.',
   configCustomApiDesc: 'Usa tu propia API de OpenAI / DeepSeek.',
+  configServerAi: 'IA integrada del servidor',
+  configServerAiDesc: 'Usa la IA configurada mediante variables de entorno del servidor. Sin API key.',
   genTitle: 'Generar Preguntas IA',
   genSubtitle: 'Sube tus apuntes para crear exámenes automáticamente',
   genCancel: 'Cancelar Generación',
@@ -3203,6 +3217,8 @@ export const fr: LocaleMessages = {
   configCustomApi: 'API Personnalisée',
   configCfFreeDesc: 'Offre gratuite sans clé API. Limite quotidienne.',
   configCustomApiDesc: 'Utilisez votre propre API OpenAI / DeepSeek.',
+  configServerAi: 'IA intégrée au serveur',
+  configServerAiDesc: 'Utilisez l\'IA configurée via les variables d\'environnement du serveur. Aucune clé requise.',
   genTitle: 'Générer des Questions IA',
   genSubtitle: 'Importez vos documents pour créer un examen',
   genCancel: 'Annuler la Génération',
@@ -3652,6 +3668,8 @@ export const de: LocaleMessages = {
   configCustomApi: 'Eigene API',
   configCfFreeDesc: 'Kostenlos ohne API-Schlüssel. Tageslimit.',
   configCustomApiDesc: 'Nutze deine eigene OpenAI / DeepSeek API.',
+  configServerAi: 'Integrierte Server-KI',
+  configServerAiDesc: 'Nutzt die über Server-Umgebungsvariablen konfigurierte KI. Kein API-Key nötig.',
   genTitle: 'KI Fragen Generieren',
   genSubtitle: 'Lade Lernmaterialien hoch, um Prüfungen zu erstellen',
   genCancel: 'Abbrechen',
@@ -4101,6 +4119,8 @@ export const ru: LocaleMessages = {
   configCustomApi: 'Свой API',
   configCfFreeDesc: 'Бесплатный тариф без ключа API. Дневной лимит.',
   configCustomApiDesc: 'Используйте свой API OpenAI / DeepSeek.',
+  configServerAi: 'Встроенный ИИ сервера',
+  configServerAiDesc: 'Использует ИИ, настроенный через переменные окружения сервера. Ключ не нужен.',
   genTitle: 'Генерация Вопросов ИИ',
   genSubtitle: 'Загрузите учебные материалы для создания теста',
   genCancel: 'Отмена',
@@ -4550,6 +4570,8 @@ export const ar: LocaleMessages = {
   configCustomApi: 'API مخصص',
   configCfFreeDesc: 'خطة مجانية، لا تتطلب مفتاح API. حد يومي.',
   configCustomApiDesc: 'استخدم مفتاح OpenAI / DeepSeek الخاص بك.',
+  configServerAi: 'ذكاء اصطناعي مدمج بالخادم',
+  configServerAiDesc: 'يستخدم الذكاء الاصطناعي المُعد عبر متغيرات بيئة الخادم. لا حاجة لمفتاح API.',
   genTitle: 'توليد أسئلة بالذكاء الاصطناعي',
   genSubtitle: 'قم برفع مستنداتك لإنشاء امتحانات تلقائياً',
   genCancel: 'إلغاء التوليد',
