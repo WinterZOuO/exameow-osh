@@ -2,13 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { AIConfig, ModelInfo } from '@exameow/shared'
 import { api } from '@/api'
-import { isCloudflare } from '@/utils/platform'
+import { isCloudflare, isTauri } from '@/utils/platform'
+import type { ServerConfigInfo } from '@/api/http'
 
 import { DEFAULT_CF_MODEL } from '@/api/cf-models'
 import { fetchModelsFromEndpoint } from '@/utils/modelList'
 import { normalizeEndpoint, withV1Suffix } from '@/utils/endpoint'
 
-export type AIProvider = 'cf-free' | 'custom'
+export type AIProvider = 'cf-free' | 'custom' | 'server'
 
 export const useConfigStore = defineStore('config', () => {
   const endpoint = ref('')
@@ -17,8 +18,12 @@ export const useConfigStore = defineStore('config', () => {
   const models = ref<ModelInfo[]>([])
   const loading = ref(false)
   const aiProvider = ref<AIProvider>('cf-free')
+  const serverInfo = ref<ServerConfigInfo | null>(null)
 
   const configured = computed(() => {
+    if (!isCloudflare() && !isTauri() && aiProvider.value === 'server') {
+      return true
+    }
     if (!isCloudflare()) {
       return !!endpoint.value && !!apiKey.value && !!model.value
     }
@@ -44,6 +49,21 @@ export const useConfigStore = defineStore('config', () => {
         endpoint.value = 'cloudflare-worker'
         apiKey.value = 'cloudflare-worker'
       }
+      return
+    }
+    if (isTauri()) return
+    serverInfo.value = await api.getServerInfo()
+    const storedProvider = localStorage.getItem('exameow_ai_provider')
+    if (storedProvider === 'server') {
+      aiProvider.value = 'server'
+      if (!model.value && serverInfo.value?.model) model.value = serverInfo.value.model
+      return
+    }
+    if (endpoint.value || apiKey.value || model.value) return
+    if (serverInfo.value?.has_env_ai) {
+      aiProvider.value = 'server'
+      if (serverInfo.value.model) model.value = serverInfo.value.model
+      localStorage.setItem('exameow_ai_provider', 'server')
     }
   }
 
@@ -51,6 +71,10 @@ export const useConfigStore = defineStore('config', () => {
     loading.value = true
     try {
       if (isCloudflare() && aiProvider.value === 'cf-free') {
+        models.value = await api.getModels({ endpoint: '', api_key: '', model: '' })
+        return
+      }
+      if (!isCloudflare() && !isTauri() && aiProvider.value === 'server') {
         models.value = await api.getModels({ endpoint: '', api_key: '', model: '' })
         return
       }
@@ -81,11 +105,17 @@ export const useConfigStore = defineStore('config', () => {
 
   async function save() {
     localStorage.setItem('exameow_ai_provider', aiProvider.value)
+    if (!isCloudflare() && !isTauri() && aiProvider.value === 'server') {
+      return
+    }
     endpoint.value = normalizeEndpoint(endpoint.value)
     await api.saveConfig({ endpoint: endpoint.value, api_key: apiKey.value, model: model.value })
   }
 
   function getConfig(): AIConfig {
+    if (!isCloudflare() && !isTauri() && aiProvider.value === 'server') {
+      return { endpoint: '', api_key: '', model: model.value }
+    }
     return { endpoint: endpoint.value, api_key: apiKey.value, model: model.value }
   }
 
@@ -95,7 +125,10 @@ export const useConfigStore = defineStore('config', () => {
     if (provider === 'cf-free' && !model.value) {
       model.value = DEFAULT_CF_MODEL
     }
+    if (provider === 'server' && !model.value && serverInfo.value?.model) {
+      model.value = serverInfo.value.model
+    }
   }
 
-  return { endpoint, apiKey, model, models, loading, configured, aiProvider, loadSaved, fetchModels, save, getConfig, setProvider }
+  return { endpoint, apiKey, model, models, loading, configured, aiProvider, serverInfo, loadSaved, fetchModels, save, getConfig, setProvider }
 })
