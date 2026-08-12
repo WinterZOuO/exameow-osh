@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 
 import { useI18nStore } from '@/stores/i18n'
-import { isCloudflare } from '@/utils/platform'
+import { isCloudflare, isTauri } from '@/utils/platform'
 import BaseCombobox from '@/components/common/BaseCombobox.vue'
 import { ServerIcon, KeyIcon, CloudArrowDownIcon, CpuChipIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon, CheckIcon, ArrowRightIcon, ArrowLeftIcon, CloudIcon } from '@heroicons/vue/24/outline'
 
@@ -18,6 +18,19 @@ const saveError = ref('')
 
 const configFetchError = ref('')
 const configFetching = ref(false)
+
+const showEndpointAndAuth = computed(() => {
+  if (isTauri()) return true
+  if (isCloudflare()) return configStore.aiProvider === 'custom'
+  return configStore.aiProvider !== 'server'
+})
+
+const fetchModelsDisabled = computed(() => {
+  if (isCloudflare()) return configStore.aiProvider === 'custom' && (!configStore.endpoint || !configStore.apiKey)
+  if (isTauri()) return !configStore.endpoint || !configStore.apiKey
+  if (configStore.aiProvider === 'server') return false
+  return !configStore.endpoint || !configStore.apiKey
+})
 
 
 async function handleFetchModels() {
@@ -80,8 +93,38 @@ async function handleSave() {
       </p>
     </div>
 
+    <!-- HTTP/Web: Server env AI vs custom API -->
+    <div v-if="!isCloudflare() && !isTauri()" class="card-filled p-5 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configAiProvider') }}</label>
+      <div class="flex items-center gap-3">
+        <button
+          v-if="configStore.serverInfo?.has_env_ai"
+          class="btn-tonal text-sm !px-5 !py-2.5"
+          :class="{ 'btn-filled': configStore.aiProvider === 'server' }"
+          @click="configStore.setProvider('server')"
+        >
+          <CpuChipIcon class="w-4 h-4" />
+          <span>{{ i18n.t('configServerAi') }}</span>
+        </button>
+        <button
+          class="btn-tonal text-sm !px-5 !py-2.5"
+          :class="{ 'btn-filled': configStore.aiProvider !== 'server' }"
+          @click="configStore.setProvider('custom')"
+        >
+          <ServerIcon class="w-4 h-4" />
+          <span>{{ i18n.t('configCustomApi') }}</span>
+        </button>
+      </div>
+      <p v-if="configStore.aiProvider === 'server'" class="text-body-sm mt-3" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('configServerAiDesc') }}<template v-if="configStore.serverInfo?.endpoint"> · {{ configStore.serverInfo.endpoint }}</template>
+      </p>
+      <p v-else class="text-body-sm mt-3" style="color: rgb(var(--md-on-surface-variant))">
+        {{ i18n.t('configCustomApiDesc') }}
+      </p>
+    </div>
+
     <!-- Endpoint (custom API or non-CF) -->
-    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+    <div v-if="showEndpointAndAuth" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
       <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionEndpoint') }}</label>
       <div class="relative">
         <ServerIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
@@ -94,7 +137,7 @@ async function handleSave() {
     </div>
 
     <!-- Auth (custom API or non-CF) -->
-    <div v-if="!isCloudflare() || configStore.aiProvider === 'custom'" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+    <div v-if="showEndpointAndAuth" class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
       <label class="text-label-md font-semibold block mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('configSectionAuth') }}</label>
       <div class="relative">
         <KeyIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style="color: rgb(var(--md-on-surface-variant))" />
@@ -117,7 +160,7 @@ async function handleSave() {
       <div class="flex flex-col sm:flex-row items-center gap-3">
         <button
           class="btn-tonal shrink-0 text-sm !h-12 !px-4 !rounded-2xl"
-          :disabled="(!isCloudflare() || configStore.aiProvider === 'custom') && (!configStore.endpoint || !configStore.apiKey)"
+          :disabled="fetchModelsDisabled"
           @click="handleFetchModels"
         >
           <CloudArrowDownIcon class="w-4 h-4" />
