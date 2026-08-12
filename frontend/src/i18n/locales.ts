@@ -3218,7 +3218,7 @@ export const fr: LocaleMessages = {
   configCfFreeDesc: 'Offre gratuite sans clé API. Limite quotidienne.',
   configCustomApiDesc: 'Utilisez votre propre API OpenAI / DeepSeek.',
   configServerAi: 'IA intégrée au serveur',
-  configServerAiDesc: 'Utilisez l\'IA configurée via les variables d\'environnement du serveur. Aucune clé requise.',
+  configServerAiDesc: 'Utilise l\'IA configurée via les variables d\'environnement du serveur. Aucune clé requise.',
   genTitle: 'Générer des Questions IA',
   genSubtitle: 'Importez vos documents pour créer un examen',
   genCancel: 'Annuler la Génération',
