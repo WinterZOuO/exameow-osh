@@ -14,7 +14,7 @@ export function setUnauthorizedHandler(fn: () => void) {
  * 但本機開發前端喺另一個 port，冇 include 就唔會帶 cookie。
  */
 async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
-  const res = await apiFetch(input, { ...init, credentials: 'include' })
+  const res = await fetch(input, { ...init, credentials: 'include' })
   if (res.status === 401) onUnauthorized?.()
   return res
 }
