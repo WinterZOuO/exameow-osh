@@ -36,6 +36,15 @@ fn cors_layer() -> Option<CorsLayer> {
     )
 }
 
+/// 設定錯誤唔應該 panic —— panic 會印一大堆 backtrace 提示，睇落似程式炸咗，
+/// 而且 compose 有 restart: unless-stopped 會變成無限 crash-loop。
+fn fatal(msg: &str) -> ! {
+    eprintln!();
+    eprintln!("啟動失敗：{msg}");
+    eprintln!();
+    std::process::exit(1);
+}
+
 #[tokio::main]
 async fn main() {
     let config_store = ConfigStore::new("ExameowServer").unwrap_or_else(|_| {
@@ -50,8 +59,8 @@ async fn main() {
         println!("WARNING: ADMIN_TOKEN is the default \"pass\" — change it at /#/admin before exposing this server");
     }
 
-    auth::init_schema(&relay.conn).unwrap_or_else(|e| panic!("failed to init auth schema: {e}"));
-    auth::seed_admin(&relay.conn).unwrap_or_else(|e| panic!("failed to seed admin user: {e}"));
+    auth::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 auth schema 失敗：{e}")));
+    auth::seed_admin(&relay.conn).unwrap_or_else(|e| fatal(&e));
 
     let state = Arc::new(AppState {
         config_store,

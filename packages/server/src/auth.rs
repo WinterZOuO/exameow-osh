@@ -179,11 +179,12 @@ pub fn seed_admin(db: &Mutex<Connection>) -> Result<(), String> {
 
     let username = std::env::var("ADMIN_USERNAME").unwrap_or_else(|_| "admin".to_string());
     let (password, generated) = match std::env::var("ADMIN_PASSWORD") {
-        Ok(p) if p.len() >= MIN_PASSWORD_LEN => (p, false),
+        // 用字元數而唔係 p.len()（byte 數）—— 中文密碼一個字係 3 bytes
+        Ok(p) if p.chars().count() >= MIN_PASSWORD_LEN => (p, false),
         Ok(p) if !p.is_empty() => {
             return Err(format!(
-                "ADMIN_PASSWORD 太短（要至少 {MIN_PASSWORD_LEN} 個字元，而家 {}）",
-                p.len()
+                "ADMIN_PASSWORD 太短：要至少 {MIN_PASSWORD_LEN} 個字元，而家得 {}。想要隨機密碼就索性唔好設 ADMIN_PASSWORD，啟動時會生成一個印喺 log。",
+                p.chars().count()
             ))
         }
         _ => (gen_token()[..24].to_string(), true),
@@ -377,7 +378,7 @@ pub async fn create_user_handler(
     if username.is_empty() {
         return Err(err(StatusCode::BAD_REQUEST, "username required"));
     }
-    if req.password.len() < MIN_PASSWORD_LEN {
+    if req.password.chars().count() < MIN_PASSWORD_LEN {
         return Err(err(StatusCode::BAD_REQUEST, "password too short"));
     }
     let role = match req.role.as_deref() {
