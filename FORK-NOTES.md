@@ -45,6 +45,14 @@
 `api/bridge.ts`（Tauri）同 `api/cf.ts`（Cloudflare Workers）暫時保留 ——
 喺 web build 係惰性嘅、唔阻編譯，W3 重寫 config 層時一齊處理。
 
+## Image
+
+`ghcr.io/winterzouo/exameow-osh:latest`（同時有 `sha-<short>` tag）
+
+- **public**，VPS `docker pull` 唔使認證
+- `linux/amd64` + `linux/arm64`
+- 壓縮後 **9.8 MB**（Alpine + 靜態 Rust binary + 前端 dist）
+
 ## 部署
 
 ```bash
