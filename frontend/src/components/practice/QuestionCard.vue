@@ -8,7 +8,9 @@ import {
   XCircleIcon,
   XMarkIcon,
   SparklesIcon,
+  FlagIcon,
 } from '@heroicons/vue/24/outline'
+import { FlagIcon as FlagIconSolid } from '@heroicons/vue/24/solid'
 
 const props = defineProps<{
   question: Question
@@ -27,6 +29,9 @@ const props = defineProps<{
   aiJudgeError?: string | null
   aiExplaining?: boolean
   aiExplainError?: string | null
+  /** 🚩 標記（W7）——冇傳呢個 prop 嘅舊用法（本機 bank 練習）就唔顯示標記掣 */
+  flagged?: boolean
+  flagCount?: number
 }>()
 
 const emit = defineEmits<{
@@ -38,7 +43,10 @@ const emit = defineEmits<{
   (e: 'aiCancel'): void
   (e: 'aiExplain'): void
   (e: 'regrade', correct: boolean): void
+  (e: 'toggleFlag'): void
 }>()
+
+const showFlag = computed(() => props.flagged !== undefined)
 
 const i18n = useI18nStore()
 const router = useRouter()
@@ -69,13 +77,28 @@ const interactive = computed(() => {
 
 const optionLabels = 'ABCDEFGH'.split('')
 
+const TF_TRUE_TOKENS = ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1']
+const TF_FALSE_TOKENS = ['B', '×', '错', '错误', 'FALSE', 'F', '否', 'NO', 'N', '0']
+
+/**
+ * 判斷題答案值嘅格式五花八門（LLM 出「A」/「对」/「TRUE」都可能）,要撞哂成隻
+ * token 先算 exact match。舊時用 `.includes()` 撞子字串，"FALSE" 呢個字入面
+ * 藏咗個 "A"，會俾 TRUE_TOKENS 嘅 'A' 誤中副車，一條答案係「錯」嘅題目判到變咗
+ * 「啱」——單一個字/字母嘅 token 唔應該做 substring，淨係多過一個字嘅 token
+ * （例如成句「答案：正确」）先俾佢做 fallback。
+ */
+function isAnswerTrue(raw: string): boolean {
+  const a = raw.trim().toUpperCase()
+  if (TF_TRUE_TOKENS.includes(a)) return true
+  if (TF_FALSE_TOKENS.includes(a)) return false
+  if (TF_FALSE_TOKENS.some(v => v.length > 1 && a.includes(v))) return false
+  if (TF_TRUE_TOKENS.some(v => v.length > 1 && a.includes(v))) return true
+  return false
+}
+
 const correctAnswerSet = computed(() => {
   if (props.question.type === 'true_false') {
-    const a = props.question.answer.trim()
-    const isTrue = ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1'].some(
-      v => a.toUpperCase() === v.toUpperCase() || a.includes(v)
-    )
-    return new Set<string>(isTrue ? ['A'] : ['B'])
+    return new Set<string>(isAnswerTrue(props.question.answer) ? ['A'] : ['B'])
   }
   return new Set(props.question.answer.trim().toUpperCase().replace(/[^A-H]/g, '').split(''))
 })
@@ -255,32 +278,46 @@ function getBadgeStyle(opt: string) {
         >{{ i18n.t('practiceModeFlashcard') }}</span>
       </div>
 
-      <!-- Result badge after submit -->
-      <div v-if="submitted && isCorrect !== null" class="flex items-center gap-1.5">
-        <template v-if="isCorrect">
-          <CheckCircleIcon class="w-5 h-5" :style="{ color: 'rgb(var(--md-primary))' }" />
-          <span class="text-sm font-bold" :style="{ color: 'rgb(var(--md-primary))' }">
-            {{ i18n.t('practiceCorrect') }}
-          </span>
-        </template>
-        <template v-else>
-          <XCircleIcon class="w-5 h-5" :style="{ color: 'rgb(var(--md-error))' }" />
-          <span class="text-sm font-bold" :style="{ color: 'rgb(var(--md-error))' }">
-            {{ i18n.t('practiceIncorrect') }}
-          </span>
-        </template>
-      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Result badge after submit -->
+        <div v-if="submitted && isCorrect !== null" class="flex items-center gap-1.5">
+          <template v-if="isCorrect">
+            <CheckCircleIcon class="w-5 h-5" :style="{ color: 'rgb(var(--md-primary))' }" />
+            <span class="text-sm font-bold" :style="{ color: 'rgb(var(--md-primary))' }">
+              {{ i18n.t('practiceCorrect') }}
+            </span>
+          </template>
+          <template v-else>
+            <XCircleIcon class="w-5 h-5" :style="{ color: 'rgb(var(--md-error))' }" />
+            <span class="text-sm font-bold" :style="{ color: 'rgb(var(--md-error))' }">
+              {{ i18n.t('practiceIncorrect') }}
+            </span>
+          </template>
+        </div>
 
-      <!-- Remove from wrong questions button -->
-      <button
-        v-if="isWrongMode && !submitted"
-        class="btn-tonal !h-8 text-xs !px-3 shrink-0"
-        :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
-        @click="emit('removeWrong')"
-      >
-        <XMarkIcon class="w-3.5 h-3.5" />
-        {{ i18n.t('practiceRemoveWrong') }}
-      </button>
+        <!-- 🚩 標記（W7）——冇傳 flagged prop 就唔顯示，本機 bank 練習唔受影響 -->
+        <button
+          v-if="showFlag"
+          class="btn-icon !w-8 !h-8"
+          :style="flagged ? { color: 'rgb(var(--md-error))' } : {}"
+          :title="i18n.t(flagged ? 'questionsUnflag' : 'questionsFlag')"
+          @click="emit('toggleFlag')"
+        >
+          <FlagIconSolid v-if="flagged" class="w-4 h-4" />
+          <FlagIcon v-else class="w-4 h-4" />
+        </button>
+
+        <!-- Remove from wrong questions button -->
+        <button
+          v-if="isWrongMode && !submitted"
+          class="btn-tonal !h-8 text-xs !px-3 shrink-0"
+          :style="{ borderColor: 'rgb(var(--md-error))', color: 'rgb(var(--md-error))' }"
+          @click="emit('removeWrong')"
+        >
+          <XMarkIcon class="w-3.5 h-3.5" />
+          {{ i18n.t('practiceRemoveWrong') }}
+        </button>
+      </div>
     </div>
 
     <!-- Stem -->

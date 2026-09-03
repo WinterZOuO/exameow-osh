@@ -102,6 +102,9 @@ export interface SharedQuestion extends Question {
   contributor_username: string
   status: string
   created_at: number
+  /** 俾幾多個唔同用戶 🚩 咗（W7，信任小組唔遮呢個數） */
+  flag_count: number
+  flagged_by_me: boolean
 }
 
 export interface BulkInsertResult {
@@ -109,6 +112,17 @@ export interface BulkInsertResult {
   /** 撞咗題幹 hash 俾 `INSERT OR IGNORE` 拋走嘅題數（同課同學生成過同一條題） */
   duplicates: number
   skipped: number
+}
+
+// ---------------------------------------------------------------- 練習流程（W7）
+
+export interface AttemptSummary {
+  attempted: number
+  correct: number
+}
+
+export interface FlagResult {
+  flagged: boolean
 }
 
 export interface ServerConfigInfo {
@@ -369,6 +383,36 @@ export const httpApi = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ material_id: materialId, questions }),
       }),
+    )
+  },
+
+  // ---------------------------------------------------------------- 練習流程（W7）
+
+  /** 對唔對已經喺前端判過，呢度淨係寫低結果——`isCorrect` 亂報自己揾自己笨 */
+  async recordAttempt(courseId: string, questionId: string, userAnswer: string, isCorrect: boolean): Promise<void> {
+    const res = await apiFetch(
+      `${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/questions/${encodeURIComponent(questionId)}/attempts`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_answer: userAnswer, is_correct: isCorrect }),
+      },
+    )
+    if (!res.ok) await throwHttpError(res)
+  },
+
+  /** 淨係自己嘅聚合——同課同學嘅答題進度睇唔到,亦冇路由攞得到 */
+  async myAttemptSummary(courseId: string): Promise<AttemptSummary> {
+    return json(await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/attempts/me/summary`))
+  },
+
+  /** 🚩 標記／取消標記（toggle），回傳 toggle 之後嘅新狀態 */
+  async toggleQuestionFlag(courseId: string, questionId: string): Promise<FlagResult> {
+    return json(
+      await apiFetch(
+        `${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/questions/${encodeURIComponent(questionId)}/flag`,
+        { method: 'POST' },
+      ),
     )
   },
 };

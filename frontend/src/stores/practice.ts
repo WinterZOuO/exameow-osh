@@ -219,12 +219,21 @@ export const usePracticeStore = defineStore('practice', () => {
     saveSession(session.value)
   }
 
+  /**
+   * 撞成隻 token 先算 exact match——舊時用 `.includes()` 撞子字串，"FALSE" 呢個
+   * 字入面藏咗個 "A"，會俾 TRUE 嗰組嘅 'A' 誤中副車，一條答案係「錯」嘅判斷題
+   * 判到變咗「啱」（W7 測試新練習流程先揭發，但呢個 bug 本身喺 practice.ts
+   * 冇改過）。單一個字/字母嘅 token 唔應該做 substring，淨係多過一個字嘅
+   * token（例如成句「答案：正确」）先俾佢做 fallback。
+   */
   function normalizeTF(ans: string): string {
     const t = ans.trim().toUpperCase()
-    if (['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1'].some(v => t === v.toUpperCase() || t.includes(v))) return 'TRUE'
-    if (['B', '×', '错', '错误', 'FALSE', 'F', '否', 'NO', 'N', '0'].some(v => t === v.toUpperCase() || t.includes(v))) return 'FALSE'
-    if (t === 'TRUE' || t.includes('TRUE') || t.includes('对') || t.includes('正确')) return 'TRUE'
-    if (t === 'FALSE' || t.includes('FALSE') || t.includes('错') || t.includes('错误')) return 'FALSE'
+    const trueTokens = ['A', '√', '对', '正确', 'TRUE', 'T', '是', 'YES', 'Y', '1']
+    const falseTokens = ['B', '×', '错', '错误', 'FALSE', 'F', '否', 'NO', 'N', '0']
+    if (trueTokens.includes(t)) return 'TRUE'
+    if (falseTokens.includes(t)) return 'FALSE'
+    if (falseTokens.some(v => v.length > 1 && t.includes(v))) return 'FALSE'
+    if (trueTokens.some(v => v.length > 1 && t.includes(v))) return 'TRUE'
     return t
   }
 

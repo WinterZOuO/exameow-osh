@@ -39,9 +39,23 @@ export const useQuestionsStore = defineStore('questions', () => {
     return result
   }
 
+  /**
+   * 🚩 標記／取消標記（W7,toggle）。就地更新 `byCourse` 個 cache,
+   * 唔使成個 list 再 refetch 一次。
+   */
+  async function toggleFlag(courseId: string, questionId: string): Promise<boolean> {
+    const result = await api.toggleQuestionFlag(courseId, questionId)
+    const q = byCourse.value[courseId]?.find(q => q.id === questionId)
+    if (q) {
+      q.flagged_by_me = result.flagged
+      q.flag_count += result.flagged ? 1 : -1
+    }
+    return result.flagged
+  }
+
   function reset() {
     byCourse.value = {}
   }
 
-  return { byCourse, loading, fetchQuestions, pushGenerated, reset }
+  return { byCourse, loading, fetchQuestions, pushGenerated, toggleFlag, reset }
 })

@@ -10,6 +10,11 @@
 //!   先會有值（幾份一齊生成冇一個明確嘅出處，留 NULL）；要生成就要有權睇到
 //!   嗰份教材（上傳者本人或 admin）—— 同 materials.rs 嘅 ACL 一致
 //! - 呢個模組刻意冇 flag / hide / 抽題練習 —— 嗰啲留返 W7（design.md §8）
+//!
+//! **W7 補充**：`list_questions_handler` 加多咗 `flag_count`（呢條題俾幾多
+//! 個人 🚩 咗）同 `flagged_by_me`（自己有冇標記過）——寫入/toggle 呢兩樣嘢
+//! 嘅路由喺 `attempts.rs`（同 `attempts` 表擺埋一齊，因為兩樣都係「答完/
+//! 睇完一條題之後嘅動作」，唔屬於「呢個模組」原本嘅 bulk-insert/list 職責）
 
 use axum::{
     extract::{Path, State},
@@ -104,6 +109,10 @@ pub struct SharedQuestion {
     pub score: Option<f64>,
     pub status: String,
     pub created_at: i64,
+    /// 俾幾多個唔同用戶 🚩 咗（W7）——信任小組入面唔遮呢個數,等人手決定
+    /// 使唔使用 sqlite3 CLI 手動隱藏,見 design.md §10
+    pub flag_count: i64,
+    pub flagged_by_me: bool,
 }
 
 #[derive(Deserialize)]
@@ -226,14 +235,17 @@ pub async fn list_questions_handler(
         .prepare(
             "SELECT q.id, q.course_id, q.material_id, q.contributor_id, u.username,
                     q.type, q.stem, q.options, q.answer, q.analysis, q.ai_analysis,
-                    q.score, q.status, q.created_at
+                    q.score, q.status, q.created_at,
+                    (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id),
+                    EXISTS(SELECT 1 FROM question_flags qf2
+                            WHERE qf2.question_id = q.id AND qf2.user_id = ?2)
                FROM questions q JOIN users u ON u.id = q.contributor_id
               WHERE q.course_id = ?1 AND q.status = 'active'
               ORDER BY q.created_at DESC",
         )
         .map_err(db_err)?;
     let rows = stmt
-        .query_map(params![course_id], |r| {
+        .query_map(params![course_id, user.id], |r| {
             let options_json: String = r.get(7)?;
             let options: Vec<String> = serde_json::from_str(&options_json).unwrap_or_default();
             Ok(SharedQuestion {
@@ -251,6 +263,8 @@ pub async fn list_questions_handler(
                 score: r.get(11)?,
                 status: r.get(12)?,
                 created_at: r.get(13)?,
+                flag_count: r.get(14)?,
+                flagged_by_me: r.get(15)?,
             })
         })
         .map_err(db_err)?

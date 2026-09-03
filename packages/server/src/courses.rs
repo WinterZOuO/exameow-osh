@@ -367,10 +367,24 @@ pub async fn delete_course_handler(
     if role != "owner" && !user.is_admin() {
         return Err(err(StatusCode::FORBIDDEN, "owner only"));
     }
-    // course_members 有 ON DELETE CASCADE，但 SQLite 預設冇開 foreign_keys，
-    // 同 auth.rs 刪 user 嗰度一樣，要手動清
+    // course_members/materials/questions/attempts/question_flags 全部有
+    // ON DELETE CASCADE，但 SQLite 預設冇開 foreign_keys，同 auth.rs 刪 user
+    // 嗰度一樣，要手動清——之前得 course_members 走咗，materials 同 questions
+    // 一直漏喺度（W4/W6 遺留嘅 orphan row），W7 加 attempts/question_flags
+    // 順手一次過補晒
     conn.execute(
         "DELETE FROM course_members WHERE course_id = ?1",
+        params![id],
+    )
+    .map_err(db_err)?;
+    conn.execute("DELETE FROM materials WHERE course_id = ?1", params![id])
+        .map_err(db_err)?;
+    conn.execute("DELETE FROM questions WHERE course_id = ?1", params![id])
+        .map_err(db_err)?;
+    conn.execute("DELETE FROM attempts WHERE course_id = ?1", params![id])
+        .map_err(db_err)?;
+    conn.execute(
+        "DELETE FROM question_flags WHERE course_id = ?1",
         params![id],
     )
     .map_err(db_err)?;

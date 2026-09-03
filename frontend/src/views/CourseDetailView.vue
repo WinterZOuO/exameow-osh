@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCoursesStore } from '@/stores/courses'
 import { useMaterialsStore } from '@/stores/materials'
 import { useQuestionsStore } from '@/stores/questions'
+import { api } from '@/api'
 import type { CourseDetail } from '@/api/http'
 import {
   ArrowLeftIcon,
@@ -19,7 +20,10 @@ import {
   QueueListIcon,
   SparklesIcon,
   ChevronDownIcon,
+  PlayIcon,
+  FlagIcon,
 } from '@heroicons/vue/24/outline'
+import { FlagIcon as FlagIconSolid } from '@heroicons/vue/24/solid'
 
 const route = useRoute()
 const router = useRouter()
@@ -48,6 +52,7 @@ async function load() {
   }
   await materialsStore.fetchMaterials(courseId.value)
   await questionsStore.fetchQuestions(courseId.value)
+  await loadMySummary()
 }
 
 onMounted(load)
@@ -56,6 +61,10 @@ function goGenerate(materialId?: string) {
   const query: Record<string, string> = { course: courseId.value }
   if (materialId) query.material = materialId
   router.push({ name: 'generate', query })
+}
+
+function goPractice() {
+  router.push(`/courses/${courseId.value}/practice`)
 }
 
 // ---------------------------------------------------------------- 教材（W5）
@@ -116,6 +125,23 @@ async function handleDeleteMaterial(id: string) {
 
 const questions = computed(() => questionsStore.byCourse[courseId.value] ?? [])
 const expandedQuestionId = ref<string | null>(null)
+const mySummary = ref<{ attempted: number; correct: number } | null>(null)
+
+async function loadMySummary() {
+  try {
+    mySummary.value = await api.myAttemptSummary(courseId.value)
+  } catch {
+    // 純粹顯示用嘅統計，攞唔到就算，唔阻住成個頁面
+  }
+}
+
+async function handleToggleFlag(id: string) {
+  try {
+    await questionsStore.toggleFlag(courseId.value, id)
+  } catch (e: any) {
+    actionError.value = e.message || String(e)
+  }
+}
 
 const TYPE_LABEL_KEYS: Record<string, string> = {
   single_choice: 'typeSingle',
@@ -305,12 +331,21 @@ async function handleDelete() {
             <QueueListIcon class="w-4 h-4" />
             {{ i18n.t('questionsTitle') }}（{{ questions.length }}）
           </label>
-          <button class="btn-tonal text-sm !px-3 !py-1.5" @click="goGenerate()">
-            <SparklesIcon class="w-4 h-4" />
-            <span>{{ i18n.t('questionsGenerate') }}</span>
-          </button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button v-if="questions.length > 0" class="btn-filled text-sm !px-3 !py-1.5" @click="goPractice">
+              <PlayIcon class="w-4 h-4" />
+              <span>{{ i18n.t('practiceStartBtn') }}</span>
+            </button>
+            <button class="btn-tonal text-sm !px-3 !py-1.5" @click="goGenerate()">
+              <SparklesIcon class="w-4 h-4" />
+              <span>{{ i18n.t('questionsGenerate') }}</span>
+            </button>
+          </div>
         </div>
-        <p class="text-body-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('questionsHint') }}</p>
+        <p class="text-body-sm mb-1" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('questionsHint') }}</p>
+        <p v-if="mySummary" class="text-body-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">
+          {{ i18n.t('practiceCourseMySummary', { attempted: mySummary.attempted, correct: mySummary.correct }) }}
+        </p>
 
         <div v-if="questions.length === 0" class="text-body-sm py-4 text-center" style="color: rgb(var(--md-on-surface-variant))">
           {{ i18n.t('questionsEmpty') }}
@@ -322,18 +357,30 @@ async function handleDelete() {
             class="rounded-xl overflow-hidden"
             style="background-color: rgb(var(--md-surface-container-highest))"
           >
-            <button class="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left" @click="toggleQuestion(q.id)">
-              <div class="min-w-0">
-                <div class="text-sm truncate">{{ q.stem }}</div>
-                <div class="text-xs" style="color: rgb(var(--md-on-surface-variant))">
-                  {{ typeLabel(q.type) }} · {{ i18n.t('questionsContributedBy') }} {{ q.contributor_username }}
+            <div class="w-full flex items-center gap-1 pr-1.5">
+              <button class="flex-1 min-w-0 flex items-center justify-between gap-3 px-3 py-2.5 text-left" @click="toggleQuestion(q.id)">
+                <div class="min-w-0">
+                  <div class="text-sm truncate">{{ q.stem }}</div>
+                  <div class="text-xs" style="color: rgb(var(--md-on-surface-variant))">
+                    {{ typeLabel(q.type) }} · {{ i18n.t('questionsContributedBy') }} {{ q.contributor_username }}
+                    <template v-if="q.flag_count > 0"> · {{ i18n.t('questionsFlagCount', { n: q.flag_count }) }}</template>
+                  </div>
                 </div>
-              </div>
-              <ChevronDownIcon
-                class="w-4 h-4 shrink-0 transition-transform duration-200"
-                :class="{ 'rotate-180': expandedQuestionId === q.id }"
-              />
-            </button>
+                <ChevronDownIcon
+                  class="w-4 h-4 shrink-0 transition-transform duration-200"
+                  :class="{ 'rotate-180': expandedQuestionId === q.id }"
+                />
+              </button>
+              <button
+                class="btn-icon !w-8 !h-8 shrink-0"
+                :style="q.flagged_by_me ? { color: 'rgb(var(--md-error))' } : {}"
+                :title="i18n.t(q.flagged_by_me ? 'questionsUnflag' : 'questionsFlag')"
+                @click="handleToggleFlag(q.id)"
+              >
+                <FlagIconSolid v-if="q.flagged_by_me" class="w-4 h-4" />
+                <FlagIcon v-else class="w-4 h-4" />
+              </button>
+            </div>
             <div v-if="expandedQuestionId === q.id" class="px-3 pb-3 text-sm space-y-1.5">
               <div v-for="(opt, i) in q.options" :key="i" style="color: rgb(var(--md-on-surface-variant))">
                 {{ String.fromCharCode(65 + i) }}. {{ opt }}

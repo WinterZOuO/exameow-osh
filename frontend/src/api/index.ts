@@ -8,6 +8,8 @@ import {
   type MaterialSummary,
   type SharedQuestion,
   type BulkInsertResult,
+  type AttemptSummary,
+  type FlagResult,
   type ServerConfigInfo,
 } from './http'
 
@@ -157,5 +159,19 @@ export const api = {
 
   bulkInsertQuestions(courseId: string, materialId: string | null, questions: Question[]): Promise<BulkInsertResult> {
     return httpApi.bulkInsertQuestions(courseId, materialId, questions)
+  },
+
+  // ------------------------------------------------ 練習流程（W7）
+
+  recordAttempt(courseId: string, questionId: string, userAnswer: string, isCorrect: boolean): Promise<void> {
+    return httpApi.recordAttempt(courseId, questionId, userAnswer, isCorrect)
+  },
+
+  myAttemptSummary(courseId: string): Promise<AttemptSummary> {
+    return httpApi.myAttemptSummary(courseId)
+  },
+
+  toggleQuestionFlag(courseId: string, questionId: string): Promise<FlagResult> {
+    return httpApi.toggleQuestionFlag(courseId, questionId)
   },
 }

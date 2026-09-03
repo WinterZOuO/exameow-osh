@@ -1,3 +1,4 @@
+mod attempts;
 mod auth;
 mod courses;
 mod llm;
@@ -67,6 +68,7 @@ async fn main() {
     courses::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 courses schema 失敗：{e}")));
     materials::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 materials schema 失敗：{e}")));
     questions::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 questions schema 失敗：{e}")));
+    attempts::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 attempts schema 失敗：{e}")));
 
     let state = Arc::new(AppState {
         relay,
@@ -133,6 +135,18 @@ async fn main() {
         .route(
             "/api/courses/{id}/questions/bulk",
             post(questions::bulk_insert_questions_handler),
+        )
+        .route(
+            "/api/courses/{id}/questions/{qid}/attempts",
+            post(attempts::record_attempt_handler),
+        )
+        .route(
+            "/api/courses/{id}/questions/{qid}/flag",
+            post(attempts::toggle_flag_handler),
+        )
+        .route(
+            "/api/courses/{id}/attempts/me/summary",
+            get(attempts::my_attempt_summary_handler),
         )
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))

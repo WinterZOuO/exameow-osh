@@ -63,6 +63,12 @@ const router = createRouter({
       meta: { title: 'Course' },
     },
     {
+      path: '/courses/:id/practice',
+      name: 'course-practice',
+      component: () => import('@/views/CoursePracticeView.vue'),
+      meta: { title: 'Course Practice' },
+    },
+    {
       path: '/mine/settings',
       name: 'mine-settings',
       component: () => import('@/views/SettingsView.vue'),

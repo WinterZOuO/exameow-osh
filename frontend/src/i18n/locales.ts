@@ -523,6 +523,12 @@ export interface LocaleMessages {
   genFromMaterial?: string
   genBackToCourse?: string
   genPushResult?: string
+  questionsFlag?: string
+  questionsUnflag?: string
+  questionsFlagCount?: string
+  practiceCourseCount?: string
+  practiceCourseNoQuestions?: string
+  practiceCourseMySummary?: string
 }
 
 export const zh: LocaleMessages = {
@@ -1047,6 +1053,12 @@ export const zhTW: LocaleMessages = {
   genFromMaterial: '根據教材「{name}」生成',
   genBackToCourse: '返去課程',
   genPushResult: '已入共享題庫：{inserted} 條新題目，{duplicates} 條重複已省略',
+  questionsFlag: '標記呢條題目可能有錯',
+  questionsUnflag: '取消標記',
+  questionsFlagCount: '{n} 人標記咗',
+  practiceCourseCount: '抽幾多題（共 {total} 條共享題目）',
+  practiceCourseNoQuestions: '呢個課程未有題目，返去生成先啦',
+  practiceCourseMySummary: '你喺呢個課程已作答 {attempted} 次，啱 {correct} 次',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -1568,6 +1580,12 @@ export const en: LocaleMessages = {
   genFromMaterial: 'Generating from material "{name}"',
   genBackToCourse: 'Back to course',
   genPushResult: 'Added to shared bank: {inserted} new, {duplicates} duplicates skipped',
+  questionsFlag: 'Flag this question as possibly wrong',
+  questionsUnflag: 'Remove flag',
+  questionsFlagCount: 'Flagged by {n}',
+  practiceCourseCount: 'How many questions to draw (of {total} shared)',
+  practiceCourseNoQuestions: 'No questions in this course yet — generate some first',
+  practiceCourseMySummary: 'You have answered {attempted} times in this course, {correct} correct',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',

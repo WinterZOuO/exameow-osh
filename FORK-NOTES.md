@@ -220,13 +220,64 @@ redirect，一個准用嘅 host 回 `302 → http://169.254.169.254/` 就繞過�
 「X 條新題目、Y 條重複已省略」嘅結果。同 W4/W5 一樣要喺 `App.vue` 登出
 watcher 加 `questionsStore.reset()`。
 
-**W7 落地之後要記得**：呢個共享題庫卡而家淨係「睇」，撳題目得個展開，
-冇真正嘅抽題練習、冇 `attempts`、冇 🚩 flag——嗰啲留晒俾 W7（design.md
-§8 W7 本身就分開咗呢兩件事）。
+### W7（已完成）練習流程
+
+新增 `packages/server/src/attempts.rs`：`attempts`（答題記錄）同
+`question_flags`（🚩 標記）兩張表，都掛喺 `questions`／`courses` 底下。
+`POST /api/courses/{id}/questions/{qid}/attempts` 記一次答題結果；
+`POST /api/courses/{id}/questions/{qid}/flag` toggle 🚩（撞
+`(question_id, user_id)` unique index，撳一下標記、再撳一下取消）；
+`GET /api/courses/{id}/attempts/me/summary` 攞返自己嘅聚合
+`{attempted, correct}`。`questions.rs` 嘅 `list_questions_handler`
+加多兩個 subquery 出嚟嘅欄：`flag_count`（呢條題俾幾多人 🚩 咗）、
+`flagged_by_me`（自己有冇標記過）。
+
+前端新增 `stores/coursePractice.ts`（抽題／判分／session 狀態）同
+`views/CoursePracticeView.vue`（畫面），`/courses/:id` 加返一粒
+「開始練習」掣同一句「你已作答 X 次，啱 Y 次」摘要；`QuestionCard.vue`
+加咗個 `flagged`/`flagCount` prop + `toggleFlag` emit（冇傳 `flagged`
+prop 就唔顯示,`PracticeView.vue` 嗰套本機 bank 練習完全冇受影響）。
+
+**設計文件冇寫、但實作時要決定嘅嘢：**
+
+- **抽題完全喺前端做,冇 server-side「開一個 practice session」嘅
+  endpoint**。W6 嘅 `GET .../questions` 已經成個 `status='active'` 池
+  攞晒落嚟,`coursePractice.ts` 淨係喺呢堆入面隨機抽 N 條——server 唔使
+  知「呢次抽咗邊幾題」,少一條 API,亦冇「session id」呢個要另外管理嘅
+  概念
+- **session 純粹喺記憶體度,唔似 `practice.ts` 咁存 localStorage**。
+  重新整頁就要由頭嚟過——呢個係刻意收窄嘅 scope：W7 嘅要求淨係「抽題
+  → 答 → 對答案 → 寫 attempts」,跨 reload 保存進度中途嘅 session 唔喺
+  呢張 checklist 度,唔使為咗呢樣嘢加多一層持久化邏輯
+- **判分喺前端做（照抄 `practice.ts` 嗰套邏輯）,server 淨係信落嚟嘅
+  結果寫低**,唔重新判一次。呢個唔係計分競賽,`is_correct` 亂報自己
+  揾自己笨,冇必要為咗防呢種情況喺 server 度重寫一次判分邏輯
+- **「A 同 B 嘅答題進度互相睇唔到」要喺 API 層做到,唔淨係前端唔顯示**。
+  成個模組冇任何一條路由可以攞到第二個用戶嘅 `attempts`,`/attempts/me/summary`
+  淨係聚合自己嘅——呢個唔係前端揀唔揀顯示嘅問題,而係伺服器根本冇畀
+  呢條路
+- **AI 判分／解釋喺 course practice 入面完整駁埋**（`api.judgeAnswer`／
+  `api.explainQuestion` 本身就同 bank/localStorage 冇關,`PracticeView.vue`
+  點用就照抄嗰套嚟用）,但 AI 解釋攞返嚟嘅內容淨係喺嗰次 session 顯示,
+  **唔會寫返去共享題庫**——一開始諗過持久化,但 W6 已經刻意跳過
+  `source_excerpt`/`model_used` 呢類擴充欄,加返一條「AI 解釋要唔要
+  存」嘅寫入路徑唔化算,留返俾人自己再撳一次生成
+- **順手修**：`courses.rs` 刪 course 嗰段之前得 `course_members`
+  行手動清（W4 已知嘅 SQLite 冇開 `foreign_keys` gotcha),`materials`/
+  `questions` 一直漏喺度冇清——W7 加埋 `attempts`/`question_flags`
+  之後索性一次過補晒四張表,唔留 orphan row
+- **順手修一個判斷題判分 bug**：`normalizeTF`（`stores/practice.ts`）同
+  `QuestionCard.vue` 嘅 `correctAnswerSet` 都用 `.includes()` 撞子字串
+  嚟認「呢個答案係啱定錯」,但 `"FALSE"` 呢個字本身就藏咗個 `"A"`,會俾
+  TRUE 嗰組嘅單字母 token `'A'` 誤中副車——一條答案存做完整字 `"FALSE"`
+  嘅判斷題,會俾人判到「啱」。起呢個 store 測試新練習流程嗰陣直接撞到
+  （bulk insert 咗一條 `answer: "FALSE"` 嘅題,答啱咗都話你錯）,順手喺
+  `practice.ts`／`QuestionCard.vue`／新嘅 `coursePractice.ts` 三處一齊
+  改成「exact token match 優先,得多過一個字嘅 token 先做 substring
+  fallback」
 
 ### 之後仲要做（見設計文件 §8）
 
-- W7 練習流程（由共享題庫隨機抽題、寫 `attempts`、🚩 flag）
 - W8 provider 設定備忘（唔使寫 code）
 
 `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
