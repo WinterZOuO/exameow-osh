@@ -10,6 +10,7 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
+  UserGroupIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -23,6 +24,7 @@ async function handleLogout() {
 const version = import.meta.env.VITE_APP_VERSION
 
 const entries = [
+  { key: 'mineCourses', descKey: 'mineCoursesDesc', path: '/courses', icon: UserGroupIcon },
   { key: 'mineAIConfig', descKey: 'mineAIConfigDesc', path: '/mine/config', icon: CpuChipIcon },
   { key: 'mineRecords', descKey: 'mineRecordsDesc', path: '/mine/records', icon: ChartBarIcon },
   { key: 'minePublished', descKey: 'minePublishedDesc', path: '/mine/published', icon: PaperAirplaneIcon },

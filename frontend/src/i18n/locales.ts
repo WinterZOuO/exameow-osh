@@ -473,6 +473,33 @@ export interface LocaleMessages {
   configKeyWhere?: string
   configFetchModelsNote?: string
   configNotConfiguredYet?: string
+  // W4 課程（只填 zh-TW / en）
+  mineCourses?: string
+  mineCoursesDesc?: string
+  coursesTitle?: string
+  coursesSubtitle?: string
+  coursesCreate?: string
+  coursesJoin?: string
+  coursesCode?: string
+  coursesCourseTitle?: string
+  coursesCourseTitlePlaceholder?: string
+  coursesCreateSubmit?: string
+  coursesJoinCode?: string
+  coursesJoinSubmit?: string
+  coursesCancel?: string
+  coursesFormRequired?: string
+  coursesLoading?: string
+  coursesEmpty?: string
+  coursesOwnerBadge?: string
+  coursesMemberCount?: string
+  coursesMembers?: string
+  coursesJoinCodeHint?: string
+  coursesCopy?: string
+  coursesCopied?: string
+  coursesLeave?: string
+  coursesDelete?: string
+  coursesDeleteConfirm?: string
+  coursesDeleteConfirmYes?: string
 }
 
 export const zh: LocaleMessages = {
@@ -948,6 +975,32 @@ export const zhTW: LocaleMessages = {
   configKeyWhere: 'Key 加密之後存喺伺服器，唔會再落返瀏覽器。要留意：架站嗰位揸住解密用嘅 MASTER_KEY，技術上解得開。',
   configFetchModelsNote: '會先儲存設定，再用已存嘅 Key 拉列表',
   configNotConfiguredYet: '未設定',
+  mineCourses: '課程',
+  mineCoursesDesc: '開課、加入、join code',
+  coursesTitle: '課程',
+  coursesSubtitle: '開新課程，或者用 join code 加入同學嘅課程',
+  coursesCreate: '開新課程',
+  coursesJoin: '加入課程',
+  coursesCode: '課程編號',
+  coursesCourseTitle: '課程名稱',
+  coursesCourseTitlePlaceholder: '例：職業安全與健康 5001',
+  coursesCreateSubmit: '建立',
+  coursesJoinCode: 'Join Code',
+  coursesJoinSubmit: '加入',
+  coursesCancel: '取消',
+  coursesFormRequired: '請填晒所有欄位',
+  coursesLoading: '載入緊…',
+  coursesEmpty: '未有課程，開一個新嘅或者用 join code 加入',
+  coursesOwnerBadge: '課主',
+  coursesMemberCount: '{count} 位成員',
+  coursesMembers: '成員',
+  coursesJoinCodeHint: '呢個 code 俾同學入嚟用（POST /api/courses/join）。同學要先有帳號先加得入。',
+  coursesCopy: '複製',
+  coursesCopied: '已複製',
+  coursesLeave: '離開課程',
+  coursesDelete: '刪除課程',
+  coursesDeleteConfirm: '刪除之後所有成員都會被移除，動作不可逆，確定？',
+  coursesDeleteConfirmYes: '確定刪除',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -1420,6 +1473,32 @@ export const en: LocaleMessages = {
   configKeyWhere: 'Your key is encrypted and stored on the server; it is never sent back to the browser. Note that whoever runs the server holds the MASTER_KEY and can technically decrypt it.',
   configFetchModelsNote: 'Saves your settings first, then lists models using the stored key',
   configNotConfiguredYet: 'Not configured',
+  mineCourses: 'Courses',
+  mineCoursesDesc: 'Create, join, join codes',
+  coursesTitle: 'Courses',
+  coursesSubtitle: 'Create a new course, or join a classmate’s course with a join code',
+  coursesCreate: 'New course',
+  coursesJoin: 'Join course',
+  coursesCode: 'Course code',
+  coursesCourseTitle: 'Course title',
+  coursesCourseTitlePlaceholder: 'e.g. Occupational Safety & Health 5001',
+  coursesCreateSubmit: 'Create',
+  coursesJoinCode: 'Join code',
+  coursesJoinSubmit: 'Join',
+  coursesCancel: 'Cancel',
+  coursesFormRequired: 'Please fill in all fields',
+  coursesLoading: 'Loading…',
+  coursesEmpty: 'No courses yet — create one or join with a code',
+  coursesOwnerBadge: 'Owner',
+  coursesMemberCount: '{count} members',
+  coursesMembers: 'Members',
+  coursesJoinCodeHint: 'Share this code so classmates can join (POST /api/courses/join). They need an account first.',
+  coursesCopy: 'Copy',
+  coursesCopied: 'Copied',
+  coursesLeave: 'Leave course',
+  coursesDelete: 'Delete course',
+  coursesDeleteConfirm: 'All members will be removed. This cannot be undone. Are you sure?',
+  coursesDeleteConfirmYes: 'Yes, delete',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',

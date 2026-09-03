@@ -51,6 +51,18 @@ const router = createRouter({
       meta: { title: 'AI Config' },
     },
     {
+      path: '/courses',
+      name: 'courses',
+      component: () => import('@/views/CoursesView.vue'),
+      meta: { title: 'Courses' },
+    },
+    {
+      path: '/courses/:id',
+      name: 'course-detail',
+      component: () => import('@/views/CourseDetailView.vue'),
+      meta: { title: 'Course' },
+    },
+    {
       path: '/mine/settings',
       name: 'mine-settings',
       component: () => import('@/views/SettingsView.vue'),

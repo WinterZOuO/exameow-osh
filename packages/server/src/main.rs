@@ -1,4 +1,5 @@
 mod auth;
+mod courses;
 mod llm;
 mod relay;
 mod routes;
@@ -61,6 +62,7 @@ async fn main() {
     auth::seed_admin(&relay.conn).unwrap_or_else(|e| fatal(&e));
     llm::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 llm schema 失敗：{e}")));
     llm::ensure_master_key().unwrap_or_else(|e| fatal(&e));
+    courses::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 courses schema 失敗：{e}")));
 
     let state = Arc::new(AppState {
         relay,
@@ -102,6 +104,16 @@ async fn main() {
                 .delete(llm::delete_llm_config),
         )
         .route("/api/llm-config/models", post(llm::post_models))
+        .route(
+            "/api/courses",
+            get(courses::list_courses_handler).post(courses::create_course_handler),
+        )
+        .route("/api/courses/join", post(courses::join_course_handler))
+        .route(
+            "/api/courses/{id}",
+            get(courses::get_course_handler).delete(courses::delete_course_handler),
+        )
+        .route("/api/courses/{id}/leave", post(courses::leave_course_handler))
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))
         .route("/api/judge", post(routes::judge_handler))

@@ -114,9 +114,33 @@ redirect，一個准用嘅 host 回 `302 → http://169.254.169.254/` 就繞過�
   改成講清楚 key 加密存喺伺服器，而且老實講埋「架站嗰位揸住 MASTER_KEY，
   技術上解得開」
 
+### W4（已完成）課程同成員
+
+新增 `packages/server/src/courses.rs`：`courses` + `course_members` 表。
+任何已登入用戶都可以開新課程並自動成為 `owner`；其他人憑 `join_code` 加入
+成為 `member`。所有課程範圍嘅路由都經 `require_member()` 先查成員資格。
+
+- `join_code` 8 位（32^8 ≈ 1.1 萬億種組合），刻意同 `relay.rs` 嘅 6 位即棄
+  exam code 分開諗 —— join_code 係長期入場券，唔係派一次即用嘅
+- 唔係成員一律當「課程唔存在」回 404，唔會分 403/404 兩種訊息漏出「呢個
+  course_id 其實存在」
+- owner 唔可以直接離開，要用刪除 —— 唔想留低冇人揸嘅課程
+- join_code 輸入前會 normalize（去空格、大楷化），用戶打錯大小寫或者手多打
+  咗個 `-` 都照樣入到
+- 刪課程要手動清 `course_members` —— SQLite 預設冇開 `foreign_keys`，
+  schema 寫嘅 `ON DELETE CASCADE` 唔會自動生效，同 W2 刪 user 果度一樣
+
+前端：新增 `/courses`（列表 + 開課 + 加入）同 `/courses/:id`（join code、
+成員列表、離開／刪除），MineView 加返個入口。
+
+**測試揪出一個前端 store cache bug**：`stores/courses.ts` 原本嘅
+`ensureLoaded()` 靠 `loaded` flag 避免重複拉 API，但登出換第二個帳號登入
+（同一個分頁）之後 flag 唔會重置，新用戶一入 `/courses` 會短暫閃返舊用戶嘅
+課程列表。改用每次入頁都 `fetchCourses()`，加埋 `App.vue` 監聽登出時
+`coursesStore.reset()` 兩層修。單用戶測試完全影唔到，一定要真係換帳號先見到。
+
 ### 之後仲要做（見設計文件 §8）
 
-- W4 課程同成員（join code）
 - W5 教材上傳同 ACL
 - W6 共享題庫（`stores/practice.ts`、`stores/exam.ts` 由 localStorage 改 server）
 - W7 練習流程

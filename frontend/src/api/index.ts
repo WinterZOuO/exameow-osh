@@ -1,6 +1,6 @@
 import type { AnswerResult, ExamParams, ExplainParams, ExplainResult, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 import { tauriApi } from './bridge'
-import { httpApi, type ServerConfigInfo } from './http'
+import { httpApi, type CourseDetail, type CourseSummary, type ServerConfigInfo } from './http'
 
 let _isTauri: boolean | null = null
 
@@ -94,5 +94,31 @@ export const api = {
   async getServerInfo(): Promise<ServerConfigInfo | null> {
     if (isTauri()) return null
     return httpApi.getServerInfo()
+  },
+
+  // ------------------------------------------------ 課程（W4，server-only 概念）
+
+  listCourses(): Promise<CourseSummary[]> {
+    return httpApi.listCourses()
+  },
+
+  createCourse(code: string, title: string): Promise<CourseSummary> {
+    return httpApi.createCourse(code, title)
+  },
+
+  joinCourse(joinCode: string): Promise<CourseSummary> {
+    return httpApi.joinCourse(joinCode)
+  },
+
+  getCourse(id: string): Promise<CourseDetail> {
+    return httpApi.getCourse(id)
+  },
+
+  leaveCourse(id: string): Promise<void> {
+    return httpApi.leaveCourse(id)
+  },
+
+  deleteCourse(id: string): Promise<void> {
+    return httpApi.deleteCourse(id)
   },
 }

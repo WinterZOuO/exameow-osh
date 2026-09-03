@@ -42,6 +42,32 @@ export interface GenerateResult {
   questions: Question[]
 }
 
+// ---------------------------------------------------------------- 課程（W4）
+
+export interface CourseSummary {
+  id: string
+  code: string
+  title: string
+  owner_id: string
+  owner_username: string
+  /** 當前用戶喺呢個課程嘅角色 */
+  role: 'owner' | 'member'
+  join_code: string
+  member_count: number
+  created_at: number
+}
+
+export interface CourseMember {
+  user_id: string
+  username: string
+  role: 'owner' | 'member'
+  joined_at: number
+}
+
+export interface CourseDetail extends CourseSummary {
+  members: CourseMember[]
+}
+
 export interface ServerConfigInfo {
   has_env_ai: boolean
   endpoint: string
@@ -211,6 +237,46 @@ export const httpApi = {
       if (res.ok) return await res.json()
     } catch {}
     return null
+  },
+
+  // ---------------------------------------------------------------- 課程
+
+  async listCourses(): Promise<CourseSummary[]> {
+    return json(await apiFetch(`${BASE_URL}/api/courses`))
+  },
+
+  async createCourse(code: string, title: string): Promise<CourseSummary> {
+    return json(
+      await apiFetch(`${BASE_URL}/api/courses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, title }),
+      }),
+    )
+  },
+
+  async joinCourse(joinCode: string): Promise<CourseSummary> {
+    return json(
+      await apiFetch(`${BASE_URL}/api/courses/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ join_code: joinCode }),
+      }),
+    )
+  },
+
+  async getCourse(id: string): Promise<CourseDetail> {
+    return json(await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(id)}`))
+  },
+
+  async leaveCourse(id: string): Promise<void> {
+    const res = await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(id)}/leave`, { method: 'POST' })
+    if (!res.ok) await throwHttpError(res)
+  },
+
+  async deleteCourse(id: string): Promise<void> {
+    const res = await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (!res.ok) await throwHttpError(res)
   },
 };
 
