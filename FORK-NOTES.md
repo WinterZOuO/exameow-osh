@@ -33,9 +33,31 @@
   改為 pull GHCR image + 掛 `exameow-data` volume
 - port 改為只 bind `127.0.0.1`，由 Caddy 反向代理，唔直接曝露
 
+### W2（已完成）帳號同 session
+
+新增 `packages/server/src/auth.rs`：
+
+- `users` / `sessions` 表，密碼用 **argon2id**，session token 喺 DB **只存 SHA-256 hash**，明文只出現喺 HttpOnly cookie
+- `require_auth` middleware 掛喺除咗 `/api/auth/login` 同 `/logout` 之外嘅**所有** `/api` 路由；靜態檔唔攔（登入頁要載到）
+- admin 由 `ADMIN_USERNAME` / `ADMIN_PASSWORD` 種子建立；冇設密碼就隨機生成並喺 log 印一次
+- admin-only：`GET/POST /api/auth/users`、`DELETE /api/auth/users/{id}`
+- 登入失敗訊息「用戶唔存在」同「密碼錯」**完全一樣**，唔泄漏邊個 username 有效
+- cookie 預設帶 `Secure`，本機用 HTTP 測試設 `COOKIE_SECURE=0`
+
+**CORS 收緊**：由 `allow_origin(Any)` 改成預設**完全唔開**（生產同源就夠），
+只有設咗 `CORS_ORIGIN` 先開，而且帶 credentials 要逐個 origin 列明、唔可以用萬用字元。
+
+**順帶修咗 S1**：`/api/config/load` 而家冇 session 就 401，唔會再明文交出 API key。
+（S2 `/api/models` query string 同 S3 SSRF 留返 W3。）
+
+前端：`stores/auth.ts`、`views/LoginView.vue`、router `beforeEach` guard、
+`http.ts` 統一 `apiFetch`（帶 credentials + 401 就彈返登入頁）、MineView 帳號區同登出掣。
+
+順手修咗一個 W1 整出嚟嘅 bug：`AppShell.vue` 個 `navSearch` 導航項仲指住已刪嘅
+`/search`（字串路徑，type-check 捉唔到）。
+
 ### 之後仲要做（見設計文件 §8）
 
-- W2 帳號同 session
 - W3 每用戶 LLM 設定 + 伺服器端加密 + 反轉請求流程 + endpoint allowlist（修 SSRF）
 - W4 課程同成員（join code）
 - W5 教材上傳同 ACL

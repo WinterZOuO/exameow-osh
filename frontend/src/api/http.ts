@@ -2,6 +2,23 @@ import type { AIConfig, AnswerResult, ExamParams, ExplainParams, ExplainResult, 
 
 const BASE_URL = import.meta.env.VITE_API_URL || ''
 
+/** 任何 API 回 401 時叫，由 main.ts 接駁去 auth store + router */
+let onUnauthorized: (() => void) | null = null
+export function setUnauthorizedHandler(fn: () => void) {
+  onUnauthorized = fn
+}
+
+/**
+ * 統一嘅 fetch：帶 session cookie，撞到 401 就通知上層。
+ * 生產環境同源，credentials 其實可有可無；
+ * 但本機開發前端喺另一個 port，冇 include 就唔會帶 cookie。
+ */
+async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  const res = await apiFetch(input, { ...init, credentials: 'include' })
+  if (res.status === 401) onUnauthorized?.()
+  return res
+}
+
 export interface GenerateResult {
   questions: Question[]
 }
@@ -15,7 +32,7 @@ export interface ServerConfigInfo {
 export const httpApi = {
   async getModels(endpoint: string, apiKey: string): Promise<ModelInfo[]> {
     const url = `${BASE_URL}/api/models?endpoint=${encodeURIComponent(endpoint)}&api_key=${encodeURIComponent(apiKey)}`
-    const res = await fetch(url)
+    const res = await apiFetch(url)
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
     return res.json()
   },
@@ -33,7 +50,7 @@ export const httpApi = {
     formData.append('api_key', config.api_key)
     formData.append('model', config.model)
 
-    const res = await fetch(`${BASE_URL}/api/generate`, {
+    const res = await apiFetch(`${BASE_URL}/api/generate`, {
       method: 'POST',
       body: formData,
       signal,
@@ -54,7 +71,7 @@ export const httpApi = {
   },
 
   async exportXlsx(questions: Question[], filename: string = 'exameow_questions.xlsx'): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/export/xlsx`, {
+    const res = await apiFetch(`${BASE_URL}/api/export/xlsx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(questions),
@@ -75,7 +92,7 @@ export const httpApi = {
     config: AIConfig,
     signal?: AbortSignal,
   ): Promise<AnswerResult> {
-    const res = await fetch(`${BASE_URL}/api/answer`, {
+    const res = await apiFetch(`${BASE_URL}/api/answer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -97,7 +114,7 @@ export const httpApi = {
     config: AIConfig,
     signal?: AbortSignal,
   ): Promise<JudgeResult> {
-    const res = await fetch(`${BASE_URL}/api/judge`, {
+    const res = await apiFetch(`${BASE_URL}/api/judge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -122,7 +139,7 @@ export const httpApi = {
     config: AIConfig,
     signal?: AbortSignal,
   ): Promise<ExplainResult> {
-    const res = await fetch(`${BASE_URL}/api/explain`, {
+    const res = await apiFetch(`${BASE_URL}/api/explain`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -141,7 +158,7 @@ export const httpApi = {
   },
 
   async saveConfig(config: AIConfig): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/config/save`, {
+    const res = await apiFetch(`${BASE_URL}/api/config/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
@@ -153,7 +170,7 @@ export const httpApi = {
 
   async loadConfig(): Promise<AIConfig | null> {
     try {
-      const res = await fetch(`${BASE_URL}/api/config/load`)
+      const res = await apiFetch(`${BASE_URL}/api/config/load`)
       if (res.ok) {
         const data = await res.json()
         return data
@@ -165,7 +182,7 @@ export const httpApi = {
 
   async getServerInfo(): Promise<ServerConfigInfo | null> {
     try {
-      const res = await fetch(`${BASE_URL}/api/config/server`)
+      const res = await apiFetch(`${BASE_URL}/api/config/server`)
       if (res.ok) return await res.json()
     } catch {}
     return null

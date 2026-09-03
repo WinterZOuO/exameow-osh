@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { useAuthStore } from '@/stores/auth'
 import {
   CpuChipIcon,
   PaperAirplaneIcon,
@@ -8,10 +9,17 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const i18n = useI18nStore()
+const auth = useAuthStore()
+
+async function handleLogout() {
+  await auth.logout()
+  await router.replace({ name: 'login' })
+}
 const version = import.meta.env.VITE_APP_VERSION
 
 const entries = [
@@ -56,6 +64,22 @@ const entries = [
           <ChevronRightIcon class="w-4.5 h-4.5 stroke-[2.5] rtl:rotate-180" />
         </div>
       </button>
+    </div>
+
+    <!-- 帳號 -->
+    <div class="mt-6 card-filled p-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="font-semibold truncate">{{ auth.user?.username }}</p>
+          <p class="text-body-sm" style="color: rgb(var(--md-on-surface-variant))">
+            {{ auth.isAdmin ? i18n.t('authRoleAdmin') : i18n.t('authRoleMember') }}
+          </p>
+        </div>
+        <button class="btn-tonal text-sm !px-4 !py-2 shrink-0" @click="handleLogout">
+          <ArrowRightStartOnRectangleIcon class="w-4 h-4 rtl:rotate-180" />
+          {{ i18n.t('authSignOut') }}
+        </button>
+      </div>
     </div>
 
     <!-- Footer Links -->

@@ -450,6 +450,19 @@ export interface LocaleMessages {
   manageColCorrect: string
   manageColDuration: string
   manageColTime: string
+  // W2 帳號（只填 zh-TW / en，其餘語言由 t() fallback 去 en）
+  authSignIn?: string
+  authSigningIn?: string
+  authSignOut?: string
+  authSignInSubtitle?: string
+  authUsername?: string
+  authPassword?: string
+  authTogglePassword?: string
+  authInvalidCredentials?: string
+  authLoginFailed?: string
+  authNoSelfSignup?: string
+  authRoleAdmin?: string
+  authRoleMember?: string
 }
 
 export const zh: LocaleMessages = {
@@ -904,6 +917,18 @@ export const zh: LocaleMessages = {
 }
 
 export const zhTW: LocaleMessages = {
+  authSignIn: '登入',
+  authSigningIn: '登入緊…',
+  authSignOut: '登出',
+  authSignInSubtitle: '登入之後先用得',
+  authUsername: '用戶名',
+  authPassword: '密碼',
+  authTogglePassword: '顯示／隱藏密碼',
+  authInvalidCredentials: '用戶名或密碼唔啱',
+  authLoginFailed: '登入失敗，請再試一次',
+  authNoSelfSignup: '呢個站唔開放註冊，帳號由管理員開',
+  authRoleAdmin: '管理員',
+  authRoleMember: '成員',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -1355,6 +1380,18 @@ export const zhTW: LocaleMessages = {
 }
 
 export const en: LocaleMessages = {
+  authSignIn: 'Sign in',
+  authSigningIn: 'Signing in…',
+  authSignOut: 'Sign out',
+  authSignInSubtitle: 'Sign in to continue',
+  authUsername: 'Username',
+  authPassword: 'Password',
+  authTogglePassword: 'Show / hide password',
+  authInvalidCredentials: 'Incorrect username or password',
+  authLoginFailed: 'Sign-in failed, please try again',
+  authNoSelfSignup: 'Sign-up is closed; accounts are created by an admin',
+  authRoleAdmin: 'Admin',
+  authRoleMember: 'Member',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',

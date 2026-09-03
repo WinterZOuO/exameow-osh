@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -6,6 +7,12 @@ const router = createRouter({
     {
       path: '/',
       redirect: '/practice',
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/LoginView.vue'),
+      meta: { title: 'Sign In', public: true },
     },
     {
       path: '/practice',
@@ -96,6 +103,24 @@ const router = createRouter({
       meta: { title: 'Admin' },
     },
   ],
+})
+
+// 除咗標明 public 嘅路由，全部都要有效 session。
+// auth.checked 避免每次導航都問一次 server。
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  if (!auth.checked) await auth.fetchMe()
+
+  if (to.meta.public) {
+    return auth.isAuthenticated ? { path: '/practice' } : true
+  }
+  if (!auth.isAuthenticated) {
+    return {
+      name: 'login',
+      query: to.fullPath === '/' ? {} : { redirect: to.fullPath },
+    }
+  }
+  return true
 })
 
 export default router

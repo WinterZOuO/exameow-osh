@@ -14,7 +14,6 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
   AcademicCapIcon,
-  MagnifyingGlassIcon,
   UserCircleIcon,
   LanguageIcon,
 } from '@heroicons/vue/24/outline'
@@ -40,7 +39,6 @@ async function openGitHub() {
 const navItems = [
   { key: 'navPractice', path: '/practice', icon: AcademicCapIcon },
   { key: 'navGenerate', path: '/generate', icon: SparklesIcon },
-  { key: 'navSearch', path: '/search', icon: MagnifyingGlassIcon },
   { key: 'navMine', path: '/mine', icon: UserCircleIcon },
 ]
 

@@ -20,6 +20,13 @@ pub struct AppState {
     pub admin_token: Mutex<String>,
 }
 
+impl AppState {
+    /// 全個 app 共用同一個 SQLite handle（由 relay::init_db 開）
+    pub fn db(&self) -> &Mutex<rusqlite::Connection> {
+        &self.relay.conn
+    }
+}
+
 #[derive(Deserialize)]
 pub struct ModelsQuery {
     pub endpoint: Option<String>,
