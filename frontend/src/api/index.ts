@@ -1,6 +1,13 @@
 import type { AnswerResult, ExamParams, ExplainParams, ExplainResult, JudgeParams, JudgeResult, ModelInfo, Question } from '@exameow/shared'
 import { tauriApi } from './bridge'
-import { httpApi, type CourseDetail, type CourseSummary, type ServerConfigInfo } from './http'
+import {
+  httpApi,
+  type CourseDetail,
+  type CourseSummary,
+  type MaterialDetail,
+  type MaterialSummary,
+  type ServerConfigInfo,
+} from './http'
 
 let _isTauri: boolean | null = null
 
@@ -120,5 +127,23 @@ export const api = {
 
   deleteCourse(id: string): Promise<void> {
     return httpApi.deleteCourse(id)
+  },
+
+  // ------------------------------------------------ 教材（W5）
+
+  listMaterials(courseId: string): Promise<MaterialSummary[]> {
+    return httpApi.listMaterials(courseId)
+  },
+
+  uploadMaterial(courseId: string, file: File): Promise<MaterialSummary> {
+    return httpApi.uploadMaterial(courseId, file)
+  },
+
+  getMaterial(id: string): Promise<MaterialDetail> {
+    return httpApi.getMaterial(id)
+  },
+
+  deleteMaterial(id: string): Promise<void> {
+    return httpApi.deleteMaterial(id)
   },
 }

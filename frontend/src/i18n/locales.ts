@@ -500,6 +500,18 @@ export interface LocaleMessages {
   coursesDelete?: string
   coursesDeleteConfirm?: string
   coursesDeleteConfirmYes?: string
+  materialsTitle?: string
+  materialsHint?: string
+  materialsUpload?: string
+  materialsUploading?: string
+  materialsEmpty?: string
+  materialsMineEmpty?: string
+  materialsUploadedBy?: string
+  materialsDelete?: string
+  materialsDeleteConfirm?: string
+  materialsDeleteConfirmYes?: string
+  materialsInvalidType?: string
+  materialsTooLarge?: string
 }
 
 export const zh: LocaleMessages = {
@@ -1001,6 +1013,18 @@ export const zhTW: LocaleMessages = {
   coursesDelete: '刪除課程',
   coursesDeleteConfirm: '刪除之後所有成員都會被移除，動作不可逆，確定？',
   coursesDeleteConfirmYes: '確定刪除',
+  materialsTitle: '教材',
+  materialsHint: '淨係接受 .md 檔案，上限 300 KB。上傳咗嘅原文只有你本人同管理員睇得到。',
+  materialsUpload: '上傳教材',
+  materialsUploading: '上傳緊…',
+  materialsEmpty: '未有教材，上傳一份 .md 筆記開始',
+  materialsMineEmpty: '你未上傳過教材',
+  materialsUploadedBy: '上傳者',
+  materialsDelete: '刪除',
+  materialsDeleteConfirm: '刪除之後呢份教材會永久消失，確定？',
+  materialsDeleteConfirmYes: '確定刪除',
+  materialsInvalidType: '淨係接受 .md 檔案',
+  materialsTooLarge: '檔案太大（上限 300 KB）',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -1499,6 +1523,18 @@ export const en: LocaleMessages = {
   coursesDelete: 'Delete course',
   coursesDeleteConfirm: 'All members will be removed. This cannot be undone. Are you sure?',
   coursesDeleteConfirmYes: 'Yes, delete',
+  materialsTitle: 'Materials',
+  materialsHint: 'Only .md files, up to 300 KB. The raw text is visible only to you and admins.',
+  materialsUpload: 'Upload material',
+  materialsUploading: 'Uploading…',
+  materialsEmpty: 'No materials yet — upload a .md note to get started',
+  materialsMineEmpty: "You haven't uploaded any materials yet",
+  materialsUploadedBy: 'Uploaded by',
+  materialsDelete: 'Delete',
+  materialsDeleteConfirm: 'This material will be permanently deleted. Are you sure?',
+  materialsDeleteConfirmYes: 'Yes, delete',
+  materialsInvalidType: 'Only .md files are accepted',
+  materialsTooLarge: 'File too large (300 KB max)',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',

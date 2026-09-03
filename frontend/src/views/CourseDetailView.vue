@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
+import { useAuthStore } from '@/stores/auth'
 import { useCoursesStore } from '@/stores/courses'
+import { useMaterialsStore } from '@/stores/materials'
 import type { CourseDetail } from '@/api/http'
 import {
   ArrowLeftIcon,
@@ -11,12 +13,16 @@ import {
   ClipboardDocumentCheckIcon,
   TrashIcon,
   ArrowRightOnRectangleIcon,
+  DocumentTextIcon,
+  ArrowUpTrayIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
 const i18n = useI18nStore()
+const auth = useAuthStore()
 const store = useCoursesStore()
+const materialsStore = useMaterialsStore()
 
 const course = ref<CourseDetail | null>(null)
 const loadError = ref('')
@@ -35,9 +41,63 @@ async function load() {
   } catch (e: any) {
     loadError.value = e.message || String(e)
   }
+  await materialsStore.fetchMaterials(courseId.value)
 }
 
 onMounted(load)
+
+// ---------------------------------------------------------------- 教材（W5）
+
+const materials = computed(() => materialsStore.byCourse[courseId.value] ?? [])
+const materialsError = ref('')
+const uploading = ref(false)
+const confirmDeleteMaterialId = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function formatSize(bytes: number): string {
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
+function pickFile() {
+  fileInput.value?.click()
+}
+
+async function handleFileSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // 等同一個檔案可以再揀多次（例如上次上傳失敗之後重試）
+  if (!file) return
+
+  materialsError.value = ''
+  if (!/\.(md|markdown)$/i.test(file.name)) {
+    materialsError.value = i18n.t('materialsInvalidType')
+    return
+  }
+  if (file.size > 300_000) {
+    materialsError.value = i18n.t('materialsTooLarge')
+    return
+  }
+
+  uploading.value = true
+  try {
+    await materialsStore.uploadMaterial(courseId.value, file)
+  } catch (e: any) {
+    materialsError.value = e.message || String(e)
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function handleDeleteMaterial(id: string) {
+  materialsError.value = ''
+  try {
+    await materialsStore.deleteMaterial(courseId.value, id)
+  } catch (e: any) {
+    materialsError.value = e.message || String(e)
+  } finally {
+    confirmDeleteMaterialId.value = null
+  }
+}
 
 async function copyJoinCode() {
   if (!course.value) return
@@ -129,6 +189,70 @@ async function handleDelete() {
             >{{ i18n.t('coursesOwnerBadge') }}</span>
           </div>
         </div>
+      </div>
+
+      <!-- 教材（W5）：原文只有上傳者本人同 admin 睇得到 -->
+      <div class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="text-label-md font-semibold flex items-center gap-2" style="color: rgb(var(--md-on-surface-variant))">
+            <DocumentTextIcon class="w-4 h-4" />
+            {{ i18n.t('materialsTitle') }}
+          </label>
+          <button class="btn-tonal text-sm !px-3 !py-1.5" :disabled="uploading" @click="pickFile">
+            <ArrowUpTrayIcon class="w-4 h-4" />
+            <span>{{ uploading ? i18n.t('materialsUploading') : i18n.t('materialsUpload') }}</span>
+          </button>
+          <input ref="fileInput" type="file" accept=".md,.markdown" class="hidden" @change="handleFileSelected" />
+        </div>
+        <p class="text-body-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('materialsHint') }}</p>
+
+        <div v-if="materials.length === 0" class="text-body-sm py-4 text-center" style="color: rgb(var(--md-on-surface-variant))">
+          {{ auth.isAdmin ? i18n.t('materialsEmpty') : i18n.t('materialsMineEmpty') }}
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="m in materials"
+            :key="m.id"
+            class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl"
+            style="background-color: rgb(var(--md-surface-container-highest))"
+          >
+            <div class="min-w-0">
+              <div class="font-medium truncate">{{ m.filename }}</div>
+              <div class="text-xs" style="color: rgb(var(--md-on-surface-variant))">
+                {{ formatSize(m.size) }}
+                <template v-if="auth.isAdmin"> · {{ i18n.t('materialsUploadedBy') }} {{ m.uploader_username }}</template>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <button
+                v-if="confirmDeleteMaterialId !== m.id"
+                class="btn-icon !w-9 !h-9"
+                style="color: rgb(var(--md-error))"
+                :title="i18n.t('materialsDelete')"
+                @click="confirmDeleteMaterialId = m.id"
+              >
+                <TrashIcon class="w-4 h-4" />
+              </button>
+              <div v-else class="flex items-center gap-2 whitespace-nowrap">
+                <span class="text-xs" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('materialsDeleteConfirm') }}</span>
+                <button class="btn-tonal text-xs !px-2.5 !py-1.5" style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))" @click="handleDeleteMaterial(m.id)">
+                  {{ i18n.t('materialsDeleteConfirmYes') }}
+                </button>
+                <button class="btn-tonal text-xs !px-2.5 !py-1.5" @click="confirmDeleteMaterialId = null">{{ i18n.t('coursesCancel') }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Transition name="scale">
+          <div
+            v-if="materialsError"
+            class="mt-3 px-4 py-3 rounded-2xl text-sm"
+            style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))"
+          >
+            {{ materialsError }}
+          </div>
+        </Transition>
       </div>
 
       <Transition name="scale">

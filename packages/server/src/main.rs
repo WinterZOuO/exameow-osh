@@ -1,6 +1,7 @@
 mod auth;
 mod courses;
 mod llm;
+mod materials;
 mod relay;
 mod routes;
 
@@ -63,6 +64,7 @@ async fn main() {
     llm::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 llm schema 失敗：{e}")));
     llm::ensure_master_key().unwrap_or_else(|e| fatal(&e));
     courses::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 courses schema 失敗：{e}")));
+    materials::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 materials schema 失敗：{e}")));
 
     let state = Arc::new(AppState {
         relay,
@@ -114,6 +116,14 @@ async fn main() {
             get(courses::get_course_handler).delete(courses::delete_course_handler),
         )
         .route("/api/courses/{id}/leave", post(courses::leave_course_handler))
+        .route(
+            "/api/courses/{id}/materials",
+            get(materials::list_materials_handler).post(materials::upload_material_handler),
+        )
+        .route(
+            "/api/materials/{id}",
+            get(materials::get_material_handler).delete(materials::delete_material_handler),
+        )
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))
         .route("/api/judge", post(routes::judge_handler))

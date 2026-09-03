@@ -68,6 +68,27 @@ export interface CourseDetail extends CourseSummary {
   members: CourseMember[]
 }
 
+// ---------------------------------------------------------------- 教材（W5）
+
+/**
+ * 列表用摘要 —— 刻意冇 `content`。原文只有上傳者本人同 admin 睇得到，
+ * 要睇內容要另外攞單一 material（`getMaterial`）。
+ */
+export interface MaterialSummary {
+  id: string
+  course_id: string
+  uploader_id: string
+  uploader_username: string
+  filename: string
+  sha256: string
+  size: number
+  created_at: number
+}
+
+export interface MaterialDetail extends MaterialSummary {
+  content: string
+}
+
 export interface ServerConfigInfo {
   has_env_ai: boolean
   endpoint: string
@@ -276,6 +297,32 @@ export const httpApi = {
 
   async deleteCourse(id: string): Promise<void> {
     const res = await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (!res.ok) await throwHttpError(res)
+  },
+
+  // ---------------------------------------------------------------- 教材
+
+  async listMaterials(courseId: string): Promise<MaterialSummary[]> {
+    return json(await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/materials`))
+  },
+
+  async uploadMaterial(courseId: string, file: File): Promise<MaterialSummary> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return json(
+      await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/materials`, {
+        method: 'POST',
+        body: formData,
+      }),
+    )
+  },
+
+  async getMaterial(id: string): Promise<MaterialDetail> {
+    return json(await apiFetch(`${BASE_URL}/api/materials/${encodeURIComponent(id)}`))
+  },
+
+  async deleteMaterial(id: string): Promise<void> {
+    const res = await apiFetch(`${BASE_URL}/api/materials/${encodeURIComponent(id)}`, { method: 'DELETE' })
     if (!res.ok) await throwHttpError(res)
   },
 };

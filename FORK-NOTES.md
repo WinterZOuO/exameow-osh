@@ -139,9 +139,42 @@ redirect，一個准用嘅 host 回 `302 → http://169.254.169.254/` 就繞過�
 課程列表。改用每次入頁都 `fetchCourses()`，加埋 `App.vue` 監聽登出時
 `coursesStore.reset()` 兩層修。單用戶測試完全影唔到，一定要真係換帳號先見到。
 
+### W5（已完成）教材上傳同 ACL
+
+新增 `packages/server/src/materials.rs`：`materials` 表，掛喺 `courses` 底下。
+淨係接受 `.md` / `.markdown`，上限 300 KB；借用 `packages/core` 現成嘅
+`parse_file`（已經做咗編碼偵測、去 BOM、拒絕 binary/空檔），唔重新寫一次。
+
+- **兩層 ACL 要分開諗**：唔係課程成員 → 當「唔存在」回 404（同 W4 果句
+  一樣嘅道理）；係成員但唔係上傳者/admin → 403（明確話俾你知「呢樣嘢私有」，
+  同課程存唔存在冇關）。`list` 對非 admin 淨係回自己上傳嗰啲，連檔名都
+  唔會漏俾其他成員 —— 教材原文私有呢件事,要落到 list endpoint 都守
+- **`require_member()` 由 W4 嘅 `courses.rs` 攞出嚟做 `pub(crate)`**，
+  materials.rs 直接攞嚟用，唔重複寫多次同一條「係咪成員」查詢
+- **`size` 呢個欄位一定要諗清楚係 byte 定係字數**。SQLite 嘅
+  `LENGTH(text_column)` 對 TEXT 欄位計嘅係字元數，多位元組 UTF-8（中文）
+  一計就同 Rust `content.len()`（byte 數）唔啱數 —— 測試上傳一份中文
+  筆記，list 話 52、detail 話 112，先發現呢個位。修法：SQL 用
+  `LENGTH(CAST(content AS BLOB))` 逼佢計 byte
+- **去重用 `(course_id, uploader_id, sha256)` 三欄 unique index**，hash 計
+  喺解碼之後嘅內容（唔係原始 bytes）—— 同一份筆記換個編碼再上傳都會撞返
+  同一條，幂等處理（原地攞返已有嗰行，唔會插入新行）
+
+前端：`/courses/:id` 頁加返「教材」卡片 —— 上傳（隱藏 `<input type=file>`
+夾 `accept=".md,.markdown"`）、列表（size 用 KB 顯示、admin 睇到上傳者）、
+逐項刪除（inline 確認，唔用 native `confirm()`）。新增 `stores/materials.ts`，
+用 `courseId -> MaterialSummary[]` 嘅 map 存（同 `stores/courses.ts` 嘅扁平
+陣列唔同構造，因為教材本身就係掛住某個課程先有意義）。同 W4 一樣要喺
+`App.vue` 登出 watcher 度加 `materialsStore.reset()`，唔係嘅話會重演 W4
+揪出嗰個「換用戶但 cache 冇清」嘅 bug。
+
+**W6 落地之後要記得**：`questions.material_id` 會 reference materials(id)，
+刪教材嗰陣要手動 `SET NULL`（SQLite 冇開 `foreign_keys`，`ON DELETE
+SET NULL` 唔會自動生效）—— 而家 W5 範圍未有呢張表，暫時淨係刪 materials
+一行就夠。
+
 ### 之後仲要做（見設計文件 §8）
 
-- W5 教材上傳同 ACL
 - W6 共享題庫（`stores/practice.ts`、`stores/exam.ts` 由 localStorage 改 server）
 - W7 練習流程
 

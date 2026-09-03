@@ -25,7 +25,7 @@ const CODE_ALPHABET: &[u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 /// 揸住就入得課程、見到共享題庫，所以要夠長，唔可以同 exam 嗰種即棄 6 碼比
 const JOIN_CODE_LEN: usize = 8;
 
-type Err = (StatusCode, String);
+pub(crate) type Err = (StatusCode, String);
 
 fn err(status: StatusCode, code: &str) -> Err {
     (status, serde_json::json!({ "error": code }).to_string())
@@ -129,7 +129,10 @@ pub struct JoinCourseRequest {
 
 /// 唔係成員就當「課程唔存在」處理 —— 唔好用 403 / 404 分開兩種訊息，
 /// 免得畀人靠錯誤訊息掃到邊個 course_id 存在
-fn require_member(conn: &Connection, course_id: &str, user_id: &str) -> Result<String, Err> {
+///
+/// `pub(crate)`：W5 嘅 `materials.rs` 都要用呢個 check（教材掛喺課程底下，
+/// 要先係課程成員先有得再問教材 ACL），唔重複寫一次同一條查詢
+pub(crate) fn require_member(conn: &Connection, course_id: &str, user_id: &str) -> Result<String, Err> {
     conn.query_row(
         "SELECT role FROM course_members WHERE course_id = ?1 AND user_id = ?2",
         params![course_id, user_id],
