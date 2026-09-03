@@ -13,6 +13,8 @@ use routes::AppState;
 use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
+use tower::Layer;
+use tower_http::set_header::SetResponseHeaderLayer;
 
 /// 預設完全唔開 CORS —— 生產環境個 app 自己 serve 前端，同源就夠。
 /// 只有本機開發（vite dev server 喺另一個 port）先設 CORS_ORIGIN。
@@ -126,10 +128,28 @@ async fn main() {
             auth::require_auth,
         ));
 
+    // 靜態檔嘅快取策略。ServeDir 預設只送 last-modified，冇 Cache-Control 亦冇
+    // ETag，瀏覽器會用啟發式快取 —— 即係部署咗新版之後，用戶可能繼續行緊舊
+    // index.html 同舊 bundle，完全唔問 server。
+    //   /assets/*  檔名有 content hash，內容永遠唔會變，可以 immutable 長期 cache
+    //   其餘(index.html) 一定要 no-cache（= 用之前先 revalidate）
+    let assets_service = SetResponseHeaderLayer::overriding(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=31536000, immutable"),
+    )
+    .layer(ServeDir::new(format!("{static_dir}/assets")));
+
+    let root_service = SetResponseHeaderLayer::overriding(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("no-cache"),
+    )
+    .layer(ServeDir::new(&static_dir));
+
     let mut app = Router::new()
         .merge(public)
         .merge(protected)
-        .fallback_service(ServeDir::new(&static_dir))
+        .nest_service("/assets", assets_service)
+        .fallback_service(root_service)
         .with_state(state);
 
     if let Some(cors) = cors_layer() {
