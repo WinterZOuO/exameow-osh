@@ -3,8 +3,6 @@ resolver = "2"
 members = [
     "packages/core",
     "packages/server",
-    "src-tauri",
-    "plugins/screenrecord",
 ]
 
 [profile.release]

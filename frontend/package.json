@@ -4,14 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "node ../scripts/fetch-ocr-models.mjs",
-    "prebuild": "node ../scripts/fetch-ocr-models.mjs",
     "dev": "cross-env NODE_OPTIONS=--max-http-header-size=262144 vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build",
-    "tauri": "tauri"
+    "type-check": "vue-tsc --build"
   },
   "dependencies": {
     "@choochmeque/tauri-plugin-sharekit-api": "0.4.0-rc.5",
@@ -24,16 +21,13 @@
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-updater": "^2.10.1",
     "mammoth": "^1.12.0",
-    "onnxruntime-web": "^1.27.0",
     "pdfjs-dist": "^6.1.200",
     "pinia": "^3.0.4",
-    "ppu-paddle-ocr": "^6.1.0",
     "vue": "^3.5.38",
     "vue-router": "^5.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^24.13.2",
     "@vitejs/plugin-vue": "^6.0.7",

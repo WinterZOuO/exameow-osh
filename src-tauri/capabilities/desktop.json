@@ -1,9 +1,0 @@
-{
-  "identifier": "desktop",
-  "platforms": ["windows", "macOS", "linux"],
-  "windows": ["main", "record-overlay", "answer-float"],
-  "permissions": [
-    "updater:default",
-    "process:default"
-  ]
-}

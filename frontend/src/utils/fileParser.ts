@@ -1,5 +1,3 @@
-import { fileToCanvas } from './image'
-import { recognizeImage } from './ocr'
 
 export interface ParseProgressReport {
   current: number
@@ -18,20 +16,12 @@ export async function parseBrowserFileWithProgress(
   if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
 
   try {
-    if (file.type.startsWith('image/')) {
-      const canvas = await fileToCanvas(file)
-      const text = await recognizeImage(canvas)
-      if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
-      onProgress({ current: 1, total: 1, images: 1, pdfPages: 0, files: 0, message: '' })
-      return text
-    }
-
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      const { extractPdfTextWithOcr } = await import('./pdfParser')
-      const text = await extractPdfTextWithOcr(
+      const { extractPdfTextWithProgress } = await import('./pdfParser')
+      const text = await extractPdfTextWithProgress(
         file,
-        (done, total, ocrPages) => {
-          onProgress({ current: done, total, images: 0, pdfPages: ocrPages, files: 0, message: '' })
+        (done, total) => {
+          onProgress({ current: done, total, images: 0, pdfPages: 0, files: 0, message: '' })
         },
         signal,
       )

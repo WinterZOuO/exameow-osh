@@ -1,14 +1,10 @@
 {
-  "name": "exameow",
+  "name": "exameow-osh",
   "version": "1.4.3",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "cd frontend && pnpm dev",
-    "build": "cd frontend && pnpm build",
-    "tauri": "tauri"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4"
+    "build": "cd frontend && pnpm build"
   }
 }

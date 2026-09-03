@@ -20,44 +20,6 @@ const router = createRouter({
       meta: { title: 'Generate Exam' },
     },
     {
-      path: '/search',
-      name: 'search',
-      component: () => import('@/views/SearchHomeView.vue'),
-      meta: { title: 'Search' },
-    },
-    {
-      path: '/search/text',
-      name: 'search-text',
-      component: () => import('@/views/TextSearchView.vue'),
-      meta: { title: 'Text Search' },
-    },
-    {
-      path: '/search/photo',
-      name: 'search-photo',
-      component: () => import('@/views/PhotoSearchView.vue'),
-      meta: { title: 'Photo Search' },
-    },
-    {
-      path: '/search/screen-record',
-      name: 'search-screen-record',
-      component: () => import('@/views/ScreenRecordView.vue'),
-      meta: { title: 'Screen Record Search' },
-    },
-    {
-      path: '/search/camera-live',
-      name: 'search-camera-live',
-      component: () => import('@/views/CameraLiveView.vue'),
-      meta: { title: 'Camera Live Search' },
-    },
-    {
-      path: '/src-windows/record-overlay',
-      component: () => import('@/components/search/RecordOverlay.vue'),
-    },
-    {
-      path: '/src-windows/answer-float',
-      component: () => import('@/components/search/AnswerFloat.vue'),
-    },
-    {
       path: '/take/:code',
       name: 'take-exam',
       component: () => import('@/views/TakeExamView.vue'),
