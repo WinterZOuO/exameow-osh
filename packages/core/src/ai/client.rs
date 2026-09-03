@@ -17,8 +17,27 @@ impl AIClient {
             .then(|| &trimmed[..trimmed.len() - "/chat/completions".len()])
             .unwrap_or(trimmed);
         let endpoint = stripped.trim_end_matches('/').to_string();
+        // endpoint 有 allowlist 把關（server 嘅 llm::validate_endpoint），但預設會跟
+        // redirect —— 一個准用嘅 host 回 302 去 169.254.169.254 就繞過晒個 allowlist。
+        // 所以只准同一個 host 嘅 redirect（容許 http→https 升級），跨 host 唔跟，
+        // 由 caller 見到個 3xx 自己報錯。
         let client = reqwest::Client::builder()
             .no_proxy()
+            .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                if attempt.previous().len() > 3 {
+                    return attempt.error("too many redirects");
+                }
+                let from = attempt
+                    .previous()
+                    .last()
+                    .and_then(|u| u.host_str().map(str::to_string));
+                let to = attempt.url().host_str().map(str::to_string);
+                if from == to && attempt.url().scheme() == "https" {
+                    attempt.follow()
+                } else {
+                    attempt.stop()
+                }
+            }))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
         Self {

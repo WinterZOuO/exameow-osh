@@ -1,3 +1,3 @@
 mod store;
 
-pub use store::{AIConfigData, ConfigStore};
+pub use store::{open_sealed, seal, AIConfigData, ConfigStore};

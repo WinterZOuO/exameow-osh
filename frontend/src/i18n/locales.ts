@@ -463,6 +463,16 @@ export interface LocaleMessages {
   authNoSelfSignup?: string
   authRoleAdmin?: string
   authRoleMember?: string
+  // W3 每人 LLM 設定（只填 zh-TW / en）
+  configKeyStoredOn?: string
+  configKeyHintLabel?: string
+  configKeyKeepBlank?: string
+  configKeyEnterNew?: string
+  configKeyRemove?: string
+  configKeyRemoved?: string
+  configKeyWhere?: string
+  configFetchModelsNote?: string
+  configNotConfiguredYet?: string
 }
 
 export const zh: LocaleMessages = {
@@ -523,7 +533,7 @@ export const zh: LocaleMessages = {
   configCfFree: 'Cloudflare 免费 AI',
   configCustomApi: '自定义 API',
   configCfFreeDesc: '免费套餐，无需 API Key。每日有限额。',
-  configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 存在浏览器本地不会泄露。',
+  configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 加密存在服务器。',
   configServerAi: '服务器内置 AI',
   configServerAiDesc: '使用服务器环境变量提供的 AI 接口，无需填写密钥。',
   genTitle: '出题',
@@ -929,6 +939,15 @@ export const zhTW: LocaleMessages = {
   authNoSelfSignup: '呢個站唔開放註冊，帳號由管理員開',
   authRoleAdmin: '管理員',
   authRoleMember: '成員',
+  configKeyStoredOn: '已存喺伺服器',
+  configKeyHintLabel: '目前嘅 Key',
+  configKeyKeepBlank: '留空 = 沿用已存嗰條',
+  configKeyEnterNew: '貼上新嘅 API Key',
+  configKeyRemove: '移除',
+  configKeyRemoved: '已移除',
+  configKeyWhere: 'Key 加密之後存喺伺服器，唔會再落返瀏覽器。要留意：架站嗰位揸住解密用嘅 MASTER_KEY，技術上解得開。',
+  configFetchModelsNote: '會先儲存設定，再用已存嘅 Key 拉列表',
+  configNotConfiguredYet: '未設定',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -986,7 +1005,7 @@ export const zhTW: LocaleMessages = {
   configCfFree: 'Cloudflare 免费 AI',
   configCustomApi: '自定义 API',
   configCfFreeDesc: '免费套餐，无需 API Key。每日有限额。',
-  configCustomApiDesc: '使用你自己的 OpenAI / DeepSeek API，Key 存在浏览器本地不会泄露。',
+  configCustomApiDesc: '用你自己嘅 OpenAI / DeepSeek API，Key 加密存喺伺服器。',
   configServerAi: '伺服器內建 AI',
   configServerAiDesc: '使用伺服器環境變數提供的 AI 介面，無需填寫金鑰。',
   genTitle: '出題',
@@ -1392,6 +1411,15 @@ export const en: LocaleMessages = {
   authNoSelfSignup: 'Sign-up is closed; accounts are created by an admin',
   authRoleAdmin: 'Admin',
   authRoleMember: 'Member',
+  configKeyStoredOn: 'Stored on the server',
+  configKeyHintLabel: 'Current key',
+  configKeyKeepBlank: 'Leave blank to keep the stored key',
+  configKeyEnterNew: 'Paste a new API key',
+  configKeyRemove: 'Remove',
+  configKeyRemoved: 'Removed',
+  configKeyWhere: 'Your key is encrypted and stored on the server; it is never sent back to the browser. Note that whoever runs the server holds the MASTER_KEY and can technically decrypt it.',
+  configFetchModelsNote: 'Saves your settings first, then lists models using the stored key',
+  configNotConfiguredYet: 'Not configured',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',
@@ -1449,7 +1477,7 @@ export const en: LocaleMessages = {
   configCfFree: 'Cloudflare Free AI',
   configCustomApi: 'Custom API',
   configCfFreeDesc: 'Free tier — no API key needed. Daily limits apply.',
-  configCustomApiDesc: 'Use your own OpenAI / DeepSeek API. Key stays in your browser.',
+  configCustomApiDesc: 'Use your own OpenAI / DeepSeek API. Key is encrypted and stored on the server.',
   configServerAi: 'Server built-in AI',
   configServerAiDesc: 'Uses the AI configured via server environment variables. No API key needed.',
   genTitle: 'Generate',
@@ -1900,7 +1928,7 @@ export const ja: LocaleMessages = {
   configCfFree: 'Cloudflare 無料 AI',
   configCustomApi: 'カスタム API',
   configCfFreeDesc: '無料プラン、APIキー不要。',
-  configCustomApiDesc: '独自のOpenAI / DeepSeek APIを使用。キーはブラウザに安全に保存されます。',
+  configCustomApiDesc: '独自のOpenAI / DeepSeek APIを使用。キーは暗号化してサーバーに保存されます。',
   configServerAi: 'サーバー内蔵AI',
   configServerAiDesc: 'サーバーの環境変数で設定されたAIを使用します。APIキーは不要です。',
   genTitle: 'AI問題作成',

@@ -56,16 +56,72 @@
 順手修咗一個 W1 整出嚟嘅 bug：`AppShell.vue` 個 `navSearch` 導航項仲指住已刪嘅
 `/search`（字串路徑，type-check 捉唔到）。
 
+### W3（已完成）每人 LLM 設定 + 伺服器端加密
+
+新增 `packages/server/src/llm.rs`。
+
+**請求流程反轉（修 S1 根源）**
+
+上游每次 generate / explain / judge 都由瀏覽器喺 body 帶住 `endpoint` + `api_key`，
+所以 server 必須有辦法將條 key 交返俾瀏覽器 —— `/api/config/load` 明文回傳條 key
+唔係疏忽，係嗰個架構嘅必然結果。
+
+而家反轉：條 key 淨係喺「儲存」嗰一刻上傳一次，加密入 `user_llm_config`；
+之後每次 AI 呼叫，server 按 session user 自己查返、解密、call LLM。
+request body 只帶 `model`（型號唔係秘密）。
+
+`/api/config/save` 同 `/api/config/load` 兩條路由**整條刪走**。
+
+- `GET /api/llm-config` → `{ configured, endpoint, model, key_hint }`，**永遠冇 key**
+- `PUT /api/llm-config` → `api_key` 留空 = 沿用已存嗰條（改型號唔使重貼 key）
+- `DELETE /api/llm-config`
+- `POST /api/llm-config/models` → **修 S2**：上游係 `GET /api/models?api_key=...`，
+  條 key 入晒反向代理 access log 同瀏覽器歷史。而家係 POST，而且根本唔收 key
+
+**加密**
+
+AES-256-GCM，直接用返 `packages/core` 現成而且有測試嘅 `seal` / `open_sealed`
+（原本係 private，今次改成 `pub`）。每行獨立 nonce。master key 由 `MASTER_KEY`
+env 讀，**唔入 DB** —— DB 單獨洩漏解唔開啲 key，前提係兩者分開備份。
+
+- 冇設 `MASTER_KEY` 直接停機，順手生成一條印出嚟俾人貼（同 W2 `ADMIN_PASSWORD` 一樣用 `fatal()`，唔用 `panic!`）
+- 解密失敗（多數係換咗 `MASTER_KEY`）回 400 「請重新填」，唔回 500 —— 500 只會令人以為部 server 壞咗
+- `key_hint` 係 `sk-a…4f2a`；12 字元或以下嘅 key 淨係顯示 `…`，露頭等於露晒
+- `ResolvedLlm` 刻意**唔** derive `Serialize`，免得手殘 `Json(cfg)` 就送咗條 key 出街
+
+**Endpoint allowlist（修 S3）**
+
+13 個已知 provider host，只准 https、只准 443。額外 host 由 `LLM_EXTRA_HOSTS` 加
+（呢啲准 http，因為加嘅人係管理員，自己知做緊咩）。
+
+用 allowlist 而唔係 blocklist —— blocklist 永遠補唔切（IPv6、十進位 IP、
+`169.254.169.254`、DNS rebinding…）。URL 用 `url` crate 解，唔自己手寫 parser，
+順手擋埋 `https://api.openai.com@evil.com/` 呢類 userinfo 扮 host。
+
+**redirect 都要擋**（allowlist 唔講但唔做就白做）：`reqwest` 預設跟到 10 次
+redirect，一個准用嘅 host 回 `302 → http://169.254.169.254/` 就繞過晒個 allowlist。
+`AIClient` 改成只跟**同一個 host** 嘅 redirect，跨 host 唔跟。
+
+**前端**
+
+- `stores/config.ts` 重寫：`apiKey` 變成只寫嘅 `apiKeyInput`，存完即刻清走；
+  介面改為顯示 `keyHint`。換部機／清 cache 都唔使重新貼 key —— server 有就得
+- `api/cf.ts`、`api/cf-models.ts`、`utils/aiClient.ts`、`utils/answerClient.ts`、
+  `utils/modelList.ts` **刪走** —— 呢五個係「瀏覽器直駁 LLM」嘅路，
+  必須喺前端揸住條 key 先做得嘢，同「key 只存 server」直接相沖。
+  `api/index.ts` 唔再按平台分岔 AI 呼叫，Tauri 只留低檔案／匯出
+- i18n 「Key 存在浏览器本地不会泄露」/「Key stays in your browser」**已經係大話**，
+  改成講清楚 key 加密存喺伺服器，而且老實講埋「架站嗰位揸住 MASTER_KEY，
+  技術上解得開」
+
 ### 之後仲要做（見設計文件 §8）
 
-- W3 每用戶 LLM 設定 + 伺服器端加密 + 反轉請求流程 + endpoint allowlist（修 SSRF）
 - W4 課程同成員（join code）
 - W5 教材上傳同 ACL
 - W6 共享題庫（`stores/practice.ts`、`stores/exam.ts` 由 localStorage 改 server）
 - W7 練習流程
 
-`api/bridge.ts`（Tauri）同 `api/cf.ts`（Cloudflare Workers）暫時保留 ——
-喺 web build 係惰性嘅、唔阻編譯，W3 重寫 config 層時一齊處理。
+`api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
 
 ## Image
 
@@ -79,6 +135,11 @@
 
 ```bash
 export ADMIN_TOKEN='<自己改一個>'
+export MASTER_KEY="$(openssl rand -hex 32)"   # 生成一次，之後唔好再變
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 ```
+
+`MASTER_KEY` 一定要獨立收好：**唔好 commit 入 git，亦唔好同 `exameow-data`
+volume 擺埋一齊備份**。兩者分開放，DB 單獨洩漏先至解唔開啲 API key。
+遺失咗就所有已存嘅 key 都救唔返（用戶重新填就得，唔算災難）。

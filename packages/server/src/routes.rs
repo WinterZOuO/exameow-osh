@@ -2,20 +2,22 @@ use axum::{
     extract::{Multipart, Query, State},
     http::{header, StatusCode},
     response::Response,
-    Json,
+    Extension, Json,
 };
-use exameow_core::ai::{AIClient, ModelInfo};
-use exameow_core::config::{AIConfigData, ConfigStore};
+use exameow_core::ai::AIClient;
 use exameow_core::exam::{
-    answer_question, explain_question, generate_exam, judge_answer, AnswerResult, ExamParams, ExplainResult, JudgeResult, Question,
+    answer_question, explain_question, generate_exam, judge_answer, AnswerResult, ExamParams,
+    ExplainResult, JudgeResult, Question,
 };
 use exameow_core::parser::parse_file;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 
+use crate::auth::CurrentUser;
+use crate::llm;
+
 pub struct AppState {
-    pub config_store: ConfigStore,
     pub relay: crate::relay::RelayState,
     pub admin_token: Mutex<String>,
 }
@@ -25,12 +27,6 @@ impl AppState {
     pub fn db(&self) -> &Mutex<rusqlite::Connection> {
         &self.relay.conn
     }
-}
-
-#[derive(Deserialize)]
-pub struct ModelsQuery {
-    pub endpoint: Option<String>,
-    pub api_key: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -43,44 +39,39 @@ pub struct ExportQuery {
     pub questions: String,
 }
 
-fn ai_endpoint() -> String { std::env::var("AI_ENDPOINT").unwrap_or_default() }
-fn ai_api_key() -> String { std::env::var("AI_API_KEY").unwrap_or_default() }
-fn ai_model() -> String { std::env::var("AI_MODEL").unwrap_or_default() }
+fn ai_endpoint() -> String {
+    std::env::var("AI_ENDPOINT").unwrap_or_default()
+}
+fn ai_api_key() -> String {
+    std::env::var("AI_API_KEY").unwrap_or_default()
+}
+fn ai_model() -> String {
+    std::env::var("AI_MODEL").unwrap_or_default()
+}
 
-pub async fn get_models(
-    Query(params): Query<ModelsQuery>,
-) -> Result<Json<Vec<ModelInfo>>, (StatusCode, String)> {
-    let endpoint = params.endpoint.as_deref().unwrap_or("");
-    let api_key = params.api_key.as_deref().unwrap_or("");
+/// W3 之後所有 AI handler 都行呢條路：由 session user 查返自己嘅 endpoint + key。
+/// request body 唔再帶 `api_key` / `endpoint` —— 帶都冇用，冇 handler 會睇。
+fn resolve(
+    state: &AppState,
+    user: &CurrentUser,
+    model_override: Option<String>,
+) -> Result<llm::ResolvedLlm, (StatusCode, String)> {
+    llm::resolve_or_env(state, user, model_override)
+}
 
-    let (endpoint, api_key) = if endpoint.is_empty() || api_key.is_empty() {
-        let e = ai_endpoint();
-        let k = ai_api_key();
-        if e.is_empty() || k.is_empty() {
-            return Err((StatusCode::BAD_REQUEST, "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string()));
-        }
-        (e, k)
-    } else {
-        (endpoint.to_string(), api_key.to_string())
-    };
-
-    let client = AIClient::new(&endpoint, &api_key);
-    let models = client
-        .fetch_models()
-        .await
-        .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
-    Ok(Json(models))
+fn default_language(lang: Option<String>) -> String {
+    lang.filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "Chinese".to_string())
 }
 
 pub async fn generate_exam_handler(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<CurrentUser>,
     mut multipart: Multipart,
 ) -> Result<Json<GenerateResult>, (StatusCode, String)> {
     let mut file_data: Option<Vec<u8>> = None;
     let mut file_name = String::new();
     let mut params_json = String::new();
-    let mut endpoint = String::new();
-    let mut api_key = String::new();
     let mut model = String::new();
 
     while let Ok(Some(field)) = multipart.next_field().await {
@@ -102,18 +93,6 @@ pub async fn generate_exam_handler(
                     .await
                     .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?
             }
-            "endpoint" => {
-                endpoint = field
-                    .text()
-                    .await
-                    .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?
-            }
-            "api_key" => {
-                api_key = field
-                    .text()
-                    .await
-                    .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?
-            }
             "model" => {
                 model = field
                     .text()
@@ -124,16 +103,8 @@ pub async fn generate_exam_handler(
         }
     }
 
-    let file_data =
-        file_data.ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
-
-    let endpoint = if endpoint.is_empty() { ai_endpoint() } else { endpoint };
-    let api_key = if api_key.is_empty() { ai_api_key() } else { api_key };
-    let model = if model.is_empty() { ai_model() } else { model };
-
-    if endpoint.is_empty() || api_key.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string()));
-    }
+    let file_data = file_data.ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
+    let cfg = resolve(&state, &user, Some(model))?;
 
     let params: ExamParams = serde_json::from_str(&params_json)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid params: {e}")))?;
@@ -157,8 +128,8 @@ pub async fn generate_exam_handler(
 
     let _ = std::fs::remove_file(&temp_path_str);
 
-    let client = AIClient::new(&endpoint, &api_key);
-    let questions = generate_exam(&client, &text, &params, &model)
+    let client = AIClient::new(&cfg.endpoint, &cfg.api_key);
+    let questions = generate_exam(&client, &text, &params, &cfg.model)
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
 
@@ -204,64 +175,26 @@ pub async fn export_xlsx_handler(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-pub async fn save_config_handler(
-    State(_state): State<Arc<AppState>>,
-    Json(config): Json<AIConfigData>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    _state
-        .config_store
-        .save(&config.endpoint, &config.api_key, &config.model)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Save error: {e}")))?;
-    Ok(StatusCode::OK)
-}
-
-pub async fn load_config_handler(
-    State(_state): State<Arc<AppState>>,
-) -> Result<Json<Option<AIConfigData>>, (StatusCode, String)> {
-    let config = _state
-        .config_store
-        .load()
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Load error: {e}")))?;
-    Ok(Json(config))
-}
-
 #[derive(Deserialize)]
 pub struct AnswerRequest {
     pub question: String,
     pub language: Option<String>,
-    pub endpoint: Option<String>,
-    pub api_key: Option<String>,
     pub model: Option<String>,
 }
 
 pub async fn answer_handler(
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<CurrentUser>,
     Json(req): Json<AnswerRequest>,
 ) -> Result<Json<AnswerResult>, (StatusCode, String)> {
     if req.question.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "Question is empty".to_string()));
     }
+    let cfg = resolve(&state, &user, req.model)?;
+    let language = default_language(req.language);
 
-    let endpoint = req
-        .endpoint
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_endpoint);
-    let api_key = req
-        .api_key
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_api_key);
-    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
-
-    if endpoint.is_empty() || api_key.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
-        ));
-    }
-
-    let language = req.language.filter(|s| !s.is_empty()).unwrap_or_else(|| "Chinese".to_string());
-
-    let client = AIClient::new(&endpoint, &api_key);
-    let result = answer_question(&client, &req.question, &language, &model)
+    let client = AIClient::new(&cfg.endpoint, &cfg.api_key);
+    let result = answer_question(&client, &req.question, &language, &cfg.model)
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
     Ok(Json(result))
@@ -274,39 +207,22 @@ pub struct JudgeRequest {
     pub analysis: Option<String>,
     pub user_answer: String,
     pub language: Option<String>,
-    pub endpoint: Option<String>,
-    pub api_key: Option<String>,
     pub model: Option<String>,
 }
 
 pub async fn judge_handler(
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<CurrentUser>,
     Json(req): Json<JudgeRequest>,
 ) -> Result<Json<JudgeResult>, (StatusCode, String)> {
     if req.user_answer.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "User answer is empty".to_string()));
     }
-
-    let endpoint = req
-        .endpoint
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_endpoint);
-    let api_key = req
-        .api_key
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_api_key);
-    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
-
-    if endpoint.is_empty() || api_key.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
-        ));
-    }
-
-    let language = req.language.filter(|s| !s.is_empty()).unwrap_or_else(|| "Chinese".to_string());
+    let cfg = resolve(&state, &user, req.model)?;
+    let language = default_language(req.language);
     let analysis = req.analysis.unwrap_or_default();
 
-    let client = AIClient::new(&endpoint, &api_key);
+    let client = AIClient::new(&cfg.endpoint, &cfg.api_key);
     let result = judge_answer(
         &client,
         &req.stem,
@@ -314,7 +230,7 @@ pub async fn judge_handler(
         &analysis,
         &req.user_answer,
         &language,
-        &model,
+        &cfg.model,
     )
     .await
     .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
@@ -327,46 +243,29 @@ pub struct ExplainRequest {
     pub reference_answer: String,
     pub analysis: Option<String>,
     pub language: Option<String>,
-    pub endpoint: Option<String>,
-    pub api_key: Option<String>,
     pub model: Option<String>,
 }
 
 pub async fn explain_handler(
+    State(state): State<Arc<AppState>>,
+    Extension(user): Extension<CurrentUser>,
     Json(req): Json<ExplainRequest>,
 ) -> Result<Json<ExplainResult>, (StatusCode, String)> {
     if req.stem.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "Question is empty".to_string()));
     }
-
-    let endpoint = req
-        .endpoint
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_endpoint);
-    let api_key = req
-        .api_key
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(ai_api_key);
-    let model = req.model.filter(|s| !s.is_empty()).unwrap_or_else(ai_model);
-
-    if endpoint.is_empty() || api_key.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "No AI config (set AI_ENDPOINT/AI_API_KEY env vars)".to_string(),
-        ));
-    }
-
-    let language = req.language.filter(|s| !s.is_empty()).unwrap_or_else(|| "Chinese".to_string());
+    let cfg = resolve(&state, &user, req.model)?;
+    let language = default_language(req.language);
     let analysis = req.analysis.unwrap_or_default();
 
-    let client = AIClient::new(&endpoint, &api_key);
+    let client = AIClient::new(&cfg.endpoint, &cfg.api_key);
     let result = explain_question(
         &client,
         &req.stem,
         &req.reference_answer,
         &analysis,
         &language,
-        &model,
+        &cfg.model,
     )
     .await
     .map_err(|e| (StatusCode::BAD_GATEWAY, format!("AI error: {e}")))?;
@@ -380,6 +279,7 @@ pub struct ServerConfigInfo {
     pub model: String,
 }
 
+/// server 自己有冇一套 env AI 設定。**唔會**回傳條 key。
 pub async fn server_config_info_handler() -> Json<ServerConfigInfo> {
     let endpoint = ai_endpoint();
     let api_key = ai_api_key();

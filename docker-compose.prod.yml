@@ -14,10 +14,18 @@ services:
       - EXAM_DB_PATH=/app/data/exameow.db
       - ADMIN_TOKEN_FILE=/app/data/admin_token.txt
       - ADMIN_TOKEN=${ADMIN_TOKEN:?ADMIN_TOKEN 必須設定，唔好用預設值 pass}
-      # 過渡設定：W3（每用戶自己填 key）落地之後呢三個會拆走
+      # 加密每個用戶 LLM API key 嘅 master key（W3）。
+      # 生成：openssl rand -hex 32
+      # 唔好 commit 入 git，備份時亦唔好同 exameow-data volume 擺埋一齊 ——
+      # 分開放，DB 單獨洩漏先解唔開啲 key。
+      # 一旦遺失，所有已存嘅 API key 都救唔返（用戶重新填就得）。
+      - MASTER_KEY=${MASTER_KEY:?MASTER_KEY 必須設定，用 openssl rand -hex 32 生成}
+      # 選填：server 自己一套 fallback key，用戶冇填自己嗰條就用呢個
       - AI_ENDPOINT=${AI_ENDPOINT:-}
       - AI_API_KEY=${AI_API_KEY:-}
       - AI_MODEL=${AI_MODEL:-}
+      # 選填：allowlist 以外嘅 LLM host（自架 / 內網），逗號分隔
+      - LLM_EXTRA_HOSTS=${LLM_EXTRA_HOSTS:-}
     volumes:
       - exameow-data:/app/data
     restart: unless-stopped

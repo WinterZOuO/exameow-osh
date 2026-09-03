@@ -6,7 +6,7 @@ import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
 import { useI18nStore } from './i18n'
 import type { ParseProgressReport } from '@/utils/fileParser'
-import { isTauri, isCloudflare } from '@/utils/platform'
+import { isTauri } from '@/utils/platform'
 
 const ALL_TYPES: QuestionType[] = [
   'single_choice' as QuestionType,
@@ -486,7 +486,6 @@ export const useExamStore = defineStore('exam', () => {
 
     try {
       error.value = null
-      const config = configStore.getConfig()
       const baseParams = getParams()
 
       // Parse all files and concatenate text
@@ -521,8 +520,6 @@ export const useExamStore = defineStore('exam', () => {
 
       progress.value = { current: 0, total: batches.length, phase: 'generating', message: i18n.t('genProgressGeneratingBatch', { current: 1, total: batches.length }) }
 
-      const useDirectAI = isCloudflare() && configStore.aiProvider === 'custom'
-
       const uniqueTexts = new Set(batches.map(b => b.text)).size
       const chunkSizes = [...new Set(batches.map(b => b.text || ''))].map(t => t.length)
       console.log(
@@ -542,14 +539,8 @@ export const useExamStore = defineStore('exam', () => {
           `${JSON.stringify(batch.type_counts)} | ${textLen} chars | "${textPreview}..."`,
         )
 
-        if (useDirectAI && batch.text) {
-          const { callCustomAI } = await import('@/utils/aiClient')
-          const questions_ = await callCustomAI(batch.text, batch, config, signal)
-          questions.value.push(...questions_)
-        } else {
-          const result = await api.generateExam(fileRef, batch, config, signal)
-          questions.value.push(...result.questions)
-        }
+        const result = await api.generateExam(fileRef as File, batch, configStore.model, signal)
+        questions.value.push(...result.questions)
         console.log(`[Exameow] Batch ${batch.batch_index} done: ${questions.value.length} questions total`)
       }
 

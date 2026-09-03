@@ -5,7 +5,6 @@ import { usePracticeStore } from '@/stores/practice'
 import { useWrongQuestionsStore } from '@/stores/wrongQuestions'
 import { useConfigStore } from '@/stores/config'
 import { api } from '@/api'
-import { isCloudflare } from '@/utils/platform'
 import type { JudgeResult, ExplainResult } from '@exameow/shared'
 import { useSwipeNavigation } from '@/composables/useSwipeNavigation'
 import type { PracticeMode, MockExamConfig, WrongSort } from '@exameow/shared'
@@ -449,14 +448,9 @@ async function handleAiExplain() {
   }
 
   try {
-    const config = configStore.getConfig()
-    let result: ExplainResult
-    if (isCloudflare() && configStore.aiProvider === 'custom') {
-      const { explainViaCustomAI } = await import('@/utils/answerClient')
-      result = await explainViaCustomAI(params, language, config, explainAbort.signal)
-    } else {
-      result = await api.explainQuestion(params, language, config, explainAbort.signal)
-    }
+    const result: ExplainResult = await api.explainQuestion(
+      params, language, configStore.model, explainAbort.signal,
+    )
     if (practiceStore.session?.currentIndex !== qIndex) return
     practiceStore.saveAiAnalysis(q.id, result.explanation)
   } catch (e: any) {
@@ -494,14 +488,9 @@ async function handleAiJudge() {
   }
 
   try {
-    const config = configStore.getConfig()
-    let result: JudgeResult
-    if (isCloudflare() && configStore.aiProvider === 'custom') {
-      const { judgeViaCustomAI } = await import('@/utils/answerClient')
-      result = await judgeViaCustomAI(params, language, config, judgeAbort.signal)
-    } else {
-      result = await api.judgeAnswer(params, language, config, judgeAbort.signal)
-    }
+    const result: JudgeResult = await api.judgeAnswer(
+      params, language, configStore.model, judgeAbort.signal,
+    )
     if (practiceStore.session?.currentIndex !== qIndex) return
     aiFeedback.value = result.feedback
     applyGrade(result.correct)

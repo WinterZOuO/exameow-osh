@@ -1,4 +1,5 @@
 mod auth;
+mod llm;
 mod relay;
 mod routes;
 
@@ -8,7 +9,6 @@ use axum::{
     routing::{delete, get, post},
     Router,
 };
-use exameow_core::config::ConfigStore;
 use routes::AppState;
 use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
@@ -49,10 +49,6 @@ fn fatal(msg: &str) -> ! {
 
 #[tokio::main]
 async fn main() {
-    let config_store = ConfigStore::new("ExameowServer").unwrap_or_else(|_| {
-        eprintln!("Warning: could not init config store, using transient store");
-        ConfigStore::new("ExameowServerTransient").unwrap()
-    });
     let db_path = std::env::var("EXAM_DB_PATH").unwrap_or_else(|_| "./exameow.db".to_string());
     let relay = relay::init_db(&db_path)
         .unwrap_or_else(|e| panic!("failed to init exam db at {db_path}: {e}"));
@@ -63,9 +59,10 @@ async fn main() {
 
     auth::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 auth schema 失敗：{e}")));
     auth::seed_admin(&relay.conn).unwrap_or_else(|e| fatal(&e));
+    llm::init_schema(&relay.conn).unwrap_or_else(|e| fatal(&format!("初始化 llm schema 失敗：{e}")));
+    llm::ensure_master_key().unwrap_or_else(|e| fatal(&e));
 
     let state = Arc::new(AppState {
-        config_store,
         relay,
         admin_token: Mutex::new(admin_token),
     });
@@ -98,15 +95,19 @@ async fn main() {
             get(auth::list_users_handler).post(auth::create_user_handler),
         )
         .route("/api/auth/users/{id}", delete(auth::delete_user_handler))
-        .route("/api/models", get(routes::get_models))
+        .route(
+            "/api/llm-config",
+            get(llm::get_llm_config)
+                .put(llm::put_llm_config)
+                .delete(llm::delete_llm_config),
+        )
+        .route("/api/llm-config/models", post(llm::post_models))
         .route("/api/generate", post(routes::generate_exam_handler))
         .route("/api/answer", post(routes::answer_handler))
         .route("/api/judge", post(routes::judge_handler))
         .route("/api/explain", post(routes::explain_handler))
         .route("/api/export", get(routes::export_handler))
         .route("/api/export/xlsx", post(routes::export_xlsx_handler))
-        .route("/api/config/save", post(routes::save_config_handler))
-        .route("/api/config/load", get(routes::load_config_handler))
         .route("/api/config/server", get(routes::server_config_info_handler))
         .route("/api/exam/publish", post(relay::publish_handler))
         .route(

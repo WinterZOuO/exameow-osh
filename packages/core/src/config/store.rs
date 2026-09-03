@@ -17,7 +17,9 @@ pub struct ConfigStore {
     key: [u8; 32],
 }
 
-fn seal(key: &[u8; 32], plaintext: &[u8]) -> Result<String, CoreError> {
+/// AES-256-GCM 密封，輸出 base64(nonce || ciphertext || tag)。
+/// 每次呼叫都生成獨立 nonce，同一段明文加密兩次唔會得出相同密文。
+pub fn seal(key: &[u8; 32], plaintext: &[u8]) -> Result<String, CoreError> {
     let rng = SystemRandom::new();
     let mut nonce_bytes = [0u8; 12];
     rng.fill(&mut nonce_bytes)
@@ -38,7 +40,8 @@ fn seal(key: &[u8; 32], plaintext: &[u8]) -> Result<String, CoreError> {
     Ok(BASE64.encode(&combined))
 }
 
-fn open_sealed(key: &[u8; 32], encoded: &str) -> Result<Vec<u8>, CoreError> {
+/// `seal` 嘅逆操作。key 唔啱 / 密文被改過都會 Err，唔會回傳垃圾。
+pub fn open_sealed(key: &[u8; 32], encoded: &str) -> Result<Vec<u8>, CoreError> {
     let combined = BASE64
         .decode(encoded)
         .map_err(|e| CoreError::Config(format!("decode error: {e}")))?;

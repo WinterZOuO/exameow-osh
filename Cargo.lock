@@ -511,6 +511,7 @@ version = "0.1.0"
 dependencies = [
  "argon2",
  "axum",
+ "base64",
  "exameow-core",
  "rand 0.8.7",
  "rusqlite",
@@ -521,6 +522,7 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
+ "url",
  "uuid",
 ]
 
