@@ -89,6 +89,28 @@ export interface MaterialDetail extends MaterialSummary {
   content: string
 }
 
+// ---------------------------------------------------------------- 共享題庫（W6）
+
+/**
+ * 課程內共享嘅題目 —— 生成完直接入呢度，同課成員全部見得到（同教材相反，
+ * 教材原文私有，題目一入庫就係大家嘅嘢）。
+ */
+export interface SharedQuestion extends Question {
+  course_id: string
+  material_id: string | null
+  contributor_id: string
+  contributor_username: string
+  status: string
+  created_at: number
+}
+
+export interface BulkInsertResult {
+  inserted: number
+  /** 撞咗題幹 hash 俾 `INSERT OR IGNORE` 拋走嘅題數（同課同學生成過同一條題） */
+  duplicates: number
+  skipped: number
+}
+
 export interface ServerConfigInfo {
   has_env_ai: boolean
   endpoint: string
@@ -324,6 +346,30 @@ export const httpApi = {
   async deleteMaterial(id: string): Promise<void> {
     const res = await apiFetch(`${BASE_URL}/api/materials/${encodeURIComponent(id)}`, { method: 'DELETE' })
     if (!res.ok) await throwHttpError(res)
+  },
+
+  // ---------------------------------------------------------------- 共享題庫（W6）
+
+  async listCourseQuestions(courseId: string): Promise<SharedQuestion[]> {
+    return json(await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/questions`))
+  },
+
+  /**
+   * 生成完之後推入課程共享題庫。`materialId` 得生成自單一教材先傳
+   * （方便日後「睇返呢條題出自邊份筆記」），多個輸入來源一齊生成就傳 `null`。
+   */
+  async bulkInsertQuestions(
+    courseId: string,
+    materialId: string | null,
+    questions: Question[],
+  ): Promise<BulkInsertResult> {
+    return json(
+      await apiFetch(`${BASE_URL}/api/courses/${encodeURIComponent(courseId)}/questions/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ material_id: materialId, questions }),
+      }),
+    )
   },
 };
 

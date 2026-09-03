@@ -168,15 +168,66 @@ redirect，一個准用嘅 host 回 `302 → http://169.254.169.254/` 就繞過�
 `App.vue` 登出 watcher 度加 `materialsStore.reset()`，唔係嘅話會重演 W4
 揪出嗰個「換用戶但 cache 冇清」嘅 bug。
 
-**W6 落地之後要記得**：`questions.material_id` 會 reference materials(id)，
-刪教材嗰陣要手動 `SET NULL`（SQLite 冇開 `foreign_keys`，`ON DELETE
-SET NULL` 唔會自動生效）—— 而家 W5 範圍未有呢張表，暫時淨係刪 materials
-一行就夠。
+（W6 落地已經補返 `questions.material_id` 刪教材時嘅手動 `SET NULL` 清理，
+見下面 W6 段落。）
+
+### W6（已完成）共享題庫
+
+新增 `packages/server/src/questions.rs`：`questions` 表，掛喺 `courses`
+底下，課程內所有成員共享同一份池（同教材相反 —— 教材原文私有，題目一入
+庫就係大家嘅嘢）。`POST /api/courses/{id}/questions/bulk` 一次過插入一批
+題目，撞 `(course_id, stem_hash)` 嘅重複題用 `INSERT OR IGNORE` 拋走；
+`GET /api/courses/{id}/questions` 列出 `status='active'` 嘅共享池。
+
+- **刻意冇跟設計文件 §6.4 嘅 `POST /api/courses/{id}/generate`**。設計文件
+  原意係「server 直接用 `material_ids` 生成」，但生成管線（chunk 切分、
+  batch、PDF/圖片解析）已經成套喺前端 `stores/exam.ts` 度，仲要處理埋
+  Tauri 本機檔案路徑，Rust 側重寫一次唔化算。改法：`stores/exam.ts`
+  嘅生成流程完全冇變，淨係「生成完之後點存」呢一步分岔 —— 有 `courseTarget`
+  就 bulk insert 入共享題庫，冇就沿用返舊時嗰種存落 `localStorage` 嘅本機
+  bank（`practiceStore.saveGeneratedAsBank`）。獨立（冇課程 context）嘅
+  `/generate` 頁行為完全冇變，零 regression 風險
+- **教材照舊借用現成嘅檔案解析管線,唔開多一條路**。GenerateView 揀咗某份
+  教材生成，就將佢個 `content`（已經解碼好嘅字串）包做一個 `File`
+  （`new File([content], filename)`），推入同一個 `fileInputsRef` —— 同直接
+  拖一個 `.md` 檔上嚟行足全同一條路（`parseBrowserFile` 見 `.md` 就
+  `file.text()`），前端零新解析代碼
+- **`material_id` 淨係生成自單一份教材先有值**。揀咗教材生成先傳呢個
+  id（等日後可以話俾你知「呢條題出自邊份筆記」），獨立檔案上傳或者未揀
+  教材就傳 `null` —— 冇話得埋邊一個先係「出處」
+- **material-scoped 嘅 bulk insert 要重做一次 ACL 檢查，唔可以信前端**。
+  `material_id` 有值,server 要自己查返嗰份教材屬唔屬於呢個課程、你係唔係
+  上傳者或 admin —— 唔係就 403/404（同 materials.rs 一樣嘅兩層邏輯）。
+  淨係喺前端擋（例如淨係俾你揀自己嘅教材）唔夠，request body 可以隨便砌
+- **去重 hash 摺埋空白同大小楷**：`normalize_stem()` 用 `split_whitespace()`
+  摺走連續空白、`to_lowercase()` 轉細楷先 sha256。測試證咗「兩個人揸住
+  同一份筆記,各自生成」呢個真實情景 —— 題幹字眼一模一樣但空白/大小楷有
+  少少出入,一樣撞得中同一條 index
+- **答案/選項曾經想過收埋唔畀睇，最後冇做**。第一版就兩個人、互相信任，
+  收埋反而唔方便核對答案啱唔啱；`SharedQuestion` 照樣帶埋 `answer`/
+  `options`。日後多人版先再諗要唔要留返俾 W7 嘅練習模式先解鎖
+- **依家張表冚唔到設計文件 §6.2 嘅 `source_excerpt`/`model_used`**。
+  `exameow_core::exam::Question` 呢個核心型別本身冇呢兩個欄，強行加即係
+  自己另外維護一份型別，值博率唔高，第一期跳過，日後真係要再加
+
+前端：`stores/questions.ts`（新）跟 `stores/materials.ts` 一樣用
+`courseId -> SharedQuestion[]` map 存；`stores/exam.ts` 嘅 `generate()`
+加一個可選嘅 `courseTarget` 參數，生成完視乎有冇呢個 target 分岔存去邊度
+（見上面）。`/courses/:id` 頁新增「共享題庫」卡：題目數量、生成掣、
+每條題撳一下展開睇選項/答案/解析；教材列表每行加多一粒「用呢份生成」
+掣，帶 `?course=<id>&material=<id>` 跳去 `GenerateView`，嗰邊自動攞返
+教材內容包做 File 塞入輸入框，生成完直接推入嗰個課程嘅共享題庫、彈返
+「X 條新題目、Y 條重複已省略」嘅結果。同 W4/W5 一樣要喺 `App.vue` 登出
+watcher 加 `questionsStore.reset()`。
+
+**W7 落地之後要記得**：呢個共享題庫卡而家淨係「睇」，撳題目得個展開，
+冇真正嘅抽題練習、冇 `attempts`、冇 🚩 flag——嗰啲留晒俾 W7（design.md
+§8 W7 本身就分開咗呢兩件事）。
 
 ### 之後仲要做（見設計文件 §8）
 
-- W6 共享題庫（`stores/practice.ts`、`stores/exam.ts` 由 localStorage 改 server）
-- W7 練習流程
+- W7 練習流程（由共享題庫隨機抽題、寫 `attempts`、🚩 flag）
+- W8 provider 設定備忘（唔使寫 code）
 
 `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
 

@@ -5,6 +5,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useCoursesStore } from '@/stores/courses'
 import { useMaterialsStore } from '@/stores/materials'
+import { useQuestionsStore } from '@/stores/questions'
 import type { CourseDetail } from '@/api/http'
 import {
   ArrowLeftIcon,
@@ -15,6 +16,9 @@ import {
   ArrowRightOnRectangleIcon,
   DocumentTextIcon,
   ArrowUpTrayIcon,
+  QueueListIcon,
+  SparklesIcon,
+  ChevronDownIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -23,6 +27,7 @@ const i18n = useI18nStore()
 const auth = useAuthStore()
 const store = useCoursesStore()
 const materialsStore = useMaterialsStore()
+const questionsStore = useQuestionsStore()
 
 const course = ref<CourseDetail | null>(null)
 const loadError = ref('')
@@ -42,9 +47,16 @@ async function load() {
     loadError.value = e.message || String(e)
   }
   await materialsStore.fetchMaterials(courseId.value)
+  await questionsStore.fetchQuestions(courseId.value)
 }
 
 onMounted(load)
+
+function goGenerate(materialId?: string) {
+  const query: Record<string, string> = { course: courseId.value }
+  if (materialId) query.material = materialId
+  router.push({ name: 'generate', query })
+}
 
 // ---------------------------------------------------------------- 教材（W5）
 
@@ -97,6 +109,29 @@ async function handleDeleteMaterial(id: string) {
   } finally {
     confirmDeleteMaterialId.value = null
   }
+}
+
+// ---------------------------------------------------------------- 共享題庫（W6）
+// 呢度淨係「睇到成個共享池」——真正抽題練習、寫 attempts 留返 W7
+
+const questions = computed(() => questionsStore.byCourse[courseId.value] ?? [])
+const expandedQuestionId = ref<string | null>(null)
+
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  single_choice: 'typeSingle',
+  multi_choice: 'typeMulti',
+  true_false: 'typeTrueFalse',
+  fill_blank: 'typeFillBlank',
+  short_answer: 'typeShortAnswer',
+}
+
+function typeLabel(type: string): string {
+  const key = TYPE_LABEL_KEYS[type]
+  return key ? i18n.t(key as any) : type
+}
+
+function toggleQuestion(id: string) {
+  expandedQuestionId.value = expandedQuestionId.value === id ? null : id
 }
 
 async function copyJoinCode() {
@@ -223,7 +258,15 @@ async function handleDelete() {
                 <template v-if="auth.isAdmin"> · {{ i18n.t('materialsUploadedBy') }} {{ m.uploader_username }}</template>
               </div>
             </div>
-            <div class="shrink-0">
+            <div class="shrink-0 flex items-center gap-1">
+              <button
+                v-if="confirmDeleteMaterialId !== m.id"
+                class="btn-icon !w-9 !h-9"
+                :title="i18n.t('materialsGenerate')"
+                @click="goGenerate(m.id)"
+              >
+                <SparklesIcon class="w-4 h-4" />
+              </button>
               <button
                 v-if="confirmDeleteMaterialId !== m.id"
                 class="btn-icon !w-9 !h-9"
@@ -253,6 +296,53 @@ async function handleDelete() {
             {{ materialsError }}
           </div>
         </Transition>
+      </div>
+
+      <!-- 共享題庫（W6）：課程內所有成員見到晒同一份池，同教材相反 -->
+      <div class="card-filled p-5 sm:p-6 mb-4 shadow-sm border border-[rgb(var(--md-outline-variant)/0.3)]">
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="text-label-md font-semibold flex items-center gap-2" style="color: rgb(var(--md-on-surface-variant))">
+            <QueueListIcon class="w-4 h-4" />
+            {{ i18n.t('questionsTitle') }}（{{ questions.length }}）
+          </label>
+          <button class="btn-tonal text-sm !px-3 !py-1.5" @click="goGenerate()">
+            <SparklesIcon class="w-4 h-4" />
+            <span>{{ i18n.t('questionsGenerate') }}</span>
+          </button>
+        </div>
+        <p class="text-body-sm mb-3" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('questionsHint') }}</p>
+
+        <div v-if="questions.length === 0" class="text-body-sm py-4 text-center" style="color: rgb(var(--md-on-surface-variant))">
+          {{ i18n.t('questionsEmpty') }}
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="q in questions"
+            :key="q.id"
+            class="rounded-xl overflow-hidden"
+            style="background-color: rgb(var(--md-surface-container-highest))"
+          >
+            <button class="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left" @click="toggleQuestion(q.id)">
+              <div class="min-w-0">
+                <div class="text-sm truncate">{{ q.stem }}</div>
+                <div class="text-xs" style="color: rgb(var(--md-on-surface-variant))">
+                  {{ typeLabel(q.type) }} · {{ i18n.t('questionsContributedBy') }} {{ q.contributor_username }}
+                </div>
+              </div>
+              <ChevronDownIcon
+                class="w-4 h-4 shrink-0 transition-transform duration-200"
+                :class="{ 'rotate-180': expandedQuestionId === q.id }"
+              />
+            </button>
+            <div v-if="expandedQuestionId === q.id" class="px-3 pb-3 text-sm space-y-1.5">
+              <div v-for="(opt, i) in q.options" :key="i" style="color: rgb(var(--md-on-surface-variant))">
+                {{ String.fromCharCode(65 + i) }}. {{ opt }}
+              </div>
+              <div class="font-medium">{{ i18n.t('questionsAnswer') }}：{{ q.answer }}</div>
+              <div v-if="q.analysis" style="color: rgb(var(--md-on-surface-variant))">{{ q.analysis }}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Transition name="scale">

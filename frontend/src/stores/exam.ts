@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, reactive, computed } from 'vue'
 import type { ExamParams, Question, QuestionType, Difficulty } from '@exameow/shared'
+import type { BulkInsertResult } from '@/api/http'
 import { api } from '@/api'
 import { useConfigStore } from './config'
 import { usePracticeStore } from './practice'
+import { useQuestionsStore } from './questions'
 import { useI18nStore } from './i18n'
 import type { ParseProgressReport } from '@/utils/fileParser'
 import { isTauri } from '@/utils/platform'
@@ -29,6 +31,8 @@ export const useExamStore = defineStore('exam', () => {
   const generating = ref(false)
   const error = ref<string | null>(null)
   const progress = ref({ current: 0, total: 0, message: '', phase: 'parsing' as ProgressPhase })
+  /** W6：生成完淨係喺有課程 context 先會填 —— 話你知推咗入共享題庫幾多條新題、幾多條撞重複 */
+  const pushResult = ref<BulkInsertResult | null>(null)
   let abortController: AbortController | null = null
   const generated = computed(() => questions.value.length > 0)
   const totalCount = computed(() =>
@@ -474,12 +478,23 @@ export const useExamStore = defineStore('exam', () => {
     return fullText
   }
 
-  async function generate(inputs: (string | File)[]) {
+  /**
+   * `courseTarget` 有值 —— 呢次生成係喺課程 context 入面做嘅（W6）：
+   * 生成完唔會再存落 localStorage 嘅本機題庫,而係直接 bulk insert 入
+   * `courseTarget.courseId` 嘅共享題庫（撞重複由 server 用 `INSERT OR IGNORE` 擋）。
+   * `materialId` 得生成自單一份教材先傳,幾個輸入來源一齊生成就傳 `null`。
+   * 冇傳 `courseTarget` 就係舊時嗰種獨立生成,行為完全不變。
+   */
+  async function generate(
+    inputs: (string | File)[],
+    courseTarget?: { courseId: string; materialId: string | null },
+  ) {
     const configStore = useConfigStore()
     const i18n = useI18nStore()
     generating.value = true
     progress.value = { current: 0, total: 0, message: i18n.t('genProgressParsing'), phase: 'parsing' }
     questions.value = []
+    pushResult.value = null
     sourceFileName.value = extractFileName(inputs)
     abortController = new AbortController()
     const signal = abortController.signal
@@ -547,8 +562,17 @@ export const useExamStore = defineStore('exam', () => {
       progress.value = { current: batches.length, total: batches.length, phase: 'complete', message: i18n.t('genProgressComplete') }
       saveCachedQuestions()
 
-      const practiceStore = usePracticeStore()
-      practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
+      if (courseTarget) {
+        const questionsStore = useQuestionsStore()
+        pushResult.value = await questionsStore.pushGenerated(
+          courseTarget.courseId,
+          questions.value,
+          courseTarget.materialId,
+        )
+      } else {
+        const practiceStore = usePracticeStore()
+        practiceStore.saveGeneratedAsBank(questions.value, sourceFileName.value)
+      }
     } catch (e: any) {
       if (e?.name === 'AbortError' || signal.aborted) {
         progress.value = { ...progress.value, phase: 'cancelled', message: i18n.t('genProgressCancelled') }
@@ -571,12 +595,13 @@ export const useExamStore = defineStore('exam', () => {
   function reset() {
     questions.value = []
     sourceFileName.value = ''
+    pushResult.value = null
     try { localStorage.removeItem('exameow-questions'); localStorage.removeItem('exameow-sourcefile') } catch {}
   }
 
   return {
     questionTypes, typeCounts, totalCount,
     difficulty, language, topicFilter, questions, generating, generated,
-    sourceFileName, error, progress, getParams, generate, cancelGeneration, reset,
+    sourceFileName, error, progress, pushResult, getParams, generate, cancelGeneration, reset,
   }
 })

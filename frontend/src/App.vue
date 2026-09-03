@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useConfigStore } from '@/stores/config'
 import { useCoursesStore } from '@/stores/courses'
 import { useMaterialsStore } from '@/stores/materials'
+import { useQuestionsStore } from '@/stores/questions'
 import AppShell from '@/components/layout/AppShell.vue'
 
 const route = useRoute()
@@ -12,6 +13,7 @@ const auth = useAuthStore()
 const configStore = useConfigStore()
 const coursesStore = useCoursesStore()
 const materialsStore = useMaterialsStore()
+const questionsStore = useQuestionsStore()
 
 // 登入頁唔應該有底部導航同 header
 const isPublicRoute = computed(() => route.meta.public === true)
@@ -28,6 +30,7 @@ watch(
     } else {
       coursesStore.reset()
       materialsStore.reset()
+      questionsStore.reset()
     }
   },
   { immediate: true },

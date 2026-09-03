@@ -339,15 +339,20 @@ pub async fn delete_material_handler(
         return Err(err(StatusCode::FORBIDDEN, "material is private to its uploader"));
     }
 
-    // 未有 questions 表引用 material_id（W6 先會有）——而家淨係刪返 materials 一行就夠。
-    // W6 落地之後,呢度要記得手動清 questions.material_id（SQLite 冇開 foreign_keys，
-    // ON DELETE SET NULL 唔會自動生效，同 courses.rs 刪 course 嗰個教訓一樣）
     let n = conn
         .execute("DELETE FROM materials WHERE id = ?1", params![id])
         .map_err(db_err)?;
     if n == 0 {
         return Err(err(StatusCode::NOT_FOUND, "material not found"));
     }
+    // W6：questions.material_id 會 reference 呢張表。SQLite 冇開 foreign_keys，
+    // `ON DELETE SET NULL` 唔會自動生效（同 courses.rs 刪 course 嗰個教訓一樣），
+    // 要手動清 —— 題目本身唔跟住刪，淨係斷返個出處連結
+    conn.execute(
+        "UPDATE questions SET material_id = NULL WHERE material_id = ?1",
+        params![id],
+    )
+    .map_err(db_err)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

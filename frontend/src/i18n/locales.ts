@@ -512,6 +512,17 @@ export interface LocaleMessages {
   materialsDeleteConfirmYes?: string
   materialsInvalidType?: string
   materialsTooLarge?: string
+  materialsGenerate?: string
+  questionsTitle?: string
+  questionsHint?: string
+  questionsGenerate?: string
+  questionsEmpty?: string
+  questionsContributedBy?: string
+  questionsAnswer?: string
+  genCourseBanner?: string
+  genFromMaterial?: string
+  genBackToCourse?: string
+  genPushResult?: string
 }
 
 export const zh: LocaleMessages = {
@@ -1025,6 +1036,17 @@ export const zhTW: LocaleMessages = {
   materialsDeleteConfirmYes: '確定刪除',
   materialsInvalidType: '淨係接受 .md 檔案',
   materialsTooLarge: '檔案太大（上限 300 KB）',
+  materialsGenerate: '用呢份生成題目',
+  questionsTitle: '共享題庫',
+  questionsHint: '呢個課程所有成員生成嘅題目都會入呢個池，同課成員全部見得到。抽題練習留返下一步先做。',
+  questionsGenerate: '生成題目',
+  questionsEmpty: '未有題目，揀一份教材生成第一批',
+  questionsContributedBy: '貢獻者',
+  questionsAnswer: '答案',
+  genCourseBanner: '呢次生成完成會直接入「{course}」嘅共享題庫',
+  genFromMaterial: '根據教材「{name}」生成',
+  genBackToCourse: '返去課程',
+  genPushResult: '已入共享題庫：{inserted} 條新題目，{duplicates} 條重複已省略',
   appName: '過瞭喵',
   appSubtitle: 'AI 智能出題',
   navConfig: '配置',
@@ -1535,6 +1557,17 @@ export const en: LocaleMessages = {
   materialsDeleteConfirmYes: 'Yes, delete',
   materialsInvalidType: 'Only .md files are accepted',
   materialsTooLarge: 'File too large (300 KB max)',
+  materialsGenerate: 'Generate from this',
+  questionsTitle: 'Shared question bank',
+  questionsHint: 'Everyone generates into this shared pool for the course — all members see all questions. Practice mode is coming later.',
+  questionsGenerate: 'Generate questions',
+  questionsEmpty: 'No questions yet — pick a material to generate the first batch',
+  questionsContributedBy: 'Contributed by',
+  questionsAnswer: 'Answer',
+  genCourseBanner: 'These questions will be added to the shared bank for "{course}"',
+  genFromMaterial: 'Generating from material "{name}"',
+  genBackToCourse: 'Back to course',
+  genPushResult: 'Added to shared bank: {inserted} new, {duplicates} duplicates skipped',
   appName: 'Exameow',
   appSubtitle: 'AI Question Generator',
   navConfig: 'Config',

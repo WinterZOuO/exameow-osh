@@ -6,6 +6,8 @@ import {
   type CourseSummary,
   type MaterialDetail,
   type MaterialSummary,
+  type SharedQuestion,
+  type BulkInsertResult,
   type ServerConfigInfo,
 } from './http'
 
@@ -145,5 +147,15 @@ export const api = {
 
   deleteMaterial(id: string): Promise<void> {
     return httpApi.deleteMaterial(id)
+  },
+
+  // ------------------------------------------------ 共享題庫（W6）
+
+  listCourseQuestions(courseId: string): Promise<SharedQuestion[]> {
+    return httpApi.listCourseQuestions(courseId)
+  },
+
+  bulkInsertQuestions(courseId: string, materialId: string | null, questions: Question[]): Promise<BulkInsertResult> {
+    return httpApi.bulkInsertQuestions(courseId, materialId, questions)
   },
 }

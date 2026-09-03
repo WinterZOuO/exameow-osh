@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useExamStore } from '@/stores/exam'
 import { useConfigStore } from '@/stores/config'
 import { useI18nStore } from '@/stores/i18n'
 import FileUploader from '@/components/generate/FileUploader.vue'
 import ParamForm from '@/components/generate/ParamForm.vue'
 import QuestionTable from '@/components/preview/QuestionTable.vue'
-import { getFileInputs, fileInputsRef } from '@/stores/fileInput'
+import { getFileInputs, fileInputsRef, addFileInputs } from '@/stores/fileInput'
 import { api } from '@/api'
 import { generateCsvContent } from '@/api/http'
 import { isAndroid } from '@/utils/platform'
@@ -14,8 +15,10 @@ import PublishExamDialog from '@/components/exam/PublishExamDialog.vue'
 import JoinExamDialog from '@/components/exam/JoinExamDialog.vue'
 import LaunchExamDialog from '@/components/exam/LaunchExamDialog.vue'
 import AiConfigNotice from '@/components/common/AiConfigNotice.vue'
-import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { SparklesIcon, ArrowDownTrayIcon, CheckCircleIcon, ShareIcon, AcademicCapIcon } from '@heroicons/vue/24/outline'
 
+const route = useRoute()
+const router = useRouter()
 const examStore = useExamStore()
 const configStore = useConfigStore()
 const i18n = useI18nStore()
@@ -44,11 +47,48 @@ const progressPercent = computed(() => {
 
 const isBatched = computed(() => examStore.progress.total > 0)
 
+// ---------------------------------------------------------------- 課程 context（W6）
+//
+// 由 CourseDetailView 帶 `?course=<id>` 過嚟就即係「生成完直接入嗰個課程嘅共享題庫」，
+// 冇呢個 query param 就係舊時嗰種獨立生成（存本機 bank，行為完全不變）。
+// `?material=<id>` 有值就順手用嗰份已上傳嘅教材做輸入 —— 借 File 包住佢個 content，
+// 行返同上傳檔案一模一樣嘅解析管線，唔使另外寫一套。
+
+const courseId = computed(() => (route.query.course as string) || '')
+const materialIdParam = computed(() => (route.query.material as string) || '')
+const courseTitle = ref('')
+const materialFileName = ref('')
+const courseContextError = ref('')
+
+onMounted(async () => {
+  if (!courseId.value) return
+  try {
+    const course = await api.getCourse(courseId.value)
+    courseTitle.value = course.title
+  } catch (e: any) {
+    courseContextError.value = e.message || String(e)
+    return
+  }
+  if (materialIdParam.value) {
+    try {
+      const material = await api.getMaterial(materialIdParam.value)
+      materialFileName.value = material.filename
+      addFileInputs([new File([material.content], material.filename, { type: 'text/markdown' })])
+    } catch (e: any) {
+      courseContextError.value = e.message || String(e)
+    }
+  }
+})
+
 async function handleGenerate() {
   const inputs = getFileInputs()
   if (inputs.length === 0) return
   try {
-    await examStore.generate(inputs)
+    if (courseId.value) {
+      await examStore.generate(inputs, { courseId: courseId.value, materialId: materialIdParam.value || null })
+    } else {
+      await examStore.generate(inputs)
+    }
   } catch (_e) {}
 }
 
@@ -127,6 +167,29 @@ async function handleShare() {
       <button class="btn-tonal text-sm" @click="showJoin = true">{{ i18n.t('pubJoin') }}</button>
     </div>
 
+    <!-- 課程 context（W6）-->
+    <div
+      v-if="courseId"
+      class="card-filled p-4 mb-4 flex items-center gap-3"
+      :style="{ backgroundColor: 'rgba(var(--md-primary) / 0.08)' }"
+    >
+      <AcademicCapIcon class="w-5 h-5 shrink-0" style="color: rgb(var(--md-primary))" />
+      <div class="min-w-0 flex-1">
+        <p class="text-body-sm font-medium truncate">
+          {{ i18n.t('genCourseBanner', { course: courseTitle || courseId }) }}
+        </p>
+        <p v-if="materialFileName" class="text-xs truncate" style="color: rgb(var(--md-on-surface-variant))">
+          {{ i18n.t('genFromMaterial', { name: materialFileName }) }}
+        </p>
+      </div>
+      <button class="btn-tonal text-xs !h-8 !px-3 shrink-0" @click="router.push(`/courses/${courseId}`)">
+        {{ i18n.t('genBackToCourse') }}
+      </button>
+    </div>
+    <div v-if="courseContextError" class="mb-4 px-4 py-3 rounded-2xl text-sm" style="background-color: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container))">
+      {{ courseContextError }}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-6">
       <!-- File Upload Card -->
       <div class="card-outlined min-h-[180px] sm:min-h-[240px] flex items-center justify-center p-3 sm:p-4">
@@ -196,6 +259,11 @@ async function handleShare() {
 
     <!-- Export & Preview -->
     <template v-if="examStore.generated && !examStore.generating">
+      <div v-if="examStore.pushResult" class="mt-6 mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2" style="background-color: rgba(var(--md-primary) / 0.12); color: rgb(var(--md-primary))">
+        <CheckCircleIcon class="w-5 h-5 shrink-0" />
+        <span>{{ i18n.t('genPushResult', { inserted: examStore.pushResult.inserted, duplicates: examStore.pushResult.duplicates }) }}</span>
+      </div>
+
       <div class="mt-6 mb-4 flex flex-wrap items-center justify-between gap-3">
         <p class="text-body-lg" style="color: rgb(var(--md-on-surface-variant))">{{ i18n.t('previewQuestionCount', { n: examStore.questions.length }) }}</p>
         <div class="flex flex-wrap gap-2">
