@@ -436,7 +436,7 @@ async function handleAiExplain() {
   aiExplaining.value = true
   aiExplainError.value = null
   explainAbort = new AbortController()
-  const language = i18n.locale === 'zh' ? 'Chinese' : 'English'
+  const language = i18n.promptLanguage
   const qIndex = practiceStore.session?.currentIndex
   const q = item.question
   const optionsText = q.options.length
@@ -483,7 +483,7 @@ async function handleAiJudge() {
   aiJudgeError.value = null
   aiFeedback.value = null
   judgeAbort = new AbortController()
-  const language = i18n.locale === 'zh' ? 'Chinese' : 'English'
+  const language = i18n.promptLanguage
   const qIndex = practiceStore.session?.currentIndex
   const q = item.question
   const params = {

@@ -60,6 +60,22 @@ export const useI18nStore = defineStore('i18n', () => {
 
   const messages = computed<LocaleMessages>(() => localeMap[locale.value] || en)
 
+  // 送俾 LLM 嘅語言名。原本 PracticeView 寫死 `locale === 'zh' ? 'Chinese' : 'English'`，
+  // 令繁體 / 日 / 韓 / 西 / 法 / 德 / 俄 / 阿 全部退化成英文解釋。
+  const promptLanguageMap: Record<Locale, string> = {
+    zh: 'Simplified Chinese',
+    'zh-TW': 'Traditional Chinese',
+    en: 'English',
+    ja: 'Japanese',
+    ko: 'Korean',
+    es: 'Spanish',
+    fr: 'French',
+    de: 'German',
+    ru: 'Russian',
+    ar: 'Arabic',
+  }
+  const promptLanguage = computed(() => promptLanguageMap[locale.value] || 'English')
+
   function setLocale(newLocale: Locale) {
     if (localeMap[newLocale]) {
       locale.value = newLocale
@@ -83,5 +99,5 @@ export const useI18nStore = defineStore('i18n', () => {
     return text
   }
 
-  return { locale, messages, setLocale, toggle, t, supportedLocales: SUPPORTED_LOCALES }
+  return { locale, messages, promptLanguage, setLocale, toggle, t, supportedLocales: SUPPORTED_LOCALES }
 })
