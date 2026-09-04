@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
+import type { LocaleMessages } from '@/i18n/locales'
 import {
   CpuChipIcon,
   PaperAirplaneIcon,
@@ -11,6 +13,7 @@ import {
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
   UserGroupIcon,
+  UsersIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -23,14 +26,25 @@ async function handleLogout() {
 }
 const version = import.meta.env.VITE_APP_VERSION
 
-const entries = [
+interface MineEntry {
+  key: keyof LocaleMessages
+  descKey: keyof LocaleMessages
+  path: string
+  icon: Component
+}
+
+const entries = computed<MineEntry[]>(() => [
   { key: 'mineCourses', descKey: 'mineCoursesDesc', path: '/courses', icon: UserGroupIcon },
   { key: 'mineAIConfig', descKey: 'mineAIConfigDesc', path: '/mine/config', icon: CpuChipIcon },
   { key: 'mineRecords', descKey: 'mineRecordsDesc', path: '/mine/records', icon: ChartBarIcon },
   { key: 'minePublished', descKey: 'minePublishedDesc', path: '/mine/published', icon: PaperAirplaneIcon },
   { key: 'mineJoined', descKey: 'mineJoinedDesc', path: '/mine/joined', icon: PencilSquareIcon },
+  // 冇自助註冊，開戶淨係得 admin 做得（見 AdminUsersView）
+  ...(auth.isAdmin
+    ? [{ key: 'mineUsers' as const, descKey: 'mineUsersDesc' as const, path: '/mine/users', icon: UsersIcon }]
+    : []),
   { key: 'mineSettings', descKey: 'mineSettingsDesc', path: '/mine/settings', icon: Cog6ToothIcon },
-] as const
+])
 </script>
 
 <template>

@@ -529,6 +529,27 @@ export interface LocaleMessages {
   practiceCourseCount?: string
   practiceCourseNoQuestions?: string
   practiceCourseMySummary?: string
+  // W9 帳號管理（只填 zh-TW / en）
+  mineUsers?: string
+  mineUsersDesc?: string
+  usersTitle?: string
+  usersSubtitle?: string
+  usersCreate?: string
+  usersUsername?: string
+  usersUsernamePlaceholder?: string
+  usersPassword?: string
+  usersPasswordHint?: string
+  usersRole?: string
+  usersRoleAdminHint?: string
+  usersCreateSubmit?: string
+  usersFormRequired?: string
+  usersHandOffHint?: string
+  usersLoading?: string
+  usersYouBadge?: string
+  usersCreatedAt?: string
+  usersDelete?: string
+  usersDeleteConfirm?: string
+  usersDeleteConfirmYes?: string
 }
 
 export const zh: LocaleMessages = {
@@ -995,6 +1016,26 @@ export const zhTW: LocaleMessages = {
   authNoSelfSignup: '呢個站唔開放註冊，帳號由管理員開',
   authRoleAdmin: '管理員',
   authRoleMember: '成員',
+  mineUsers: '帳號管理',
+  mineUsersDesc: '開／刪其他人嘅帳號',
+  usersTitle: '帳號管理',
+  usersSubtitle: '呢度冇自助註冊，每個帳號都要管理員喺呢頁開。',
+  usersCreate: '開新帳號',
+  usersUsername: '用戶名',
+  usersUsernamePlaceholder: '例如 student01',
+  usersPassword: '密碼',
+  usersPasswordHint: '至少 8 個字元。開完之後你要親自交俾對方，系統唔會再顯示。',
+  usersRole: '身分',
+  usersRoleAdminHint: '管理員可以開同刪其他帳號，慎重。',
+  usersCreateSubmit: '開帳號',
+  usersFormRequired: '用戶名同密碼都要填',
+  usersHandOffHint: '已開好「{username}」。記得將帳號密碼交俾對方，再叫佢用課程邀請碼加入課程。',
+  usersLoading: '載入緊…',
+  usersYouBadge: '你',
+  usersCreatedAt: '{date} 開',
+  usersDelete: '刪除',
+  usersDeleteConfirm: '刪咗返唔到轉頭。佢嘅答題記錄、課程成員身分同存低咗嘅 API key 會一併清走。',
+  usersDeleteConfirmYes: '確定刪',
   configKeyStoredOn: '已存喺伺服器',
   configKeyHintLabel: '目前嘅 Key',
   configKeyKeepBlank: '留空 = 沿用已存嗰條',
@@ -1522,6 +1563,26 @@ export const en: LocaleMessages = {
   authNoSelfSignup: 'Sign-up is closed; accounts are created by an admin',
   authRoleAdmin: 'Admin',
   authRoleMember: 'Member',
+  mineUsers: 'Accounts',
+  mineUsersDesc: 'Create and remove user accounts',
+  usersTitle: 'Accounts',
+  usersSubtitle: 'There is no self sign-up — an admin creates every account here.',
+  usersCreate: 'New account',
+  usersUsername: 'Username',
+  usersUsernamePlaceholder: 'e.g. student01',
+  usersPassword: 'Password',
+  usersPasswordHint: 'At least 8 characters. Hand it over yourself — it is never shown again.',
+  usersRole: 'Role',
+  usersRoleAdminHint: 'Admins can create and delete other accounts. Choose carefully.',
+  usersCreateSubmit: 'Create',
+  usersFormRequired: 'Username and password are both required',
+  usersHandOffHint: 'Created "{username}". Pass the username and password on, then have them join a course with its invite code.',
+  usersLoading: 'Loading…',
+  usersYouBadge: 'You',
+  usersCreatedAt: 'Created {date}',
+  usersDelete: 'Delete',
+  usersDeleteConfirm: 'This cannot be undone. Their attempt history, course memberships and stored API key go with them.',
+  usersDeleteConfirmYes: 'Delete',
   configKeyStoredOn: 'Stored on the server',
   configKeyHintLabel: 'Current key',
   configKeyKeepBlank: 'Leave blank to keep the stored key',

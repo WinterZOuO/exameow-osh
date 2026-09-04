@@ -364,9 +364,53 @@ Check 擺喺**查 DB／行 argon2 之前** —— 俾人狂試嗰陣連 CPU 都�
 真正登入之後,冇 header／猜 `pass`／猜返舊 token 三種方式改 admin token
 全部 403,token 完全冇被改到。
 
+### W9（已完成）Admin 帳號管理介面
+
+W2 就整咗 `GET/POST /api/auth/users` 同 `DELETE /api/auth/users/{id}`，但由頭到
+尾冇接過上介面 —— `frontend/src` 搵 `auth/users` 零命中，開戶淨係得 curl 做到。
+（`AdminView.vue` 係 upstream 嗰個 exam-relay 後台，reports／刪／復原，唔關帳號事。）
+
+新增 `views/AdminUsersView.vue`（`/mine/users`），列表／開戶／刪戶三樣。
+`MineView` 個入口淨係 admin 見到，router 加咗 `meta.admin` guard。
+
+**實作時先發現嘅坑：刪 user 會靜靜雞整爛人哋個題庫**
+
+`delete_user_handler` 原本淨係 `DELETE FROM sessions` 加 `DELETE FROM users`。
+schema 上有六張表 `REFERENCES users(id) ON DELETE CASCADE`，但 **SQLite 預設
+唔開 `foreign_keys` pragma**（呢個 repo 冇開），所以嗰啲 CASCADE 一句都唔會行。
+以前要 curl 先刪到，冇人撞過；而家有個掣，唔補就等住出事。
+
+分兩類處理：
+
+- **清走** `sessions` / `user_llm_config` / `course_members` / `attempts` /
+  `question_flags`。`user_llm_config` 最緊要 —— 入面係佢加密咗嘅 API key，
+  唔清就永遠留喺 DB
+- **擋住唔准刪**：`courses.owner_id` / `materials.uploader_id` /
+  `questions.contributor_id`。呢三張表全部係 `JOIN users` 讀（`courses.rs:150`、
+  `materials.rs:102`、`questions.rs:242`），而且係 **INNER** JOIN —— 刪咗個 user，
+  佢開嘅課程、上傳嘅教材、貢獻嘅題目就會喺所有人個列表度消失：資料仲喺 DB，
+  但 API 攞唔返，個題庫少咗一橛而冇人知。回 409 同埋講返卡住嘅係咩
+  （`user still owns content (courses: 1)`），admin 自己處理咗啲內容先
+
+六張表一次過刪，用 `unchecked_transaction`（只有 `&Connection`，喺 MutexGuard
+後面）—— 中途仆街唔好剩低半個 user：登入唔到但仲喺列表度。
+
+**驗證**：`cargo test` 全綠（4 條新 test：擋住條件、purge 掃乾淨、唔會掃到
+第二個人、API key 一定跟住走）。再喺 tunnel 上真人行過一次：開戶→重覆用戶名
+409→密碼太短 400→刪自己 400→俾 student01 開個課程→刪佢 409→佢刪咗個課程→
+再刪 204，DB 度六張表全部歸零。用 `role=member` 登入，`/mine` 冇咗個入口，
+直接打 `#/mine/users` 會彈返去 `/mine`。
+
+一個知道嘅缺口：**冇改密碼／重設密碼**。用戶唔記得密碼，admin 而家淨係得
+「刪咗再開過」，而佢名下有內容嘅話仲要刪唔到。要補就係 server 加條
+`PUT /api/auth/users/{id}/password`。
+
 ### 尚餘
 
-`api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
+- `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
+- 冇重設密碼（見 W9）。
+- Server 錯誤訊息一律係英文原文直出（`username taken`、`user still owns
+  content (...)`…），介面唔會翻譯。同 W8 錯誤對照表嗰啲一致，暫時接受。
 
 ## Image
 

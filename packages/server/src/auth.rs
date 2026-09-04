@@ -533,6 +533,61 @@ pub async fn create_user_handler(
     }))
 }
 
+/// 刪 user 之後一定要一齊清走嘅表：純粹屬於佢一個人、冇咗佢就冇意義。
+///
+/// Schema 上每個都寫住 `ON DELETE CASCADE`，但 SQLite **預設唔開**
+/// `foreign_keys` pragma，所以嗰啲 CASCADE 一句都唔會行 —— 要自己掃。
+/// `user_llm_config` 特別緊要：入面係佢加密咗嘅 API key，唔清就永遠留喺 DB。
+const PURGE_TABLES: &[&str] = &[
+    "sessions",
+    "user_llm_config",
+    "course_members",
+    "attempts",
+    "question_flags",
+];
+
+/// 佢名下、刪咗會連累其他人嘅內容：(表, 欄)。
+///
+/// 呢三張表全部係 `JOIN users` 讀出嚟嘅（`courses.rs:150`、`materials.rs:102`、
+/// `questions.rs:242`），而個 JOIN 係 INNER —— 一刪咗個 user，佢開嘅課程、
+/// 上傳嘅教材、貢獻嘅題目就會喺**所有人**個列表度靜靜雞消失：資料仲喺 DB，
+/// 但 API 攞唔返，course 個題庫等於少咗一橛而冇人知。
+const OWNED_CONTENT: &[(&str, &str)] = &[
+    ("courses", "owner_id"),
+    ("materials", "uploader_id"),
+    ("questions", "contributor_id"),
+];
+
+/// 數吓佢名下仲有幾多嘢，用嚟決定畀唔畀刪。回傳 `["courses: 2", ...]`。
+/// 表名同欄名全部係上面嗰個 const 入面嘅字面值，唔會有外來輸入。
+fn owned_content(conn: &Connection, user_id: &str) -> Result<Vec<String>, Err> {
+    let mut blocking = Vec::new();
+    for (table, column) in OWNED_CONTENT {
+        let n: i64 = conn
+            .query_row(
+                &format!("SELECT COUNT(*) FROM {table} WHERE {column} = ?1"),
+                params![user_id],
+                |r| r.get(0),
+            )
+            .map_err(db_err)?;
+        if n > 0 {
+            blocking.push(format!("{table}: {n}"));
+        }
+    }
+    Ok(blocking)
+}
+
+fn purge_user_rows(conn: &Connection, user_id: &str) -> Result<(), Err> {
+    for table in PURGE_TABLES {
+        conn.execute(
+            &format!("DELETE FROM {table} WHERE user_id = ?1"),
+            params![user_id],
+        )
+        .map_err(db_err)?;
+    }
+    Ok(())
+}
+
 pub async fn delete_user_handler(
     State(state): State<Arc<AppState>>,
     Extension(user): Extension<CurrentUser>,
@@ -543,14 +598,26 @@ pub async fn delete_user_handler(
         return Err(err(StatusCode::BAD_REQUEST, "cannot delete yourself"));
     }
     let conn = state.db().lock().map_err(db_err)?;
-    // sessions 有 ON DELETE CASCADE，但 SQLite 預設冇開 foreign_keys，所以手動清
-    let _ = conn.execute("DELETE FROM sessions WHERE user_id = ?1", params![id]);
-    let n = conn
+
+    let blocking = owned_content(&conn, &id)?;
+    if !blocking.is_empty() {
+        return Err(err(
+            StatusCode::CONFLICT,
+            &format!("user still owns content ({})", blocking.join(", ")),
+        ));
+    }
+
+    // 一次過刪六張表，中途仆街就唔好剩低半個 user（登入唔到但仲喺列表度）。
+    // `unchecked_transaction` 係因為我哋只有 `&Connection`（喺 MutexGuard 後面）。
+    let tx = conn.unchecked_transaction().map_err(db_err)?;
+    purge_user_rows(&tx, &id)?;
+    let n = tx
         .execute("DELETE FROM users WHERE id = ?1", params![id])
         .map_err(db_err)?;
     if n == 0 {
         return Err(err(StatusCode::NOT_FOUND, "user not found"));
     }
+    tx.commit().map_err(db_err)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -646,5 +713,94 @@ mod tests {
         t.record_failure("bob", 0);
         t.record_failure("carol", LOGIN_WINDOW_MS + MIN);
         assert!(!t.per_user.contains_key("bob"), "過咗期就唔應該仲霸住");
+    }
+
+    // -------------------------------------------------------- 刪 user
+
+    /// 起一個夠用嘅 schema：只要欄名同真嘅一樣，`owned_content` /
+    /// `purge_user_rows` 就試得到。
+    fn setup_users_db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE users (id TEXT PRIMARY KEY);
+             CREATE TABLE sessions (user_id TEXT);
+             CREATE TABLE user_llm_config (user_id TEXT, api_key_enc TEXT);
+             CREATE TABLE course_members (user_id TEXT);
+             CREATE TABLE attempts (user_id TEXT);
+             CREATE TABLE question_flags (user_id TEXT);
+             CREATE TABLE courses (id TEXT PRIMARY KEY, owner_id TEXT);
+             CREATE TABLE materials (id TEXT PRIMARY KEY, uploader_id TEXT);
+             CREATE TABLE questions (id TEXT PRIMARY KEY, contributor_id TEXT);
+             INSERT INTO users (id) VALUES ('u1'), ('u2');",
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn a_plain_member_has_nothing_blocking_deletion() {
+        let conn = setup_users_db();
+        assert!(owned_content(&conn, "u1").unwrap().is_empty());
+    }
+
+    #[test]
+    fn owning_shared_content_blocks_deletion() {
+        let conn = setup_users_db();
+        conn.execute("INSERT INTO courses VALUES ('c1', 'u1')", []).unwrap();
+        conn.execute("INSERT INTO questions VALUES ('q1', 'u1')", []).unwrap();
+        conn.execute("INSERT INTO questions VALUES ('q2', 'u1')", []).unwrap();
+
+        let blocking = owned_content(&conn, "u1").unwrap();
+        assert_eq!(blocking, vec!["courses: 1", "questions: 2"]);
+        // 唔關第二個人事
+        assert!(owned_content(&conn, "u2").unwrap().is_empty());
+    }
+
+    #[test]
+    fn purge_clears_every_per_user_table() {
+        let conn = setup_users_db();
+        for t in PURGE_TABLES {
+            conn.execute(&format!("INSERT INTO {t} (user_id) VALUES ('u1')"), [])
+                .unwrap();
+            conn.execute(&format!("INSERT INTO {t} (user_id) VALUES ('u2')"), [])
+                .unwrap();
+        }
+
+        purge_user_rows(&conn, "u1").unwrap();
+
+        for t in PURGE_TABLES {
+            let n: i64 = conn
+                .query_row(
+                    &format!("SELECT COUNT(*) FROM {t} WHERE user_id = 'u1'"),
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(n, 0, "{t} 冇清乾淨");
+            let others: i64 = conn
+                .query_row(
+                    &format!("SELECT COUNT(*) FROM {t} WHERE user_id = 'u2'"),
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(others, 1, "{t} 唔應該掃埋第二個人");
+        }
+    }
+
+    /// 條加密咗嘅 API key 一定要跟住個 user 一齊走，唔係就永遠留喺 DB。
+    #[test]
+    fn purge_takes_the_stored_api_key_with_it() {
+        let conn = setup_users_db();
+        conn.execute(
+            "INSERT INTO user_llm_config (user_id, api_key_enc) VALUES ('u1', 'secret')",
+            [],
+        )
+        .unwrap();
+        purge_user_rows(&conn, "u1").unwrap();
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM user_llm_config", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 0);
     }
 }

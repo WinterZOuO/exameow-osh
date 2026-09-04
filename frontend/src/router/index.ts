@@ -93,6 +93,12 @@ const router = createRouter({
       meta: { title: 'Wrong Questions' },
     },
     {
+      path: '/mine/users',
+      name: 'mine-users',
+      component: () => import('@/views/AdminUsersView.vue'),
+      meta: { title: 'Accounts', admin: true },
+    },
+    {
       path: '/mine/records',
       name: 'mine-records',
       component: () => import('@/views/PracticeRecordsView.vue'),
@@ -138,6 +144,8 @@ router.beforeEach(async (to) => {
       query: to.fullPath === '/' ? {} : { redirect: to.fullPath },
     }
   }
+  // server 一樣會回 403，呢度擋住只係唔想俾人見到一版得個錯誤訊息嘅嘢
+  if (to.meta.admin && !auth.isAdmin) return { path: '/mine' }
   return true
 })
 

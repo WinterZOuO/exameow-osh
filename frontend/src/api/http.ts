@@ -42,6 +42,18 @@ export interface GenerateResult {
   questions: Question[]
 }
 
+// ---------------------------------------------------------------- 帳號（W2 嘅 API，W9 先接返上介面）
+
+/** server 只認呢兩個值，第三個會回 400 `invalid role` */
+export type UserRole = 'member' | 'admin'
+
+export interface UserSummary {
+  id: string
+  username: string
+  role: UserRole
+  created_at: number
+}
+
 // ---------------------------------------------------------------- 課程（W4）
 
 export interface CourseSummary {
@@ -414,6 +426,27 @@ export const httpApi = {
         { method: 'POST' },
       ),
     )
+  },
+
+  // ---------------------------------------------------------------- 帳號管理（admin）
+
+  async listUsers(): Promise<UserSummary[]> {
+    return json(await apiFetch(`${BASE_URL}/api/auth/users`))
+  },
+
+  async createUser(username: string, password: string, role: UserRole): Promise<UserSummary> {
+    return json(
+      await apiFetch(`${BASE_URL}/api/auth/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role }),
+      }),
+    )
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    const res = await apiFetch(`${BASE_URL}/api/auth/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (!res.ok) await throwHttpError(res)
   },
 };
 

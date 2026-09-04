@@ -11,6 +11,8 @@ import {
   type AttemptSummary,
   type FlagResult,
   type ServerConfigInfo,
+  type UserSummary,
+  type UserRole,
 } from './http'
 
 let _isTauri: boolean | null = null
@@ -173,5 +175,19 @@ export const api = {
 
   toggleQuestionFlag(courseId: string, questionId: string): Promise<FlagResult> {
     return httpApi.toggleQuestionFlag(courseId, questionId)
+  },
+
+  // ------------------------------------------------ 帳號管理（admin only）
+
+  listUsers(): Promise<UserSummary[]> {
+    return httpApi.listUsers()
+  },
+
+  createUser(username: string, password: string, role: UserRole): Promise<UserSummary> {
+    return httpApi.createUser(username, password, role)
+  },
+
+  deleteUser(id: string): Promise<void> {
+    return httpApi.deleteUser(id)
   },
 }
