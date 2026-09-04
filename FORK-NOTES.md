@@ -405,6 +405,41 @@ schema 上有六張表 `REFERENCES users(id) ON DELETE CASCADE`，但 **SQLite �
 「刪咗再開過」，而佢名下有內容嘅話仲要刪唔到。要補就係 server 加條
 `PUT /api/auth/users/{id}/password`。
 
+### 本機起動腳本（`scripts/start-tunnel.ps1`）
+
+一個掣：build → 起 server → 開 Cloudflare quick tunnel → 印公網網址 → Ctrl+C
+兩個一齊收。以前每次試機都要自己 set 一堆 env var、開兩個 terminal，好易漏嘢。
+
+```powershell
+scripts\start-tunnel.bat              # 全套
+scripts\start-tunnel.bat -SkipBuild   # 唔重新 build
+scripts\start-tunnel.bat -NoTunnel    # 淨係 server
+```
+
+（`.bat` 只係個 wrapper —— PowerShell 預設 ExecutionPolicy 唔俾行 `.ps1`。）
+
+幾個特登嘅決定：
+
+- **Secret 生成一次就 keep 住**，存喺 `%LOCALAPPDATA%\exameow-osh\secrets\local.env`
+  （`icacls /inheritance:r` 鎖返自己一個，等同 `config/store.rs` 個 `0600`）。
+  每次隨機生成嘅話 `MASTER_KEY` 一變，DB 入面加密咗嘅 API key 就全部解唔返
+- **Secret 同 DB 分兩個資料夾**（`secrets\` vs `data\`）—— 你 backup `data\`
+  嗰陣唔會順手抄埋條 key。同 `docker-compose.prod.yml` 個註解同一個原則
+- **預設 port 3020 唔係 3000** —— 等你可以同時行返 docker 嗰個 instance
+- **Env var 開完即刻還原**。`$env:X = ...` 係 process 級，會漏返出你個 shell；
+  child 一 launch 就已經抄咗份 env，之後改唔關佢事
+- **`-AllowPlainHttp` 先至設 `COOKIE_SECURE=0`**。session cookie 預設帶 `Secure`，
+  用 LAN IP（`http://192.168.x.x:3020`）開嗰陣瀏覽器會靜靜雞丟咗個 cookie，
+  表現係「登入好似成功，一 refresh 就彈返出去」而且**冇任何錯誤訊息** ——
+  值得專登開個掣，唔係俾人 debug 半日。行 tunnel 就唔使（tunnel 本身係 HTTPS）
+- **`.ps1` 帶 UTF-8 BOM**。PowerShell 5.1 讀冇 BOM 嘅 file 當 ANSI，啲中文會變亂碼
+- 讀 cloudflared 個 log 要自己開 `FileShare::ReadWrite` —— 個 file 俾 child
+  揸住寫，`Get-Content` 會撞鎖
+
+**驗證**：行過四次 —— 全套（攞到網址、curl 過 tunnel 拎到 200、用生成嘅密碼
+登入到 `/api/auth/me` 認得係 admin）、第二次行（確認冇重新生成 secret，密碼一樣）、
+port 撞（回 exit 1 唔會亂起）、殺一個 child（另一個自動跟住收，冇孤兒 process）。
+
 ### 尚餘
 
 - `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
