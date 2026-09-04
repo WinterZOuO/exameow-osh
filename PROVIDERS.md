@@ -48,31 +48,26 @@ server 自己會喺你填嘅 endpoint 後面接：
 `https://generativelanguage.googleapis.com/v1beta/openai/` 存低會變咗
 `.../v1beta/openai` —— 正常，唔使理。）
 
-**`withV1Suffix`** —— 淨係喺「獲取模型」**第一次失敗之後**先行：如果條 endpoint 唔係以
-`/v1`（或者 `/v2`…）結尾，就補多個 `/v1` 再試多次。
+**`withV1Suffix`** —— 淨係喺「獲取模型」**第一次失敗之後**先行：如果條 endpoint
+嘅 path **完全冇版本段**，就補多個 `/v1` 再試多次。試完都唔掂就**還原返你原本填嗰條**。
 
 | 你填 | 第一次失敗之後會試 |
 |---|---|
 | `https://api.deepseek.com` | `https://api.deepseek.com/v1` ✅ 救得返 |
-| `https://api.deepseek.com/v1` | 唔會 retry（已經有 `/v1`） |
+| `https://api.deepseek.com/v1` | 唔會 retry（已經有版本段） |
+| `https://generativelanguage.googleapis.com/v1beta/openai` | 唔會 retry（`v1beta` 已經係版本段） |
 
-### ⚠️ Gemini 千祈唔好靠呢個 fallback
+「版本段」係指 path 入面任何一段係 `v` 加數字開頭 —— `v1`、`v2`、`v1beta`、`v1alpha`
+都算。host 唔計（`https://v2.example.com/api` 嗰個 `v2` 係 host label）。
 
-`https://generativelanguage.googleapis.com/v1beta/openai` **唔係**以 `/v1` 結尾
-（結尾係 `/openai`），所以 `withV1Suffix` 照樣會補多個 `/v1`，變成
-`.../v1beta/openai/v1` —— 一條唔存在嘅路徑。
-
-再衰啲：`stores/config.ts` 個 `fetchModels()` 係**先存低**個改咗嘅 endpoint 先至 retry，
-retry 都失敗嘅話**唔會還原**。即係話 Gemini 用戶只要「獲取模型」失敗過一次
-（貼錯 key、超時、rate limit 都算），個 endpoint 就會俾人靜靜哋改壞咗，
-之後生成題目全部 404。
-
-allowlist 亦攔佢唔住 —— allowlist 只睇 host 唔睇 path，
-`.../v1beta/openai/v1` 照樣 200 存得入去。
-
-**撞到就手動改返** `https://generativelanguage.googleapis.com/v1beta/openai/` 再存一次。
-
-（呢個係已知 bug，W8 係文件項目唔改 code，記咗喺 `class_review_web/docs/design.md` §10。）
+> **點解要咁：** 本來呢度淨係睇結尾（`/\/v\d+$/`），Gemini 條
+> `.../v1beta/openai` 結尾係 `/openai` 唔係 `/v1`，就會俾人補成
+> `.../v1beta/openai/v1` —— 一條唔存在嘅路徑。而 `fetchModels()` 係
+> **先存低**個改咗嘅 endpoint 先至 retry，舊版 retry 失敗都唔還原，
+> allowlist 又只睇 host 唔睇 path 攔佢唔住 —— 即係「獲取模型」失敗過一次
+> （貼錯 key、超時、rate limit 都算）個設定就永久壞咗。兩樣都修咗
+> （`utils/endpoint.ts` + `stores/config.ts`），詳情見
+> [FORK-NOTES.md](FORK-NOTES.md) W8。
 
 ## Allowlist：唔係咩 URL 都填得
 
@@ -113,7 +108,7 @@ open.bigmodel.cn        api.x.ai
 | `no LLM config — save your endpoint and API key first` | 完全未設定過 | 去設定頁填 |
 | `no model selected` | 有 key 但冇揀型號 | 撳「獲取模型」再揀 |
 | `HTTP 401: …` | 條 key 唔啱 / 過期 / 冇 quota | 去 provider 個台重新出一條 |
-| `HTTP 404: …` | endpoint path 錯 | 對返上面個表；Gemini 睇埋上面嗰段 ⚠️ |
+| `HTTP 404: …` | endpoint path 錯 | 對返最上面個 provider 表 —— Gemini 一定要有 `/v1beta/openai` |
 | `stored API key cannot be decrypted (MASTER_KEY changed?) — please re-enter it` | server 換咗 `MASTER_KEY` | 重新貼一次 key |
 
 ## 條 key 存喺邊

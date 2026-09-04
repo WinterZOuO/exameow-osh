@@ -292,16 +292,37 @@ helper 實際點行、allowlist 規矩、錯誤訊息對照表、條 key 存喺�
   入面 `allows_known_https_providers` 直接 assert 咗 Gemini 條長 path 通過
 - **`withV1Suffix` 對 Gemini 唔止救唔到，仲會將個設定改壞**。設計文件寫住
   「`normalizeEndpoint` / `withV1Suffix` 會自動試 `/v1` 後綴，填錯少少都救得返」——
-  對 DeepSeek 啱，對 Gemini 係反話：`.../v1beta/openai` 唔係以 `/v1` 結尾
-  （結尾係 `/openai`），所以照樣補多個 `/v1` 變成 `.../v1beta/openai/v1`。
-  而 `stores/config.ts` 個 `fetchModels()` 係**先 `save()` 存低改咗嘅 endpoint
-  先至 retry**，retry 都失敗都唔還原 —— 即係「獲取模型」失敗過一次
-  （貼錯 key、超時、rate limit 都算）個 endpoint 就永久壞咗。
-  W8 明寫唔使寫 code，所以冇改，寫咗做 PROVIDERS.md 一個 ⚠️ 段落
-  ＋ 設計文件 §10 已知限制
+  對 DeepSeek 啱，對 Gemini 係反話。**修咗**，見下面
 - **env `AI_ENDPOINT` 唔行 `validate_endpoint`**（`env_config()` 直接 `std::env::var`）。
   睇 code 覆核嗰陣先留意到 —— 呢個係合理嘅（管理員自己喺 compose file 寫，
   同「用戶隨手填一條 URL」唔同性質），但唔寫低就好易日後當咗係漏
+
+**順手修個 `/v1` fallback bug**
+
+寫 `PROVIDERS.md` 逐句覆核「填錯少少都救得返」呢句嗰陣撞出嚟，改兩處：
+
+- `frontend/src/utils/endpoint.ts` 個 `withV1Suffix` 本來係 `/\/v\d+$/` 睇結尾。
+  Gemini 條官方相容端點 `.../v1beta/openai` 結尾係 `/openai` 唔係 `/v1`，
+  就會俾人補成 `.../v1beta/openai/v1` —— 一條唔存在嘅路徑。改成睇**成條
+  path 有冇任何一段係 `v<數字>…`**（`v1`／`v2`／`v1beta`／`v1alpha` 都算），
+  有就唔補。特登只 strip 走 scheme + authority 先 split，
+  免得 `https://v2.example.com/api` 個 host label 當咗版本段
+- `frontend/src/stores/config.ts` 個 `fetchModels()`：retry 之前要 `save()`
+  存低個新 endpoint（server 攞自己嗰行去 call provider，唔存就試唔到），
+  但**retry 都失敗嘅話冇還原**。加返還原 —— 唔係嘅話「獲取模型」失敗過一次
+  （貼錯 key、超時、rate limit 都算），個設定就永久留咗條爛 endpoint。
+  allowlist 亦攔佢唔住，只睇 host 唔睇 path
+
+兩個方向嘅代價唔對等：唔補頂多係幫唔到手，補錯就整爛一條本身啱嘅 endpoint，
+所以 `withV1Suffix` 拿不準就唔補。
+
+前端冇 test runner，所以 `withV1Suffix` 用 node 行咗 13 個 case 對答案，
+再開部 server 打真嘅 provider 驗兩條路：
+
+- Gemini + 錯 key → Google 真係回 400 `INVALID_ARGUMENT`，
+  存低嘅 endpoint 照樣係 `.../v1beta/openai`，冇被補 `/v1`
+- `https://api.deepseek.com`（特登唔寫 `/v1`）+ 錯 key → DeepSeek 回 401，
+  補 `/v1` 再試都 401，之後**還原返** `https://api.deepseek.com`
 
 ### 尚餘
 

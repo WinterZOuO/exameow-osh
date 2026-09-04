@@ -110,9 +110,25 @@ export const useConfigStore = defineStore('config', () => {
         // endpoint 少咗 /v1 係最常見嘅填錯法，試多次先算數
         const candidate = withV1Suffix(endpoint.value)
         if (!candidate) throw firstError
+        // 呢個 retry 要**存低**個新 endpoint 先試得到（server 攞自己嗰行去 call
+        // provider），所以試唔掂就一定要還原 —— 唔還原嘅話「獲取模型」失敗過一次
+        // （貼錯 key、超時、rate limit 都算），個設定就永久留咗條補多咗 /v1 嘅
+        // 爛 endpoint，之後生成全部 404。
+        const original = endpoint.value
         endpoint.value = candidate
         await save()
-        models.value = await api.getModels()
+        try {
+          models.value = await api.getModels()
+        } catch {
+          endpoint.value = original
+          try {
+            await save()
+          } catch {
+            // 連還原都存唔返（多數係斷網）：起碼介面顯示返用戶原本填嗰條，
+            // 而佢跟住見到 firstError 都要再撳一次，嗰陣會再存過
+          }
+          throw firstError
+        }
       }
     } catch (e: any) {
       throw new Error(e.message || String(e))
