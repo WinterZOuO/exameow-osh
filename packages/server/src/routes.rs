@@ -20,6 +20,8 @@ use crate::llm;
 pub struct AppState {
     pub relay: crate::relay::RelayState,
     pub admin_token: Mutex<String>,
+    /// 登入失敗節流，只喺記憶體（重啟清零係可以接受嘅）—— 見 `auth::LoginThrottle`
+    pub login_throttle: Mutex<crate::auth::LoginThrottle>,
 }
 
 impl AppState {

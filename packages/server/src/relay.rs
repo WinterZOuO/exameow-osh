@@ -655,10 +655,22 @@ pub struct ChangeTokenReq {
     new_token: Option<String>,
 }
 
+/// 改 admin token。
+///
+/// **一定要驗返舊 token**：呢條路由同其餘 `/api/exam/admin/*` 一樣掛咗
+/// `require_auth`，但登入咗唔等於係 admin —— 冇呢個 check 嘅話，任何一個
+/// 拎住 join code 入嚟嘅同學都可以將 admin token 改成自己知嘅值，跟住用
+/// 佢去攞晒 `admin_reports_handler` 嗰邊嘅嘢、刪／復原 exam。
+/// （`admin_reports` / `admin_delete` / `admin_restore` 三個一早有 check，
+/// 唯獨呢條漏咗。）
 pub async fn admin_change_token_handler(
     State(state): State<Arc<crate::routes::AppState>>,
+    headers: HeaderMap,
     Json(req): Json<ChangeTokenReq>,
 ) -> Result<Json<serde_json::Value>, Err> {
+    if !admin_token_valid(&state, &headers) {
+        return Err(err(StatusCode::FORBIDDEN, "unauthorized"));
+    }
     let new_token = req
         .new_token
         .map(|t| t.trim().to_string())

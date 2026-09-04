@@ -73,6 +73,7 @@ async fn main() {
     let state = Arc::new(AppState {
         relay,
         admin_token: Mutex::new(admin_token),
+        login_throttle: Mutex::new(Default::default()),
     });
 
     {

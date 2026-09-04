@@ -324,6 +324,46 @@ helper 實際點行、allowlist 規矩、錯誤訊息對照表、條 key 存喺�
 - `https://api.deepseek.com`（特登唔寫 `/v1`）+ 錯 key → DeepSeek 回 401，
   補 `/v1` 再試都 401，之後**還原返** `https://api.deepseek.com`
 
+### 安全補強（2026-09-04，開 tunnel 之前）
+
+打算用 Cloudflare tunnel 將本機行緊嗰個 instance 穿出公網試,開之前逐條數返
+個暴露面,揾到兩個窿。兩個都唔係 tunnel 特有 —— 本身就有,只係本機用嗰陣
+睇唔出。詳細背景見設計文件 §4 S4／S5。
+
+**S4 — 登入完全冇 rate limit**（`packages/server/src/auth.rs`）
+
+新增 `LoginThrottle`：逐個 username 記連續失敗次數,過咗 `LOGIN_FREE_TRIES`(5)
+就遞增延遲(1s→2s→4s…封頂 300s),15 分鐘冇再失敗清零,登入成功即刻清零。
+Check 擺喺**查 DB／行 argon2 之前** —— 俾人狂試嗰陣連 CPU 都唔想燒。
+
+三個特登揀嘅位:
+
+- **按 username 記,唔按 IP** —— tunnel／反向代理後面 peer IP 全部係
+  `127.0.0.1`,按 IP 等於冇記;而信 `X-Forwarded-For` 又開多條
+  「自己填個 header 就繞過」嘅路
+- **罰延遲,唔鎖帳號** —— 鎖死嘅話任何人都可以用個亂密碼將你鎖出街
+- **個 map 爆 cap 要踢走最耐冇郁過嗰個,唔可以「爆咗就唔記」** ——
+  後者噴夠假 username 就令真 username 完全冇節流。有個 test 專門守住呢點
+  (`spraying_junk_usernames_cannot_evict_the_one_under_attack`)
+
+存記憶體唔入 DB。失敗／成功兩邊都要記,**用戶唔存在嗰個 case 一樣要記** ——
+淨係記存在嘅 username 就等於送個列舉工具俾人。
+
+**S5 — 任何登入用戶都可以改 admin token**（`packages/server/src/relay.rs`）
+
+`/api/exam/admin/*` 四條路由,`admin_reports` / `admin_delete` /
+`admin_restore` 三條都有 `admin_token_valid()`,唯獨
+`admin_change_token_handler` 冇。四條都掛咗 `require_auth`,但登入咗唔等於
+係 admin —— 任何一個憑 join code 入嚟嘅同學都可以將 `ADMIN_TOKEN` 改成
+自己知嘅值,跟住攞晒 reports、刪／復原 exam。加返一行 check(403,同其餘三條
+一致)。
+
+**驗證**：`cargo test -p exameow-server` 22 passed(7 條新嘅節流 test)。
+再開部 server 用 curl 行咗一次:連環試錯密碼會由 401 變 429 並講返等幾多秒、
+第二個 username 唔受連累、成功登入即刻清零;開咗個 `role=member` 嘅 bob
+真正登入之後,冇 header／猜 `pass`／猜返舊 token 三種方式改 admin token
+全部 403,token 完全冇被改到。
+
 ### 尚餘
 
 `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。

@@ -3,6 +3,7 @@
 //! - 密碼用 argon2id hash
 //! - session token 只喺 DB 存 SHA-256 hash，明文只出現喺 HttpOnly cookie
 //! - `require_auth` middleware 掛喺除咗 /api/auth/login 之外嘅所有 /api 路由
+//! - 登入有失敗節流（`LoginThrottle`），唔係嘅話公開個 URL 出去就任人試密碼
 
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -19,6 +20,7 @@ use rand::Rng;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::routes::AppState;
@@ -265,6 +267,99 @@ fn require_admin(user: &CurrentUser) -> Result<(), Err> {
 
 // ---------------------------------------------------------------- handlers
 
+// ---------------------------------------------------------------- 登入節流
+
+/// 頭幾次失敗唔罰 —— 打錯密碼係常事，唔想自己都撞到。
+const LOGIN_FREE_TRIES: u32 = 5;
+/// 咁耐冇再失敗過就當無事發生，計數清零。
+const LOGIN_WINDOW_MS: i64 = 15 * 60 * 1000;
+/// 延遲封頂，唔好無限咁翻倍。
+const LOGIN_MAX_DELAY_SECS: i64 = 300;
+/// 記得低幾多個 username。爆咗就踢走最耐冇郁過嗰個。
+const LOGIN_TRACK_CAP: usize = 4096;
+
+/// 登入失敗節流。
+///
+/// 冇呢個嘅話，一 tunnel／部署出公網就等於任人無限試密碼。argon2id 慢，
+/// 某程度上係天然減速器，但同時亦即係每次試都燒你 CPU。
+///
+/// **逐個 username 記，唔按 IP 記**：喺 Cloudflare tunnel／反向代理後面，
+/// peer IP 全部都係 127.0.0.1，按 IP 記等於冇記；而信 `X-Forwarded-For`
+/// 又反而開咗一條「自己填個 header 就繞過」嘅路。username 呃唔到人。
+///
+/// **罰延遲，唔鎖帳號**：鎖死嘅話任何人都可以用一個亂咁嘅密碼將你鎖出街。
+///
+/// 存記憶體唔入 DB —— 重啟清零可以接受（攻擊者估唔到你幾時重啟），
+/// 亦唔想每次登入都寫一次 disk。
+#[derive(Default)]
+pub struct LoginThrottle {
+    /// username → (連續失敗次數, 最後一次失敗嘅 ms)
+    per_user: HashMap<String, (u32, i64)>,
+}
+
+/// 累積咗 n 次失敗之後，下一次要等幾多秒。
+/// 頭 `LOGIN_FREE_TRIES` 次 0 秒，之後每次翻倍，去到 `LOGIN_MAX_DELAY_SECS` 封頂。
+fn login_delay_secs(failures: u32) -> i64 {
+    if failures < LOGIN_FREE_TRIES {
+        return 0;
+    }
+    // `.min(30)` 唔止係封頂，仲係防 shift overflow
+    let steps = (failures - LOGIN_FREE_TRIES).min(30);
+    (1_i64 << steps).min(LOGIN_MAX_DELAY_SECS)
+}
+
+/// 仲要等幾多秒先可以再試。0 = 而家就得。
+fn login_retry_after(failures: u32, last_ms: i64, now_ms: i64) -> i64 {
+    if now_ms - last_ms >= LOGIN_WINDOW_MS {
+        return 0; // 過咗窗口，當清零
+    }
+    let wait = login_delay_secs(failures);
+    if wait == 0 {
+        return 0;
+    }
+    let elapsed = (now_ms - last_ms) / 1000;
+    (wait - elapsed).max(0)
+}
+
+impl LoginThrottle {
+    fn check(&self, username: &str, now: i64) -> i64 {
+        match self.per_user.get(username) {
+            Some((failures, last)) => login_retry_after(*failures, *last, now),
+            None => 0,
+        }
+    }
+
+    fn record_failure(&mut self, username: &str, now: i64) {
+        // 過期嘅先清走，順便控制個 map 大細
+        self.per_user
+            .retain(|_, (_, last)| now - *last < LOGIN_WINDOW_MS);
+        if !self.per_user.contains_key(username) && self.per_user.len() >= LOGIN_TRACK_CAP {
+            // 爆 cap 就踢走最耐冇郁過嗰個。**唔可以「爆咗就唔記」** ——
+            // 咁樣噴 4096 個假 username 就可以令一個真 username 完全冇節流。
+            // 俾人狂試緊嗰個 username 時間戳一直喺度更新，唔會俾踢走。
+            if let Some(oldest) = self
+                .per_user
+                .iter()
+                .min_by_key(|(_, (_, last))| *last)
+                .map(|(k, _)| k.clone())
+            {
+                self.per_user.remove(&oldest);
+            }
+        }
+        let entry = self.per_user.entry(username.to_string()).or_insert((0, now));
+        // 隔咗成個窗口先再失敗，當重新開始數
+        if now - entry.1 >= LOGIN_WINDOW_MS {
+            entry.0 = 0;
+        }
+        entry.0 += 1;
+        entry.1 = now;
+    }
+
+    fn clear(&mut self, username: &str) {
+        self.per_user.remove(username);
+    }
+}
+
 pub async fn login_handler(
     State(state): State<Arc<AppState>>,
     Json(req): Json<LoginRequest>,
@@ -272,6 +367,19 @@ pub async fn login_handler(
     let username = req.username.trim().to_string();
     if username.is_empty() || req.password.is_empty() {
         return Err(err(StatusCode::BAD_REQUEST, "missing credentials"));
+    }
+
+    // 喺查 DB／行 argon2 之前擋 —— 俾人狂試嗰陣連 CPU 都唔想燒
+    let now = now_ms();
+    {
+        let throttle = state.login_throttle.lock().map_err(db_err)?;
+        let retry = throttle.check(&username, now);
+        if retry > 0 {
+            return Err(err(
+                StatusCode::TOO_MANY_REQUESTS,
+                &format!("too many failed logins, try again in {retry}s"),
+            ));
+        }
     }
 
     let row: Option<(String, String, String)> = {
@@ -285,15 +393,25 @@ pub async fn login_handler(
         .map_err(db_err)?
     };
 
-    // 用戶唔存在同密碼錯，對外一律回同一個錯誤，唔好泄漏邊個 username 有效
-    let (user_id, stored_hash, role) =
-        row.ok_or_else(|| err(StatusCode::UNAUTHORIZED, "invalid credentials"))?;
+    // 用戶唔存在同密碼錯，對外一律回同一個錯誤，唔好泄漏邊個 username 有效。
+    // 節流亦係兩種情況都記 —— 淨係記存在嘅 username 就等於送個列舉工具俾人。
+    let fail = |state: &AppState| {
+        if let Ok(mut t) = state.login_throttle.lock() {
+            t.record_failure(&username, now);
+        }
+        err(StatusCode::UNAUTHORIZED, "invalid credentials")
+    };
+    let Some((user_id, stored_hash, role)) = row else {
+        return Err(fail(&state));
+    };
     if !verify_password(&req.password, &stored_hash) {
-        return Err(err(StatusCode::UNAUTHORIZED, "invalid credentials"));
+        return Err(fail(&state));
+    }
+    if let Ok(mut t) = state.login_throttle.lock() {
+        t.clear(&username);
     }
 
     let token = gen_token();
-    let now = now_ms();
     {
         let conn = state.db().lock().map_err(db_err)?;
         conn.execute(
@@ -434,4 +552,99 @@ pub async fn delete_user_handler(
         return Err(err(StatusCode::NOT_FOUND, "user not found"));
     }
     Ok(StatusCode::NO_CONTENT)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MIN: i64 = 60 * 1000;
+
+    #[test]
+    fn first_few_failures_are_free() {
+        let mut t = LoginThrottle::default();
+        for i in 0..LOGIN_FREE_TRIES {
+            assert_eq!(t.check("bob", i as i64), 0, "第 {i} 次唔應該罰");
+            t.record_failure("bob", i as i64);
+        }
+        // 第 LOGIN_FREE_TRIES 次失敗之後先開始罰
+        assert!(t.check("bob", LOGIN_FREE_TRIES as i64) > 0);
+    }
+
+    #[test]
+    fn delay_grows_then_caps() {
+        assert_eq!(login_delay_secs(LOGIN_FREE_TRIES - 1), 0);
+        assert_eq!(login_delay_secs(LOGIN_FREE_TRIES), 1);
+        assert_eq!(login_delay_secs(LOGIN_FREE_TRIES + 1), 2);
+        assert_eq!(login_delay_secs(LOGIN_FREE_TRIES + 2), 4);
+        // 封頂，唔會無限翻倍（亦唔會 shift overflow）
+        assert_eq!(login_delay_secs(LOGIN_FREE_TRIES + 40), LOGIN_MAX_DELAY_SECS);
+        assert_eq!(login_delay_secs(u32::MAX), LOGIN_MAX_DELAY_SECS);
+    }
+
+    #[test]
+    fn waiting_it_out_clears_the_penalty() {
+        let mut t = LoginThrottle::default();
+        for _ in 0..(LOGIN_FREE_TRIES + 3) {
+            t.record_failure("bob", 0);
+        }
+        assert!(t.check("bob", 0) > 0);
+        // 8 次失敗 = 要等 2^(8-5) = 8 秒，等夠就再試得
+        assert_eq!(t.check("bob", 3 * 1000), 5);
+        assert_eq!(t.check("bob", 8 * 1000), 0);
+        // 過咗成個窗口更加係當冇事發生
+        assert_eq!(t.check("bob", LOGIN_WINDOW_MS), 0);
+    }
+
+    #[test]
+    fn success_clears_the_counter() {
+        let mut t = LoginThrottle::default();
+        for _ in 0..(LOGIN_FREE_TRIES + 2) {
+            t.record_failure("bob", 0);
+        }
+        assert!(t.check("bob", 0) > 0);
+        t.clear("bob");
+        assert_eq!(t.check("bob", 0), 0);
+    }
+
+    #[test]
+    fn one_user_being_attacked_does_not_slow_another() {
+        let mut t = LoginThrottle::default();
+        for _ in 0..20 {
+            t.record_failure("bob", 0);
+        }
+        assert!(t.check("bob", 0) > 0);
+        assert_eq!(t.check("alice", 0), 0, "唔應該連累第二個人");
+    }
+
+    #[test]
+    fn spraying_junk_usernames_cannot_evict_the_one_under_attack() {
+        // 呢個係「爆 cap 就唔記」嗰種寫法會中嘅招：噴夠假 username
+        // 就令一個真 username 完全冇節流。
+        let mut t = LoginThrottle::default();
+        let mut now = 0;
+        for _ in 0..(LOGIN_FREE_TRIES + 5) {
+            t.record_failure("admin", now);
+            now += 1;
+        }
+        for i in 0..(LOGIN_TRACK_CAP * 2) {
+            t.record_failure(&format!("junk{i}"), now);
+            now += 1;
+            // 被攻擊嗰個一路都仲有失敗記錄，時間戳會 refresh，唔應該俾人踢走
+            if i % 500 == 0 {
+                t.record_failure("admin", now);
+                now += 1;
+            }
+        }
+        assert!(t.check("admin", now) > 0, "admin 唔可以俾人噴到冇晒節流");
+        assert!(t.per_user.len() <= LOGIN_TRACK_CAP + 1, "個 map 要有上限");
+    }
+
+    #[test]
+    fn expired_entries_get_pruned() {
+        let mut t = LoginThrottle::default();
+        t.record_failure("bob", 0);
+        t.record_failure("carol", LOGIN_WINDOW_MS + MIN);
+        assert!(!t.per_user.contains_key("bob"), "過咗期就唔應該仲霸住");
+    }
 }
