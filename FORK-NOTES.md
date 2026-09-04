@@ -4,6 +4,7 @@
 改造成 OSH 課程嘅多人共享 MC 題溫習平台。
 
 設計文件同決策記錄喺另一個 repo：`class_review_web/docs/design.md`。
+填 LLM endpoint / key 撞到問題睇 [PROVIDERS.md](PROVIDERS.md)。
 
 ## 同 upstream 嘅分歧
 
@@ -276,9 +277,33 @@ prop 就唔顯示,`PracticeView.vue` 嗰套本機 bank 練習完全冇受影響�
   改成「exact token match 優先,得多過一個字嘅 token 先做 substring
   fallback」
 
-### 之後仲要做（見設計文件 §8）
+### W8（已完成）Provider 設定備忘
 
-- W8 provider 設定備忘（唔使寫 code）
+新增 [PROVIDERS.md](PROVIDERS.md)：兩個 provider 嘅確實 endpoint、endpoint 容錯
+helper 實際點行、allowlist 規矩、錯誤訊息對照表、條 key 存喺邊。
+
+**設計文件冇寫、但寫嗰陣先發現嘅嘢**
+
+- **放 root，唔放 `docs/`**。upstream `.gitignore` 第 21 行將成個 `docs/` 排除咗
+  （「Internal tooling (not part of the open-source release)」），擺入去就唔會 commit 到。
+  root 已經有 `FORK-NOTES.md` 呢個 fork 專屬檔，多一個唔算亂
+- **「呢兩個 host 應該係 allowlist 嘅預設值」呢項 W3 已經做咗**，W8 淨係覆核：
+  `DEFAULT_ALLOWED_HOSTS` 兩個都在，`cargo test -p exameow-server llm::` 7 passed，
+  入面 `allows_known_https_providers` 直接 assert 咗 Gemini 條長 path 通過
+- **`withV1Suffix` 對 Gemini 唔止救唔到，仲會將個設定改壞**。設計文件寫住
+  「`normalizeEndpoint` / `withV1Suffix` 會自動試 `/v1` 後綴，填錯少少都救得返」——
+  對 DeepSeek 啱，對 Gemini 係反話：`.../v1beta/openai` 唔係以 `/v1` 結尾
+  （結尾係 `/openai`），所以照樣補多個 `/v1` 變成 `.../v1beta/openai/v1`。
+  而 `stores/config.ts` 個 `fetchModels()` 係**先 `save()` 存低改咗嘅 endpoint
+  先至 retry**，retry 都失敗都唔還原 —— 即係「獲取模型」失敗過一次
+  （貼錯 key、超時、rate limit 都算）個 endpoint 就永久壞咗。
+  W8 明寫唔使寫 code，所以冇改，寫咗做 PROVIDERS.md 一個 ⚠️ 段落
+  ＋ 設計文件 §10 已知限制
+- **env `AI_ENDPOINT` 唔行 `validate_endpoint`**（`env_config()` 直接 `std::env::var`）。
+  睇 code 覆核嗰陣先留意到 —— 呢個係合理嘅（管理員自己喺 compose file 寫，
+  同「用戶隨手填一條 URL」唔同性質），但唔寫低就好易日後當咗係漏
+
+### 尚餘
 
 `api/bridge.ts`（Tauri）仲喺度但 AI 嗰部分已經冇人叫，web build 下係惰性。
 
